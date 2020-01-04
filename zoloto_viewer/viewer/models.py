@@ -21,6 +21,7 @@ def plan_upload_dir(obj: 'Page', filename):
 
 
 class Page(models.Model):
+    uid = models.UUIDField(unique=True)
     floor_caption = models.TextField()
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
     plan = models.ImageField(upload_to=plan_upload_dir, null=True, default=None)

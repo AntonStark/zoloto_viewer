@@ -1,0 +1,35 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Create project</title>
+    <link rel="stylesheet" type="text/css" href="{% static 'global.css' %}">
+</head>
+<body>
+<h2>Добавление проекта</h2>
+<form method="POST" enctype="multipart/form-data">{% csrf_token %}
+    <p>
+        <label for="project_name">Название проекта</label>
+        <br>
+        <input name="title" id="project_name" type="text" placeholder="Например, Табор">
+    </p>
+    <p id="plan_box">
+        Добавление пространств
+        <br>
+        <label for="plan_input" class="fill-button">Загрузить jpg со схемами
+            <input name="page_plan" id="plan_input" type="file" accept="image/*" style="display: none">
+        </label>
+    </p>
+    <p id="csv_box">
+        Добавление данных
+        <br>
+        <label for="csv_input" class="fill-button">Загрузить csv
+            <input name="page_plan" id="csv_input" type="file" accept="text/csv" style="display: none">
+        </label>
+    </p>
+    <a class="fill-button-negative" href="{% url 'projects' %}">Отмена</a>
+    <input type="submit" value="Добавить проект" class="fill-button" style="margin-left: 100px">
+</form>
+</body>
+</html>

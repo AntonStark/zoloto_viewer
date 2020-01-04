@@ -1,0 +1,29 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Projects</title>
+    <link rel="stylesheet" type="text/css" href="{% static 'global.css' %}">
+</head>
+<body>
+<h1>peppers, please</h1>
+<a href="{% url 'load_project' %}" class="fill-button">Загрузить проект</a>
+<table>
+    <thead>
+    <tr>
+        <td><small>Проекты</small></td>
+        <td><small>Дата добавления</small></td>
+        <td></td>
+    </tr>
+    </thead>
+    <tbody>
+    {% for proj in projects %}<tr>
+        <td>{{ proj.title }}</td>
+        <td>{{ proj.created }}</td>
+        <td></td>
+    </tr>{% endfor %}
+    </tbody>
+</table>
+</body>
+</html>

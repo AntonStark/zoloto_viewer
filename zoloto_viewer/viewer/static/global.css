@@ -1,0 +1,27 @@
+.fill-button {
+    padding: 0 2px;
+    text-decoration: none;
+
+    background: black;
+    border: 1px solid black;
+    color: white;
+}
+
+.fill-button:hover {
+    background: inherit;
+    color: inherit;
+}
+
+.fill-button-negative {
+    padding: 0 2px;
+    text-decoration: none;
+
+    background: white;
+    border: 1px solid black;
+    color: black;
+}
+
+.fill-button-negative:hover {
+    background: black;
+    color: white;
+}
