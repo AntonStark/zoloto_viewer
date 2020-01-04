@@ -1,3 +1,7 @@
+a {
+    color: black;
+}
+
 .fill-button {
     padding: 0 2px;
     text-decoration: none;
@@ -24,4 +28,36 @@
 .fill-button-negative:hover {
     background: black;
     color: white;
+}
+
+#project-page-table {
+    width: 100%;
+    height: 100vh;
+    border-collapse: collapse;
+    border: 2px solid white; /* Прячем рамку вокруг таблицы */
+}
+
+.project-page-table-left-column {
+    border-bottom: 1px solid black;
+    border-right: 1px solid black;
+}
+
+#project-page-nav-box {
+    height: 10%;
+}
+
+#project-page-layers-box {
+    height: 60%;
+}
+
+#project-page-pages-box {
+    height: 20%;
+}
+
+#project-page-links-box {
+    height: 10%;
+}
+
+#project-page-plan-box {
+    width: 100%;
 }

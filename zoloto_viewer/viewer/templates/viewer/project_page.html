@@ -1,0 +1,44 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ project.title }}</title>
+    <link rel="stylesheet" type="text/css" href="{% static 'global.css' %}">
+</head>
+<body style="margin: 0;">
+<table id="project-page-table">
+<thead></thead>
+<tbody>
+<tr>
+    <td id="project-page-nav-box" class="project-page-table-left-column">
+        <b>{{ project.title }}</b>
+        <a href="{% url 'projects' %}" style="float: right">Закрыть</a>
+    </td>
+    <td rowspan="4" id="project-page-plan-box">
+        <h1>Map will be here</h1>
+    </td>
+</tr>
+<tr>
+    <td id="project-page-layers-box" class="project-page-table-left-column">
+        <h2>Layers box</h2>
+    </td>
+</tr>
+<tr>
+    <td id="project-page-pages-box" class="project-page-table-left-column">
+        <h2>Pages box</h2>
+    </td>
+</tr>
+<tr>
+    <td id="project-page-links-box" class="project-page-table-left-column">
+        <p>
+            <b>PDF</b><br>
+            <a>Оригинальный</a>
+            <a style="white-space: nowrap">С ошибками и комментариями</a>
+        </p>
+    </td>
+</tr>
+</tbody>
+</table>
+</body>
+</html>

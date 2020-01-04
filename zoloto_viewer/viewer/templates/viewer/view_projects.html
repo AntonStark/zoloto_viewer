@@ -15,13 +15,15 @@
         <td><small>Проекты</small></td>
         <td><small>Дата добавления</small></td>
         <td></td>
+        <td></td>
     </tr>
     </thead>
     <tbody>
     {% for proj in projects %}<tr>
-        <td>{{ proj.title }}</td>
+        <td><a href="{% url 'project' proj.title %}">{{ proj.title }}</a></td>
         <td>{{ proj.created }}</td>
-        <td></td>
+        <td><a>Изменить</a></td>
+        <td><a>Удалить</a></td>
     </tr>{% endfor %}
     </tbody>
 </table>

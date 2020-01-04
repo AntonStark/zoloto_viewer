@@ -1,10 +1,18 @@
+import uuid
 from django.contrib.postgres import fields
-from django.db import models
+from django.db import models, transaction
 
 
 class Project(models.Model):
-    title = models.TextField(blank=False, unique=True)  # todo use validate_slug in form
+    title = models.TextField(blank=False, unique=True)
     created = models.DateTimeField(auto_now_add=True)
+
+    @transaction.atomic
+    def save(self, *args, **kwargs):
+        first_save = not self.pk
+        super(Project, self).save(*args, **kwargs)
+        if first_save:
+            Page.objects.create(floor_caption='', project=self)
 
 
 class Layer(models.Model):
@@ -21,7 +29,7 @@ def plan_upload_dir(obj: 'Page', filename):
 
 
 class Page(models.Model):
-    uid = models.UUIDField(unique=True)
+    uid = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     floor_caption = models.TextField()
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
     plan = models.ImageField(upload_to=plan_upload_dir, null=True, default=None)
