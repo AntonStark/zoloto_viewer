@@ -32,13 +32,16 @@ def load_project(request):
                 floor_captions[filename] = v
 
         pages = []
-        for f in request.FILES.values():
-            if f.name in ignore_files:
-                continue
+        for key in request.FILES.keys():
+            files = request.FILES.getlist(key)
 
-            ftype = f.content_type.split('/')[0]
-            if ftype == 'image':
-                pages.append(Page(floor_caption=floor_captions.get(f.name, None), plan=f))
+            for f in files:
+                if f.name in ignore_files:
+                    continue
+
+                ftype = f.content_type.split('/')[0]
+                if ftype == 'image':
+                    pages.append(Page(floor_caption=floor_captions.get(f.name, None), plan=f))
 
         csv_data = []               # todo handle csv
 

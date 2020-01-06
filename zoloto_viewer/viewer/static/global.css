@@ -34,6 +34,14 @@ a {
     border: none;
 }
 
+#load_project_form {
+    width: min-content;
+}
+
+#load_project_form {
+    white-space: nowrap;
+}
+
 #project-page-table {
     width: 100%;
     height: 100vh;

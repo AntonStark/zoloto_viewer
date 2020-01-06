@@ -9,23 +9,27 @@
 <body>
 <h1>peppers, please</h1>
 <p><a href="{% url 'load_project' %}" class="fill-button">Загрузить проект</a></p>
-<table>
-    <thead>
-    <tr>
-        <td><small>Проекты</small></td>
-        <td><small>Дата добавления</small></td>
-        <td></td>
-        <td></td>
-    </tr>
-    </thead>
-    <tbody>
-    {% for proj in projects %}<tr>
-        <td><a href="{% url 'project' proj.title %}">{{ proj.title }}</a></td>
-        <td>{{ proj.created | date }}</td>
-        <td><a>Изменить</a></td>
-        <td><a href="{% url 'project_remove' proj.title %}">Удалить</a></td>
-    </tr>{% endfor %}
-    </tbody>
-</table>
+{% if projects|length %}
+    <table>
+        <thead>
+        <tr>
+            <td><small>Проекты</small></td>
+            <td><small>Дата добавления</small></td>
+            <td></td>
+            <td></td>
+        </tr>
+        </thead>
+        <tbody>
+        {% for proj in projects %}<tr>
+            <td><a href="{% url 'project' proj.title %}">{{ proj.title }}</a></td>
+            <td>{{ proj.created | date }}</td>
+            <td><a>Изменить</a></td>
+            <td><a href="{% url 'project_remove' proj.title %}">Удалить</a></td>
+        </tr>{% endfor %}
+        </tbody>
+    </table>
+{% else %}
+    <small>Проектов не обнаружено</small>
+{% endif %}
 </body>
 </html>

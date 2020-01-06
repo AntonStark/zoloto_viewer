@@ -35,8 +35,10 @@
             <input name="csv_files_1" id="csv_input_1" type="file" accept="text/csv" multiple style="display: none">
         </label>
     </p>
-    <a class="fill-button-negative" href="{% url 'projects' %}">Отмена</a>
-    <input type="submit" value="Добавить проект" class="fill-button" style="margin-left: 100px; font: unset;">
+    <p style="white-space: nowrap">
+        <a class="fill-button-negative" href="{% url 'projects' %}" style="float: left;">Отмена</a>
+        <input type="submit" value="Добавить проект" class="fill-button" style="float: right; font: unset;">
+    </p>
 </form>
 </body>
 </html>
