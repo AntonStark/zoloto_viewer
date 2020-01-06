@@ -5,27 +5,34 @@
     <meta charset="UTF-8">
     <title>Create project</title>
     <link rel="stylesheet" type="text/css" href="{% static 'global.css' %}">
+    <script src="{% static 'load_project.js' %}" defer></script>
 </head>
 <body>
 <h2>Добавление проекта</h2>
-<form method="POST" enctype="multipart/form-data">{% csrf_token %}
+<form method="POST" enctype="multipart/form-data" id="load_project_form">{% csrf_token %}
     <p>
         <label for="project_name">Название проекта</label>
         <br>
         <input name="title" id="project_name" type="text" placeholder="Например, Табор">
     </p>
+    Добавленные пространства
+    <table>
+        <tbody id="plan_table">
+        </tbody>
+    </table>
     <p id="plan_box">
-        Добавление пространств
-        <br>
-        <label for="plan_input" class="fill-button">Загрузить jpg со схемами
-            <input name="page_plan" id="plan_input" type="file" accept="image/*" style="display: none">
+        <label for="plan_input_1" class="fill-button" id="plan_input_label">Загрузить jpg со схемами
+            <input name="plan_files_1" id="plan_input_1" type="file" accept="image/*" multiple style="display: none">
         </label>
     </p>
+    Добавленные данные
+    <table>
+        <tbody id="csv_table">
+        </tbody>
+    </table>
     <p id="csv_box">
-        Добавление данных
-        <br>
-        <label for="csv_input" class="fill-button">Загрузить csv
-            <input name="page_plan" id="csv_input" type="file" accept="text/csv" style="display: none">
+        <label for="csv_input_1" class="fill-button" id="csv_input_label">Загрузить csv
+            <input name="csv_files_1" id="csv_input_1" type="file" accept="text/csv" multiple style="display: none">
         </label>
     </p>
     <a class="fill-button-negative" href="{% url 'projects' %}">Отмена</a>
