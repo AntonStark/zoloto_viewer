@@ -1,6 +1,6 @@
 import base64
 from django.shortcuts import render, redirect
-from django.http import HttpResponseBadRequest, Http404, HttpResponseServerError
+from django.http import HttpResponseBadRequest, Http404
 
 from zoloto_viewer.viewer.models import Project, Page
 
@@ -85,8 +85,13 @@ def project_page(request, page_uid):
         page = Page.objects.get(uid=page_uid)
     except Page.DoesNotExist:
         raise Http404
+
     project = page.project
+    page_uid_list = Page.objects.filter(project=project).values_list('uid', flat=True)
+
     context = {
         'project': project,
+        'page': page,
+        'page_uid_list': page_uid_list,
     }
     return render(request, 'viewer/project_page.html', context=context)

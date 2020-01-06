@@ -66,7 +66,7 @@ const cellInit = {
 };
 function buildRow(fileDesc, short= false) {
     let tr = document.createElement('tr');
-    const cols = (short ? [1, 2, 3] : [0, 1, 2, 3]);
+    const cols = (short ? [1, 2, 3] : [0, 1, 3]);
     const cells = cols.map((i) => cellInit[i](fileDesc));
     tr.append(...cells);
     return tr;
