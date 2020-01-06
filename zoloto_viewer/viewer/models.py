@@ -7,12 +7,18 @@ class Project(models.Model):
     title = models.TextField(blank=False, unique=True)
     created = models.DateTimeField(auto_now_add=True)
 
-    @transaction.atomic
-    def save(self, *args, **kwargs):
-        first_save = not self.pk
-        super(Project, self).save(*args, **kwargs)
-        if first_save:
-            Page.objects.create(floor_caption='', project=self)
+    # @transaction.atomic
+    # def save(self, *args, **kwargs):
+    #     first_save = not self.pk
+    #     super(Project, self).save(*args, **kwargs)
+    #     if first_save:
+    #         Page.objects.create(floor_caption='', project=self)
+
+    def first_page(self):
+        pages = Page.objects.filter(project=self)
+        if not pages.exists():
+            return None
+        return pages.first()
 
 
 class Layer(models.Model):

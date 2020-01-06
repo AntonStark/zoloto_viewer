@@ -1,6 +1,6 @@
 import base64
 from django.shortcuts import render, redirect
-from django.http import HttpResponseBadRequest, Http404, HttpResponse
+from django.http import HttpResponseBadRequest, Http404, HttpResponseServerError
 
 from zoloto_viewer.viewer.models import Project, Page
 
@@ -50,7 +50,9 @@ def load_project(request):
         for p in pages:
             p.project = proj
             p.save()
-        return redirect(to='project_page', page_uid=pages[0].uid)
+
+        first_page = proj.first_page()
+        return redirect(to='project_page', page_uid=first_page.uid)
     else:
         return render(request, 'viewer/load_project.html')
 
@@ -61,11 +63,21 @@ def project(request, title):
     except Project.DoesNotExist:
         raise Http404
 
-    pages = Page.objects.filter(project=proj)
-    if not pages.exists():
+    first_page = proj.first_page()
+    if not first_page:
         raise Http404
 
-    return redirect(to='project_page', page_uid=pages.first().uid)
+    return redirect(to='project_page', page_uid=first_page.uid)
+
+
+def project_remove(request, title):
+    try:
+        proj = Project.objects.get(title=title)
+    except Project.DoesNotExist:
+        raise Http404
+
+    proj.delete()
+    return redirect(to='projects')
 
 
 def project_page(request, page_uid):
