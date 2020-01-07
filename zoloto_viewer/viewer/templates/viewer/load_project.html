@@ -11,9 +11,10 @@
 <h2>Добавление проекта</h2>
 <form method="POST" enctype="multipart/form-data" id="load_project_form">{% csrf_token %}
     <p>
-        <label for="project_name">Название проекта</label>
+        <label for="project_name_input">Название проекта</label>
         <br>
-        <input name="title" id="project_name" type="text" placeholder="Например, Табор">
+        <input name="title" id="project_name_input" type="text" placeholder="Например, Табор"
+               pattern="[-_A-Za-z0-9ЁёА-я]+" required size="60">
     </p>
     Добавленные пространства
     <table>
@@ -21,7 +22,7 @@
         </tbody>
     </table>
     <p id="plan_box">
-        <label for="plan_input_1" class="fill-button" id="plan_input_label">Загрузить jpg со схемами
+        <label for="plan_input_1" class="fill-button" id="plan_input_label" tabindex="0">Загрузить jpg со схемами
             <input name="plan_files_1" id="plan_input_1" type="file" accept="image/*" multiple style="display: none">
         </label>
     </p>
@@ -31,7 +32,7 @@
         </tbody>
     </table>
     <p id="csv_box">
-        <label for="csv_input_1" class="fill-button" id="csv_input_label">Загрузить csv
+        <label for="csv_input_1" class="fill-button" id="csv_input_label" tabindex="0">Загрузить csv
             <input name="csv_files_1" id="csv_input_1" type="file" accept="text/csv" multiple style="display: none">
         </label>
     </p>

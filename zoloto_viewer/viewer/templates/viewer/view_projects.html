@@ -5,6 +5,17 @@
     <meta charset="UTF-8">
     <title>Projects</title>
     <link rel="stylesheet" type="text/css" href="{% static 'global.css' %}">
+    <script>
+        window.addEventListener('load', function () {
+            Array.from(document.getElementsByClassName('mark-delete'))
+                .forEach(elem => elem.addEventListener('click', function (e) {
+                    const message = `Вы действительно хотите удалить проект «${elem.dataset.title}»?\n` +
+                        'Восстановить проект будет невозможно.';
+                    if (!confirm(message))
+                        e.preventDefault();
+                }));
+        });
+    </script>
 </head>
 <body>
 <h1>peppers, please</h1>
@@ -21,10 +32,15 @@
         </thead>
         <tbody>
         {% for proj in projects %}<tr>
-            <td><a href="{% url 'project' proj.title %}">{{ proj.title }}</a></td>
-            <td>{{ proj.created | date }}</td>
+            {% if proj.first_page %}
+                <td><a href="{% url 'project_page' proj.first_page.uid %}">{{ proj.title }}</a></td>
+            {% else %}
+                <td><a>{{ proj.title }}</a></td>
+            {% endif %}
+            <td>{{ proj.created|date:"d.m.Y" }}</td>
             <td><a>Изменить</a></td>
-            <td><a href="{% url 'project_remove' proj.title %}">Удалить</a></td>
+            <td><a href="{% url 'project_remove' proj.title %}" class="mark-delete"
+                   data-title="{{ proj.title }}">&#x2A09</a></td>
         </tr>{% endfor %}
         </tbody>
     </table>

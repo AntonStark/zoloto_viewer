@@ -93,3 +93,11 @@ a {
 #project-page-plan-box {
     width: 100%;
 }
+
+.mark-delete {
+    text-decoration: unset;
+    color: grey;
+}
+.mark-delete:hover {
+    color: black;
+}

@@ -1,10 +1,13 @@
 "use strict";
 console.debug('load_project.js loaded');
 
-function clearRows(tableBody) {
-    while (tableBody.hasChildNodes())
-        tableBody.removeChild(tableBody.lastChild);
-}
+const projectNameInput = document.getElementById('project_name_input');
+projectNameInput.addEventListener('input', function () {
+    if (projectNameInput.validity.patternMismatch)
+        projectNameInput.setCustomValidity('Bad character: a-zA-Z0-9_А-я- expected');
+    else
+        projectNameInput.setCustomValidity('');
+});
 
 function addIgnoreFileField(fileName) {
     const form = document.getElementById('load_project_form');
@@ -53,8 +56,8 @@ const cellInit = {
     3: function(fileDesc) {
         let td = document.createElement('td');
         let a = document.createElement('a');
-        a.text = 'x';
-        a.style = 'color: grey;';
+        a.innerHTML = '&#x2A09';
+        a.className = 'mark-delete';
         a.onclick = function() {
             const tr = td.parentNode;
             addIgnoreFileField(fileDesc.name);
@@ -112,3 +115,15 @@ function onCsvFilesChange() {
 }
 document.getElementById('csv_input_1')
     .addEventListener('change', onCsvFilesChange);
+
+document.getElementById('load_project_form')
+    .addEventListener('submit', function (e) {
+        const planSelected = document.getElementById('plan_table').childElementCount;
+        const csvSelected = document.getElementById('csv_table').childElementCount;
+        if (planSelected === 0 || csvSelected === 0) {
+            alert('Добавление проекта невозможно\n' +
+                'без указания названия проекта,\n' +
+                'добавления пространств и таблиц');
+            e.preventDefault();
+        }
+});

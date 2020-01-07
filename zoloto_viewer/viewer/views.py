@@ -7,57 +7,63 @@ from zoloto_viewer.viewer.models import Project, Page
 
 def view_projects(request):
     context = {
-        'projects': Project.objects.all(),
+        'projects': Project.objects.all().order_by('-created'),
     }
     return render(request, 'viewer/view_projects.html', context=context)
 
 
+def parse_pages(req_post, req_files):
+    ignore_files = set()
+    floor_captions = {}
+    for k, v in req_post.items():
+        if k.startswith('ignore_file_'):
+            ignore_files.add(v)
+        elif k.startswith('floor_caption_'):
+            encoded = k[14:]
+            filename = base64.decodebytes(encoded.encode('utf-8')).decode('utf-8')
+            floor_captions[filename] = v
+
+    pages_dict = {}
+    for key in req_files.keys():
+        for f in req_files.getlist(key):
+            if f.name in ignore_files:
+                continue
+
+            ftype = f.content_type.split('/')[0]
+            name = '.'.join(f.name.split('.')[:-1])
+            if ftype == 'image':
+                if name in pages_dict:
+                    return None
+                else:
+                    pages_dict[name] = (f, floor_captions.get(f.name, None))
+    return pages_dict
+
+
 def load_project(request):
-    if request.method == 'POST':
-        try:
-            title = request.POST['title']       # todo use validate_slug on title
-        except KeyError:
-            return HttpResponseBadRequest()
-
-        ignore_files = set()
-        for k, v in request.POST.items():
-            if k.startswith('ignore_file_'):
-                ignore_files.add(v)
-
-        floor_captions = {}
-        for k, v in request.POST.items():
-            if k.startswith('floor_caption_'):
-                enc = k[14:]
-                filename = base64.decodebytes(enc.encode('utf-8')).decode('utf-8')
-                floor_captions[filename] = v
-
-        pages = []
-        for key in request.FILES.keys():
-            files = request.FILES.getlist(key)
-
-            for f in files:
-                if f.name in ignore_files:
-                    continue
-
-                ftype = f.content_type.split('/')[0]
-                if ftype == 'image':
-                    pages.append(Page(floor_caption=floor_captions.get(f.name, None), plan=f))
-
-        csv_data = []               # todo handle csv
-
-        if not pages:
-            return HttpResponseBadRequest()
-        proj = Project(title=title)
-        proj.save()
-
-        for p in pages:
-            p.project = proj
-            p.save()
-
-        first_page = proj.first_page()
-        return redirect(to='project_page', page_uid=first_page.uid)
-    else:
+    if request.method != 'POST':
         return render(request, 'viewer/load_project.html')
+
+    try:
+        title = request.POST['title']
+        if not Project.validate_title(title):
+            raise ValueError
+    except (KeyError, ValueError):
+        return redirect('load_project')
+
+    pages_data = parse_pages(request.POST, request.FILES)
+    if not pages_data:
+        return redirect('load_project')
+
+    csv_data = []               # todo handle csv
+
+    proj = Project(title=title)
+    proj.save()
+
+    for name in pages_data:
+        plan, floor_caption = pages_data[name]
+        Page(project=proj, plan=plan, indd_floor=name, floor_caption=floor_caption).save()
+
+    return redirect('projects')
 
 
 def project(request, title):
