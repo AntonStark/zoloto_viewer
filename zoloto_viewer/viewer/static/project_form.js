@@ -1,5 +1,5 @@
 "use strict";
-console.debug('load_project.js loaded');
+console.debug('project_form.js loaded');
 
 const projectNameInput = document.getElementById('project_name_input');
 projectNameInput.addEventListener('input', function () {
@@ -9,14 +9,14 @@ projectNameInput.addEventListener('input', function () {
         projectNameInput.setCustomValidity('');
 });
 
+const projectForm = document.getElementById('load_project_form');
 function addIgnoreFileField(fileName) {
-    const form = document.getElementById('load_project_form');
     let field = document.createElement('input');
     field.hidden = true;
-    field.name = ['ignore', 'file', form.childElementCount].join('_');
+    field.name = ['ignore', 'file', projectForm.childElementCount].join('_');
     field.type = 'text';
     field.value = fileName;
-    form.appendChild(field);
+    projectForm.appendChild(field);
 }
 
 function addMoreFileInput(labelTag, options = {}) {
@@ -116,14 +116,15 @@ function onCsvFilesChange() {
 document.getElementById('csv_input_1')
     .addEventListener('change', onCsvFilesChange);
 
-document.getElementById('load_project_form')
-    .addEventListener('submit', function (e) {
-        const planSelected = document.getElementById('plan_table').childElementCount;
-        const csvSelected = document.getElementById('csv_table').childElementCount;
-        if (planSelected === 0 || csvSelected === 0) {
-            alert('Добавление проекта невозможно\n' +
-                'без указания названия проекта,\n' +
-                'добавления пространств и таблиц');
-            e.preventDefault();
-        }
-});
+function loadProjectFormValidator(e) {
+    const planSelected = document.getElementById('plan_table').childElementCount;
+    const csvSelected = document.getElementById('csv_table').childElementCount;
+    if (planSelected === 0 || csvSelected === 0) {
+        alert('Добавление проекта невозможно\n' +
+            'без указания названия проекта,\n' +
+            'добавления пространств и таблиц');
+        e.preventDefault();
+    }
+}
+if (projectForm.dataset.mode !== 'edit')
+    projectForm.addEventListener('submit', loadProjectFormValidator);

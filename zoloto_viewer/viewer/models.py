@@ -50,3 +50,10 @@ class Marker(models.Model):
     points = fields.JSONField(default=list)
     variables = fields.JSONField(default=dict)
     checked = models.BooleanField(null=True, default=None)
+
+
+class CsvData(models.Model):
+    """
+    Храним загруженные данные по маркерам одного слоя с возможностью версионности
+    """
+    pass

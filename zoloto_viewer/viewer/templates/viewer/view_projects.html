@@ -21,7 +21,7 @@
 <h1>peppers, please</h1>
 <p><a href="{% url 'load_project' %}" class="fill-button">Загрузить проект</a></p>
 {% if projects|length %}
-    <table>
+    <table id="projects-table">
         <thead>
         <tr>
             <td><small>Проекты</small></td>
@@ -38,8 +38,9 @@
                 <td><a>{{ proj.title }}</a></td>
             {% endif %}
             <td>{{ proj.created|date:"d.m.Y" }}</td>
-            <td><a>Изменить</a></td>
-            <td><a href="{% url 'project_remove' proj.title %}" class="mark-delete"
+            <td><a href="{% url 'edit_project' proj.title %}"
+                   class="hidden icon">&#x270E</a></td>
+            <td><a href="{% url 'project_remove' proj.title %}" class="icon mark-delete"
                    data-title="{{ proj.title }}">&#x2A09</a></td>
         </tr>{% endfor %}
         </tbody>

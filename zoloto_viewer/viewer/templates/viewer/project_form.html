@@ -1,19 +1,10 @@
-{% load static %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Create project</title>
-    <link rel="stylesheet" type="text/css" href="{% static 'global.css' %}">
-    <script src="{% static 'project_form.js' %}" defer></script>
-</head>
-<body>
-<h2>Добавление проекта</h2>
-<form method="POST" enctype="multipart/form-data" id="load_project_form">{% csrf_token %}
+<form method="POST" enctype="multipart/form-data" id="load_project_form"
+        {% if project %} data-mode="edit" {% endif %}>{% csrf_token %}
     <p>
         <label for="project_name_input">Название проекта</label>
         <br>
-        <input name="title" id="project_name_input" type="text" placeholder="Например, Табор"
+        <input name="title" id="project_name_input" type="text"
+               placeholder="Например, Табор" {% if project %} value="{{ project.title }}" {% endif %}
                pattern="[-_A-Za-z0-9ЁёА-я]+" required size="60">
     </p>
     Добавленные пространства
@@ -38,8 +29,7 @@
     </p>
     <p style="white-space: nowrap">
         <a class="fill-button-negative" href="{% url 'projects' %}" style="float: left;">Отмена</a>
-        <input type="submit" value="Добавить проект" class="fill-button" style="float: right; font: unset;">
+        <input type="submit" value="{% if project %}Сохранить изменения{% else %}Добавить проект{% endif %}"
+               class="fill-button" style="float: right; font: unset;">
     </p>
 </form>
-</body>
-</html>

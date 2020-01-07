@@ -8,6 +8,7 @@ urlpatterns = [
     path('projects', views.view_projects, name='projects'),
     path('', lambda request: HttpResponsePermanentRedirect(redirect_to='projects')),
     path('load_project', views.load_project, name='load_project'),
+    path('edit_project/<str:title>', views.edit_project, name='edit_project'),
 
     path('project/<str:title>', views.project, name='project'),
     path('project/<str:title>/remove', views.project_remove, name='project_remove'),

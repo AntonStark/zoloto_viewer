@@ -1,6 +1,6 @@
 import base64
 from django.shortcuts import render, redirect
-from django.http import HttpResponseBadRequest, Http404
+from django.http import Http404
 
 from zoloto_viewer.viewer.models import Project, Page
 
@@ -63,6 +63,18 @@ def load_project(request):
         plan, floor_caption = pages_data[name]
         Page(project=proj, plan=plan, indd_floor=name, floor_caption=floor_caption).save()
 
+    return redirect('projects')
+
+
+def edit_project(request, title):
+    try:
+        project = Project.objects.get(title=title)
+    except Project.DoesNotExist:
+        raise Http404
+    if request.method != 'POST':
+        return render(request, 'viewer/edit_project.html', context={'project': project})
+
+    # todo process changes
     return redirect('projects')
 
 

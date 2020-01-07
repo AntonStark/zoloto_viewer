@@ -94,10 +94,24 @@ a {
     width: 100%;
 }
 
-.mark-delete {
+.icon {
     text-decoration: unset;
     color: grey;
 }
-.mark-delete:hover {
+.icon:hover {
     color: black;
+}
+.hidden {
+    visibility: hidden;
+}
+#projects-table tr:hover .icon{
+    visibility: visible;
+}
+
+#projects-table {
+    border-collapse: collapse;
+}
+
+#projects-table tbody tr:hover {
+    background-color: lightgrey;
 }
