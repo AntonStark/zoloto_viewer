@@ -115,3 +115,7 @@ a {
 #projects-table tbody tr:hover {
     background-color: lightgrey;
 }
+
+#projects-table td {
+    padding: 4px;
+}

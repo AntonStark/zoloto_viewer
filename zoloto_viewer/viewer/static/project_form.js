@@ -10,10 +10,19 @@ projectNameInput.addEventListener('input', function () {
 });
 
 const projectForm = document.getElementById('load_project_form');
+
 function addIgnoreFileField(fileName) {
     let field = document.createElement('input');
     field.hidden = true;
     field.name = ['ignore', 'file', projectForm.childElementCount].join('_');
+    field.type = 'text';
+    field.value = fileName;
+    projectForm.appendChild(field);
+}
+function addDeleteFileField(fileName) {
+    let field = document.createElement('input');
+    field.hidden = true;
+    field.name = ['delete', 'file', projectForm.childElementCount].join('_');
     field.type = 'text';
     field.value = fileName;
     projectForm.appendChild(field);
@@ -128,3 +137,8 @@ function loadProjectFormValidator(e) {
 }
 if (projectForm.dataset.mode !== 'edit')
     projectForm.addEventListener('submit', loadProjectFormValidator);
+
+function deleteFileHandler(filename, tr) {
+    addDeleteFileField(filename);
+    tr.remove();
+}

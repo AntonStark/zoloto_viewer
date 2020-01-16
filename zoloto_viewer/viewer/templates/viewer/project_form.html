@@ -10,6 +10,13 @@
     Добавленные пространства
     <table>
         <tbody id="plan_table">
+        {% for caption, filename in pages_list %}
+            <tr class="loaded_plan">
+                <td><input type="text" name="floor_caption_{{ filename }}" value="{{ caption }}"></td>
+                <td>{{ filename }}</td>
+                <td><a class="mark-delete" onclick="deleteFileHandler('{{ filename }}', this.parentNode.parentNode)">&#x2A09</a></td>
+            </tr>
+        {% endfor %}
         </tbody>
     </table>
     <p id="plan_box">
@@ -20,6 +27,13 @@
     Добавленные данные
     <table>
         <tbody id="csv_table">
+        {% for filename, last_modified in csv_list %}
+            <tr>
+                <td>{{ filename }}</td>
+                <td>{{ last_modified }}</td>
+                <td><a class="mark-delete" onclick="deleteFileHandler('{{ filename }}', this.parentNode.parentNode)">&#x2A09</a></td>
+            </tr>
+        {% endfor %}
         </tbody>
     </table>
     <p id="csv_box">

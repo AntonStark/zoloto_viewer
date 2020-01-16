@@ -2,7 +2,7 @@ import base64
 from django.shortcuts import render, redirect
 from django.http import Http404
 
-from zoloto_viewer.viewer.models import Project, Page
+from zoloto_viewer.viewer.models import Project, Layer, Page
 
 
 def view_projects(request):
@@ -12,6 +12,8 @@ def view_projects(request):
     return render(request, 'viewer/view_projects.html', context=context)
 
 
+# todo parse non layer csv files (maps_info, layers_info, poi_names, pict_codes)
+#  maybe save them as project attributes
 def parse_pages(req_post, req_files):
     ignore_files = set()
     floor_captions = {}
@@ -72,7 +74,14 @@ def edit_project(request, title):
     except Project.DoesNotExist:
         raise Http404
     if request.method != 'POST':
-        return render(request, 'viewer/edit_project.html', context={'project': project})
+        pages = Page.objects.filter(project=project)
+        layers = Layer.objects.filter(project=project)      # todo include non-layer csv files
+        context = {
+            'project': project,
+            'pages_list': map(Page.serialize, pages),
+            'csv_list': [],     # todo list of (filename, lastModified)
+        }
+        return render(request, 'viewer/edit_project.html', context=context)
 
     # todo process changes
     return redirect('projects')
