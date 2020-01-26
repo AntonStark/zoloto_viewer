@@ -1,7 +1,7 @@
-import base64
-from django.shortcuts import render, redirect
 from django.http import Http404
+from django.shortcuts import render, redirect
 
+from zoloto_viewer.viewer import form_stuff
 from zoloto_viewer.viewer.models import Project, Layer, Page
 
 
@@ -10,35 +10,6 @@ def view_projects(request):
         'projects': Project.objects.all().order_by('-created'),
     }
     return render(request, 'viewer/view_projects.html', context=context)
-
-
-# todo parse non layer csv files (maps_info, layers_info, poi_names, pict_codes)
-#  maybe save them as project attributes
-def parse_pages(req_post, req_files):
-    ignore_files = set()
-    floor_captions = {}
-    for k, v in req_post.items():
-        if k.startswith('ignore_file_'):
-            ignore_files.add(v)
-        elif k.startswith('floor_caption_'):
-            encoded = k[14:]
-            filename = base64.decodebytes(encoded.encode('utf-8')).decode('utf-8')
-            floor_captions[filename] = v
-
-    pages_dict = {}
-    for key in req_files.keys():
-        for f in req_files.getlist(key):
-            if f.name in ignore_files:
-                continue
-
-            ftype = f.content_type.split('/')[0]
-            name = '.'.join(f.name.split('.')[:-1])
-            if ftype == 'image':
-                if name in pages_dict:
-                    return None
-                else:
-                    pages_dict[name] = (f, floor_captions.get(f.name, None))
-    return pages_dict
 
 
 def load_project(request):
@@ -52,18 +23,17 @@ def load_project(request):
     except (KeyError, ValueError):
         return redirect('load_project')
 
-    pages_data = parse_pages(request.POST, request.FILES)
-    if not pages_data:
+    pages_data, _ = form_stuff.parse_pages(request.POST, request.FILES)
+    csv_data = form_stuff.parse_csv(request.POST, request.FILES)
+    if not pages_data or not pages_data:
         return redirect('load_project')
-
-    csv_data = []               # todo handle csv
 
     proj = Project(title=title)
     proj.save()
 
-    for name in pages_data:
-        plan, floor_caption = pages_data[name]
-        Page(project=proj, plan=plan, indd_floor=name, floor_caption=floor_caption).save()
+    proj.store_pages(pages_data)
+    proj.create_layers(csv_data)
+    # todo client_last_modified_date must be provided by client
 
     return redirect('projects')
 
@@ -75,15 +45,31 @@ def edit_project(request, title):
         raise Http404
     if request.method != 'POST':
         pages = Page.objects.filter(project=project)
-        layers = Layer.objects.filter(project=project)      # todo include non-layer csv files
+        layers = Layer.objects.filter(project=project)
         context = {
             'project': project,
             'pages_list': map(Page.serialize, pages),
-            'csv_list': [],     # todo list of (filename, lastModified)
+            'csv_list': map(Layer.serialize, layers),       # todo include non-layer csv files (from project attrs?)
         }
         return render(request, 'viewer/edit_project.html', context=context)
 
-    # todo process changes
+    title = request.POST['title']
+    if project.title != title:
+        project.title = title
+        project.save()
+
+    csv_to_delete, pages_to_delete = form_stuff.files_to_delete(request.POST)
+    for csv_name in csv_to_delete:
+        Layer.remove_from_project(project, csv_name)
+    for page_name in pages_to_delete:
+        Page.remove_from_project(project, page_name)
+
+    pages_data, floor_captions = form_stuff.parse_pages(request.POST, request.FILES)
+    csv_data = form_stuff.parse_csv(request.POST, request.FILES)
+
+    project.store_pages(pages_data)
+    project.alter_floor_captions(floor_captions)
+    project.create_layers(csv_data)
     return redirect('projects')
 
 
@@ -106,7 +92,7 @@ def project_remove(request, title):
     except Project.DoesNotExist:
         raise Http404
 
-    proj.delete()
+    proj.delete()       # todo remove files too
     return redirect(to='projects')
 
 

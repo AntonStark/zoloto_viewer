@@ -84,16 +84,28 @@ function buildRow(fileDesc, short= false) {
     return tr;
 }
 
+function collectPlanFileNames(planTable) {
+    return [].map.call(planTable.children, row => row.children[1].textContent);
+}
+
 function onPlanFilesChange() {
     const files = this.files;
     console.log('plan', files);
 
+    const planTableElement = document.getElementById('plan_table');
+    const existingPlanNames = collectPlanFileNames(planTableElement);
     let rows = [];
     for (let i = 0; i < files.length; ++i) {
-        const tr = buildRow(files[i]);
-        rows.push(tr);
+        const file = files[i];
+        if (existingPlanNames.includes(file.name)) {
+            alert('Файл с именем ' + file.name + ' уже существует.\n' +
+                'При сохранении он будет заменён выбранным.')
+        }
+        else {
+            const tr = buildRow(file);
+            rows.push(tr);
+        }
     }
-    const planTableElement = document.getElementById('plan_table');
     planTableElement.append(...rows);
 
     const planInputLabel = document.getElementById('plan_input_label');

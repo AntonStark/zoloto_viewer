@@ -107,6 +107,6 @@ STATICFILES_DIRS = [
 ]
 
 
-MEDIA_URL = ''
+MEDIA_URL = '/media/'
 
 MEDIA_ROOT = '/var/www/zoloto_viewer/media/'
