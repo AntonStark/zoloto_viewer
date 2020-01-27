@@ -39,7 +39,7 @@ def files_to_delete(req_post):
 
 
 # todo parse non layer csv files (maps_info, layers_info, poi_names, pict_codes)
-#  maybe save them as project attributes
+#  return layers and non layers files separately
 def parse_csv(req_post, req_files):
     ignore_files = parse_ignore_files(req_post)
     csv_dict = {}

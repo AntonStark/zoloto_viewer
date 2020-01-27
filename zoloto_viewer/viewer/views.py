@@ -1,3 +1,4 @@
+from django.db import IntegrityError
 from django.http import Http404
 from django.shortcuts import render, redirect
 
@@ -67,10 +68,17 @@ def edit_project(request, title):
     pages_data, floor_captions = form_stuff.parse_pages(request.POST, request.FILES)
     csv_data = form_stuff.parse_csv(request.POST, request.FILES)
 
+    errors = []
     project.store_pages(pages_data)
-    project.alter_floor_captions(floor_captions)
+    try:
+        project.alter_floor_captions(floor_captions)
+    except IntegrityError:
+        errors.append('captions not unique')
     project.create_layers(csv_data)
-    return redirect('projects')
+
+    if errors:
+        return redirect(to='edit_project', title=title)
+    return redirect(to='projects')
 
 
 def project(request, title):
@@ -92,7 +100,7 @@ def project_remove(request, title):
     except Project.DoesNotExist:
         raise Http404
 
-    proj.delete()       # todo remove files too
+    proj.delete()
     return redirect(to='projects')
 
 

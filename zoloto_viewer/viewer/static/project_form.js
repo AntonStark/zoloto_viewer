@@ -87,7 +87,6 @@ function buildRow(fileDesc, short= false) {
 function collectPlanFileNames(planTable) {
     return [].map.call(planTable.children, row => row.children[1].textContent);
 }
-
 function onPlanFilesChange() {
     const files = this.files;
     console.log('plan', files);
@@ -115,16 +114,26 @@ document.getElementById('plan_input_1')
     .addEventListener('change', onPlanFilesChange);
 
 
+function collectCsvFileNames(csvTable) {
+    return [].map.call(csvTable.children, row => row.children[0].textContent);
+}
 function onCsvFilesChange() {
     const files = this.files;
     console.log('csv', files);
 
+    const csvTableElement = document.getElementById('csv_table');
+    const existingCsvNames = collectCsvFileNames(csvTableElement);
     let rows = [];
     for (let i = 0; i < files.length; ++i) {
-        const tr = buildRow(files[i], true);
-        rows.push(tr);
+        const file = files[i];
+        if (existingCsvNames.includes(file.name)) {
+            // alert('Файл с именем ' + file.name + ' уже используется.\n' +
+            //     'При сохранении данные будут обновлены.')
+        } else {
+            const tr = buildRow(file, true);
+            rows.push(tr);
+        }
     }
-    const csvTableElement = document.getElementById('csv_table');
     csvTableElement.append(...rows);
 
     const csvInputLabel = document.getElementById('csv_input_label');
