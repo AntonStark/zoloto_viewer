@@ -1,5 +1,7 @@
 import base64
 
+from zoloto_viewer.viewer.models import Project
+
 
 def parse_ignore_files(req_post):
     return {v for k, v in req_post.items() if k.startswith('ignore_file_')}
@@ -38,11 +40,10 @@ def files_to_delete(req_post):
     return csv_files, non_csv_files
 
 
-# todo parse non layer csv files (maps_info, layers_info, poi_names, pict_codes)
-#  return layers and non layers files separately
 def parse_csv(req_post, req_files):
     ignore_files = parse_ignore_files(req_post)
-    csv_dict = {}
+    layer_files = {}
+    additional_files = {}
     for key in req_files.keys():
         for f in req_files.getlist(key):
             if f.name in ignore_files:
@@ -50,9 +51,9 @@ def parse_csv(req_post, req_files):
 
             mime_type, ext = f.content_type.split('/')
             title = '.'.join(f.name.split('.')[:-1])
-            if ext == 'csv':
-                if title in csv_dict:   # duplicate file
-                    return None
-                else:
-                    csv_dict[title] = f
-    return csv_dict
+            if ext != 'csv':
+                continue
+
+            file_index = additional_files if Project.is_additional_file(title) else layer_files
+            file_index[title] = f
+    return layer_files, additional_files

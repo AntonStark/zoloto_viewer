@@ -10,9 +10,23 @@ from django.utils import timezone
 from os import path
 
 
+def additional_files_upload_path(obj: 'Project', filename):
+    return f'project_{obj.title}/additional_files/{filename}'
+
+
 class Project(models.Model):
     title = models.TextField(blank=False, unique=True)
     created = models.DateTimeField(auto_now_add=True)
+
+    maps_info = models.FileField(upload_to=additional_files_upload_path, null=False, blank=True, default='')
+    layers_info = models.FileField(upload_to=additional_files_upload_path, null=False, blank=True, default='')
+    poi_names = models.FileField(upload_to=additional_files_upload_path, null=False, blank=True, default='')
+    pict_codes = models.FileField(upload_to=additional_files_upload_path, null=False, blank=True, default='')
+
+    MAPS_INFO = '_maps_info'
+    LAYERS_INFO = '_layers_info'
+    POI_NAMES = '_poi_names'
+    PICT_CODES = '_pict_codes'
 
     def first_page(self):
         pages = Page.objects.filter(project=self)
@@ -21,6 +35,43 @@ class Project(models.Model):
     @staticmethod
     def validate_title(title: str):
         return re.match(r'^[-\w]+$', title) is not None
+
+    def update_additional_files(self, files_dict):
+        for title, file in files_dict.items():
+            file_kind = Project.is_additional_file(title)
+            if file_kind == Project.MAPS_INFO:
+                if self.maps_info:
+                    self.maps_info.delete()
+                self.maps_info = file
+            elif file_kind == Project.LAYERS_INFO:
+                if self.layers_info:
+                    self.layers_info.delete()
+                self.layers_info = file
+                # todo update layers params on commit (without atomic here)
+            elif file_kind == Project.POI_NAMES:
+                if self.poi_names:
+                    self.poi_names.delete()
+                self.poi_names = file
+            elif file_kind == Project.PICT_CODES:
+                if self.pict_codes:
+                    self.pict_codes.delete()
+                self.pict_codes = file
+        self.save()
+
+    def additional_files_info(self):
+        attrs = (self.maps_info, self.layers_info, self.poi_names, self.pict_codes)
+        return list(map(lambda attr: (path.basename(attr.name), ''), filter(None, attrs)))
+
+    def remove_additional_files(self, filenames):
+        if path.basename(self.maps_info.name) in filenames:
+            self.maps_info.delete(save=False)
+        if path.basename(self.layers_info.name) in filenames:
+            self.layers_info.delete(save=False)
+        if path.basename(self.poi_names.name) in filenames:
+            self.poi_names.delete(save=False)
+        if path.basename(self.pict_codes.name) in filenames:
+            self.pict_codes.delete(save=False)
+        self.save()
 
     def store_pages(self, pages_data):
         """
@@ -31,9 +82,8 @@ class Project(models.Model):
             Page.create_or_replace(project=self, plan=plan, indd_floor=name, floor_caption=floor_caption)
 
     def create_layers(self, csv_data):
+        # todo look for layer colors in self.layers_info file
         for title, data in csv_data.items():
-            if title.endswith('_info'):     # *_maps_info.csv and *_layers_info.csv files not layer data
-                continue
             Layer.create_or_replace(project=self, title=title, csv_data=data, client_last_modified_date=timezone.now())
 
     def alter_floor_captions(self, captions_dict):
@@ -42,6 +92,14 @@ class Project(models.Model):
             if filename in captions_dict.keys():
                 p.floor_caption = captions_dict[filename]
                 p.save()
+
+    @staticmethod
+    def is_additional_file(title):
+        possible_suffix = (Project.MAPS_INFO, Project.LAYERS_INFO, Project.POI_NAMES, Project.PICT_CODES)
+        for s in possible_suffix:
+            if title.endswith(s):
+                return s
+        return False
 
 
 # noinspection PyUnusedLocal

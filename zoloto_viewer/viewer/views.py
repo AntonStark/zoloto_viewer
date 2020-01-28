@@ -25,7 +25,7 @@ def load_project(request):
         return redirect('load_project')
 
     pages_data, _ = form_stuff.parse_pages(request.POST, request.FILES)
-    csv_data = form_stuff.parse_csv(request.POST, request.FILES)
+    layer_files, additional_files = form_stuff.parse_csv(request.POST, request.FILES)
     if not pages_data or not pages_data:
         return redirect('load_project')
 
@@ -33,7 +33,8 @@ def load_project(request):
     proj.save()
 
     proj.store_pages(pages_data)
-    proj.create_layers(csv_data)
+    proj.create_layers(layer_files)
+    proj.update_additional_files(additional_files)
     # todo client_last_modified_date must be provided by client
 
     return redirect('projects')
@@ -50,7 +51,7 @@ def edit_project(request, title):
         context = {
             'project': project,
             'pages_list': map(Page.serialize, pages),
-            'csv_list': map(Layer.serialize, layers),       # todo include non-layer csv files (from project attrs?)
+            'csv_list': list(map(Layer.serialize, layers)) + project.additional_files_info(),
         }
         return render(request, 'viewer/edit_project.html', context=context)
 
@@ -64,9 +65,10 @@ def edit_project(request, title):
         Layer.remove_from_project(project, csv_name)
     for page_name in pages_to_delete:
         Page.remove_from_project(project, page_name)
+    project.remove_additional_files(csv_to_delete)
 
     pages_data, floor_captions = form_stuff.parse_pages(request.POST, request.FILES)
-    csv_data = form_stuff.parse_csv(request.POST, request.FILES)
+    layer_files, additional_files = form_stuff.parse_csv(request.POST, request.FILES)
 
     errors = []
     project.store_pages(pages_data)
@@ -74,7 +76,8 @@ def edit_project(request, title):
         project.alter_floor_captions(floor_captions)
     except IntegrityError:
         errors.append('captions not unique')
-    project.create_layers(csv_data)
+    project.create_layers(layer_files)
+    project.update_additional_files(additional_files)
 
     if errors:
         return redirect(to='edit_project', title=title)
