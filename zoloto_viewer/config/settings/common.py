@@ -105,8 +105,3 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR, "viewer/static"),
     '/var/www/zoloto_viewer/static/',
 ]
-
-
-MEDIA_URL = '/media/'
-
-MEDIA_ROOT = '/var/www/zoloto_viewer/media/'
