@@ -13,6 +13,7 @@
 <tr>
     <td id="project-page-nav-box" class="project-page-table-left-column">
         <b>{{ project.title }}</b>
+        <a href="{% url 'projects' %}" style="float: right">Закрыть</a>
     </td>
     <td rowspan="4" id="project-page-plan-box">
         <img src="{{ page.plan.url }}">
@@ -37,7 +38,13 @@
     </td>
 </tr>
 <tr>
-    <td id="project-page-links-box" class="project-page-table-left-column"></td>
+    <td id="project-page-links-box" class="project-page-table-left-column">
+        <p>
+            <b>PDF</b><br>
+            <a>Оригинальный</a>
+            <a style="white-space: nowrap">С ошибками и комментариями</a>
+        </p>
+    </td>
 </tr>
 </tbody>
 </table>

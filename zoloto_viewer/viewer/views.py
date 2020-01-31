@@ -1,4 +1,5 @@
 from django.db import IntegrityError
+from django.contrib.auth.decorators import login_required
 from django.http import Http404
 from django.shortcuts import render, redirect
 
@@ -6,6 +7,7 @@ from zoloto_viewer.viewer import form_stuff
 from zoloto_viewer.viewer.models import Project, Layer, Page
 
 
+@login_required
 def view_projects(request):
     context = {
         'projects': Project.objects.all().order_by('-created'),
@@ -13,6 +15,7 @@ def view_projects(request):
     return render(request, 'viewer/view_projects.html', context=context)
 
 
+@login_required
 def load_project(request):
     if request.method != 'POST':
         return render(request, 'viewer/load_project.html')
@@ -40,6 +43,7 @@ def load_project(request):
     return redirect('projects')
 
 
+@login_required
 def edit_project(request, title):
     try:
         project = Project.objects.get(title=title)
@@ -84,6 +88,7 @@ def edit_project(request, title):
     return redirect(to='projects')
 
 
+@login_required
 def project(request, title):
     try:
         proj = Project.objects.get(title=title)
@@ -97,6 +102,7 @@ def project(request, title):
     return redirect(to='project_page', page_uid=first_page.uid)
 
 
+@login_required
 def project_remove(request, title):
     try:
         proj = Project.objects.get(title=title)
@@ -121,4 +127,5 @@ def project_page(request, page_uid):
         'page': page,
         'page_uid_list': page_uid_list,
     }
-    return render(request, 'viewer/project_page.html', context=context)
+    template = 'viewer/project_page_auth.html' if request.user.is_authenticated else 'viewer/project_page.html'
+    return render(request, template, context=context)

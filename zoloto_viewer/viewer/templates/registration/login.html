@@ -1,0 +1,35 @@
+{% extends "registration/base.html" %}
+
+{% block content %}
+
+{% if form.errors %}
+<p>Введены неправильные логин и пароль.<br>Попробуйте ещё или обратить к администратору.</p>
+{% endif %}
+
+{% if next %}
+    {% if user.is_authenticated %}
+    <p>У Вашего аккаунта нет права просматривать данную страницу.
+    Чтобы продолжить, пожалуйста, войдите через аккаунт у которого есть права.</p>
+    {% else %}
+    <p>Необходимо выполнить вход.</p>
+    {% endif %}
+{% endif %}
+
+<form method="post" action="{% url 'login' %}">
+{% csrf_token %}
+<table>
+<tr>
+    <td>{{ form.username.label_tag }}</td>
+    <td>{{ form.username }}</td>
+</tr>
+<tr>
+    <td>{{ form.password.label_tag }}</td>
+    <td>{{ form.password }}</td>
+</tr>
+</table>
+
+<input type="submit" value="Войти">
+<input type="hidden" name="next" value="{{ next }}">
+</form>
+
+{% endblock %}
