@@ -1,0 +1,36 @@
+version: '3.7'
+
+services:
+  zoloto_viewer:
+    build: .
+    command: gunicorn zoloto_viewer.config.wsgi:application --bind 0.0.0.0:8000
+    volumes:
+      - /private/var/log/develop/zoloto_viewer:/var/log/zoloto_viewer
+      - static_volume:/home/nonroot/zoloto_viewer/zoloto_viewer/staticfiles
+      - media_volume:/home/nonroot/zoloto_viewer/zoloto_viewer/mediafiles
+    expose:
+      - 8000
+    env_file:
+      - docker/.env.prod
+    depends_on:
+      - postgres
+  postgres:
+    image: postgres:12.1-alpine
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    env_file:
+      - docker/.env.prod
+  nginx:
+    build: ./docker/nginx
+    volumes:
+      - static_volume:/home/nonroot/zoloto_viewer/zoloto_viewer/staticfiles
+      - media_volume:/home/nonroot/zoloto_viewer/zoloto_viewer/mediafiles
+    ports:
+      - 1335:80
+    depends_on:
+      - zoloto_viewer
+
+volumes:
+  postgres_data:
+  static_volume:
+  media_volume:
