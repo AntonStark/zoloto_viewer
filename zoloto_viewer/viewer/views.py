@@ -1,5 +1,5 @@
-from django.db import IntegrityError
 from django.contrib.auth.decorators import login_required
+from django.db import IntegrityError
 from django.http import Http404
 from django.shortcuts import render, redirect
 

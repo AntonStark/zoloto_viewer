@@ -47,6 +47,7 @@ a {
     height: 100vh;
     border-collapse: collapse;
     border: 2px solid white; /* Прячем рамку вокруг таблицы */
+    table-layout: fixed;
 }
 
 .project-page-table-left-column {
@@ -56,9 +57,8 @@ a {
 }
 
 #floor_caption {
-    /*min-height: 66px;*/
-    /*max-height: 66px;*/
     margin-left: 6px;
+    word-break: break-all;
 }
 
 #project-page-pages-box hr {
@@ -91,7 +91,6 @@ a {
 }
 
 #project-page-plan-box {
-    width: 100%;
 }
 
 .icon {
