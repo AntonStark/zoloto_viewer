@@ -23,9 +23,10 @@ DATABASES = {
 }
 
 MEDIA_ROOT = os.path.join(BASE_DIR, 'mediafiles')
-MEDIA_URL = '/media/'
+MEDIA_URL = '/viewer/media/'
 
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATIC_URL = '/viewer/static/'
 
 # fixme after enable ssl
 # SESSION_COOKIE_SECURE = True
