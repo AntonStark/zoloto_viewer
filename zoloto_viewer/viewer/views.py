@@ -3,7 +3,7 @@ from django.db import IntegrityError
 from django.http import Http404
 from django.shortcuts import render, redirect
 
-from zoloto_viewer.viewer import form_stuff
+from zoloto_viewer.viewer.utils import project_form
 from zoloto_viewer.viewer.models import Project, Layer, Page
 
 
@@ -27,8 +27,8 @@ def load_project(request):
     except (KeyError, ValueError):
         return redirect('load_project')
 
-    pages_data, _ = form_stuff.parse_pages(request.POST, request.FILES)
-    layer_files, additional_files = form_stuff.parse_csv(request.POST, request.FILES)
+    pages_data, _ = project_form.parse_pages(request.POST, request.FILES)
+    layer_files, additional_files = project_form.parse_csv(request.POST, request.FILES)
     if not pages_data or not pages_data:
         return redirect('load_project')
 
@@ -64,15 +64,15 @@ def edit_project(request, title):
         project.title = title
         project.save()
 
-    csv_to_delete, pages_to_delete = form_stuff.files_to_delete(request.POST)
+    csv_to_delete, pages_to_delete = project_form.files_to_delete(request.POST)
     for csv_name in csv_to_delete:
         Layer.remove_from_project(project, csv_name)
     for page_name in pages_to_delete:
         Page.remove_from_project(project, page_name)
     project.remove_additional_files(csv_to_delete)
 
-    pages_data, floor_captions = form_stuff.parse_pages(request.POST, request.FILES)
-    layer_files, additional_files = form_stuff.parse_csv(request.POST, request.FILES)
+    pages_data, floor_captions = project_form.parse_pages(request.POST, request.FILES)
+    layer_files, additional_files = project_form.parse_csv(request.POST, request.FILES)
 
     errors = []
     project.store_pages(pages_data)
@@ -113,7 +113,9 @@ def project_remove(request, title):
     return redirect(to='projects')
 
 
+# todo switch to short code
 def project_page(request, page_uid):
+    # todo check code valid
     try:
         page = Page.objects.get(uid=page_uid)
     except Page.DoesNotExist:

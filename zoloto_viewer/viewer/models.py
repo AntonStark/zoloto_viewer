@@ -4,10 +4,12 @@ import shutil
 import uuid
 from django.conf import settings
 from django.contrib.postgres import fields
-from django.db import models
+from django.db import models, transaction
 from django.dispatch import receiver
 from django.utils import timezone
 from os import path
+
+from zoloto_viewer.viewer.utils import additional_files
 
 
 def additional_files_upload_path(obj: 'Project', filename):
@@ -22,6 +24,8 @@ class Project(models.Model):
     layers_info = models.FileField(upload_to=additional_files_upload_path, null=False, blank=True, default='')
     poi_names = models.FileField(upload_to=additional_files_upload_path, null=False, blank=True, default='')
     pict_codes = models.FileField(upload_to=additional_files_upload_path, null=False, blank=True, default='')
+
+    layer_info_data = fields.JSONField(null=True)
 
     MAPS_INFO = '_maps_info'
     LAYERS_INFO = '_layers_info'
@@ -44,9 +48,14 @@ class Project(models.Model):
                     self.maps_info.delete()
                 self.maps_info = file
             elif file_kind == Project.LAYERS_INFO:
+                layers_add_data = additional_files.parse_layers_info(file)
+                if not layers_add_data:
+                    continue
                 if self.layers_info:
                     self.layers_info.delete()
                 self.layers_info = file
+                self.layer_info_data = layers_add_data
+                transaction.on_commit(lambda: Layer.update_layers_info(self, layers_add_data))
                 # todo update layers params on commit (without atomic here)
             elif file_kind == Project.POI_NAMES:
                 if self.poi_names:
@@ -82,9 +91,10 @@ class Project(models.Model):
             Page.create_or_replace(project=self, plan=plan, indd_floor=name, floor_caption=floor_caption)
 
     def create_layers(self, csv_data):
-        # todo look for layer colors in self.layers_info file
         for title, data in csv_data.items():
-            Layer.create_or_replace(project=self, title=title, csv_data=data, client_last_modified_date=timezone.now())
+            Layer.create_or_replace(project=self, title=title, csv_data=data,
+                                    client_last_modified_date=timezone.now(),
+                                    layer_info=self.layer_info_data)
 
     def alter_floor_captions(self, captions_dict):
         for p in Page.objects.filter(project=self):
@@ -125,7 +135,8 @@ def csv_upload_prev_path(obj: 'Layer', filename):
 class Layer(models.Model):
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
     title = models.CharField(max_length=256, blank=False)
-    color = models.CharField(max_length=6, default='000000')
+    color = models.CharField(max_length=7, default='#000000')
+    desc = models.TextField(blank=True, default='')
 
     client_last_modified_date = models.DateTimeField(editable=False, null=True)
     next_csv_data = models.FileField(upload_to=csv_upload_next_path, null=False, blank=True, default='')
@@ -154,16 +165,31 @@ class Layer(models.Model):
                 layer.delete()
 
     @staticmethod
-    def create_or_replace(project, title, csv_data, client_last_modified_date):
+    def create_or_replace(project, title, csv_data, client_last_modified_date, layer_info=None):
+        desc, color = layer_info[title] if title in layer_info else ('', '#000000')
         for layer in Layer.objects.filter(project=project):
             if layer.orig_file_name() == csv_data.name:
                 layer.load_next(csv_data)
                 layer.title = title
+                layer.desc = desc
+                layer.color = additional_files.color_as_hex(color)
                 layer.client_last_modified_date = client_last_modified_date
                 layer.save()
                 return
-        Layer(project=project, title=title, csv_data=csv_data,
+        Layer(project=project, title=title, desc=desc, color=additional_files.color_as_hex(color), csv_data=csv_data,
               client_last_modified_date=client_last_modified_date).save()
+
+    @staticmethod
+    def update_layers_info(project, info):
+        layers = Layer.objects.filter(project=project)
+        for l in layers:
+            if l.title not in info:
+                continue
+            desc, color = info[l.title]
+
+            l.color = additional_files.color_as_hex(color)
+            l.desc = desc
+            l.save()
 
 
 def _delete_file(fpath):
