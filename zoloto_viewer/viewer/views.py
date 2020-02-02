@@ -35,9 +35,9 @@ def load_project(request):
     proj = Project(title=title)
     proj.save()
 
+    proj.update_additional_files(additional_files)
     proj.store_pages(pages_data)
     proj.create_layers(layer_files)
-    proj.update_additional_files(additional_files)
     # todo client_last_modified_date must be provided by client
 
     return redirect('projects')

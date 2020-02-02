@@ -165,7 +165,7 @@ class Layer(models.Model):
 
     @staticmethod
     def create_or_replace(project, title, csv_data, client_last_modified_date, layer_info=None):
-        desc, color = layer_info[title] if title in layer_info else ('', '#000000')
+        desc, color = layer_info[title] if layer_info and title in layer_info else ('', '#000000')
         for layer in Layer.objects.filter(project=project):
             if layer.orig_file_name() == csv_data.name:
                 layer.load_next(csv_data)
