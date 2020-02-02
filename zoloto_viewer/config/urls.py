@@ -19,4 +19,4 @@ from django.urls import include, path
 
 urlpatterns = [
     path('viewer/', include('zoloto_viewer.viewer.urls')),
-] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT) if settings.DEBUG else []
+] + (static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT) if settings.DEBUG else [])
