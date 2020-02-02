@@ -79,7 +79,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 AUTH_USER_MODEL = 'auth.User'
 
-LOGIN_URL = '/accounts/login/'
+LOGIN_URL = '/viewer/accounts/login/'
 
 
 # Internationalization

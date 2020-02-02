@@ -40,7 +40,7 @@
             <td>{{ proj.created|date:"d.m.Y" }}</td>
             <td><a href="{% url 'edit_project' proj.title %}"
                    class="hidden icon">&#x270E</a></td>
-            <td><a href="{% url 'project_remove' proj.title %}" class="icon mark-delete"
+            <td><a href="{% url 'remove_project' proj.title %}" class="icon mark-delete"
                    data-title="{{ proj.title }}">&#x2A09</a></td>
         </tr>{% endfor %}
         </tbody>

@@ -24,4 +24,3 @@ DATABASES = {
 
 MEDIA_ROOT = os.getenv('MEDIA_ROOT', '/var/www/zoloto_viewer/media/')
 MEDIA_URL = '/media/'
-
