@@ -37,7 +37,13 @@
 </tr>
 <tr>
     <td id="project-page-layers-box" class="project-page-table-left-column">
-        <h2>Layers box</h2>
+        <ul>
+        {% for layer, color in layers %}
+            <li style="color: {{ color }}; list-style-type: circle;">
+                <p>{{ layer }}</p>
+            </li>
+        {% endfor %}
+        </ul>
     </td>
 </tr>
 <tr>
