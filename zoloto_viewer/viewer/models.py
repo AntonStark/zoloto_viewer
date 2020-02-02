@@ -56,7 +56,6 @@ class Project(models.Model):
                 self.layers_info = file
                 self.layer_info_data = layers_add_data
                 transaction.on_commit(lambda: Layer.update_layers_info(self, layers_add_data))
-                # todo update layers params on commit (without atomic here)
             elif file_kind == Project.POI_NAMES:
                 if self.poi_names:
                     self.poi_names.delete()
