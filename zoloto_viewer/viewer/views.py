@@ -99,7 +99,7 @@ def project(request, title):
     if not first_page:
         raise Http404
 
-    return redirect(to='project_page', page_uid=first_page.uid)
+    return redirect(to='project_page', page_code=first_page.code)
 
 
 @login_required
@@ -113,22 +113,22 @@ def project_remove(request, title):
     return redirect(to='projects')
 
 
-# todo switch to short code
-def project_page(request, page_uid):
-    # todo check code valid
-    try:
-        page = Page.objects.get(uid=page_uid)
-    except Page.DoesNotExist:
+def project_page(request, page_code):
+    valid = Page.validate_code(page_code)
+    if not valid:
+        raise Http404
+    page = Page.by_code(valid)
+    if not page:
         raise Http404
 
     project = page.project
-    page_uid_list = Page.objects.filter(project=project).values_list('uid', flat=True)
+    page_code_list = Page.objects.filter(project=project).values_list('code', flat=True)
     layers = Layer.objects.filter(project=project).values_list('title', 'color')
 
     context = {
         'project': project,
         'page': page,
-        'page_uid_list': page_uid_list,
+        'page_code_list': page_code_list,
         'layers': layers,
     }
     template = 'viewer/project_page_auth.html' if request.user.is_authenticated else 'viewer/project_page.html'

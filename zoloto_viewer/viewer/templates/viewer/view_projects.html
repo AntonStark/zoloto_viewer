@@ -33,7 +33,7 @@
         <tbody>
         {% for proj in projects %}<tr>
             {% if proj.first_page %}
-                <td><a href="{% url 'project_page' proj.first_page.uid %}">{{ proj.title }}</a></td>
+                <td><a href="{% url 'project_page' proj.first_page.code %}">{{ proj.title }}</a></td>
             {% else %}
                 <td><a>{{ proj.title }}</a></td>
             {% endif %}

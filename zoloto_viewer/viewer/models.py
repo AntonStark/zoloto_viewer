@@ -1,3 +1,4 @@
+import base64
 import os
 import re
 import shutil
@@ -215,6 +216,7 @@ def plan_upload_path(obj: 'Page', filename):
 
 class Page(models.Model):
     uid = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    code = models.CharField(max_length=10, blank=False, unique=True)
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
     plan = models.ImageField(upload_to=plan_upload_path, null=True, default=None)
     indd_floor = models.TextField(blank=False, null=False, editable=False)      # текст, лежащий на слое floor
@@ -247,6 +249,27 @@ class Page(models.Model):
                 p.save()
                 return
         Page(project=project, plan=plan, indd_floor=indd_floor, floor_caption=floor_caption).save()
+
+    @staticmethod
+    def validate_code(page_code):
+        return page_code.upper() if isinstance(page_code, str) and len(page_code) == 10 else None
+
+    @staticmethod
+    def by_code(page_code):
+        try:
+            page = Page.objects.get(code=page_code)
+        except Page.DoesNotExist:
+            page = None
+        return page
+
+    def save(self, *args, **kwargs):
+        if not self.code:
+            maybe_code = base64.b32encode(self.uid.bytes)[:10].decode('utf-8')
+            while Page.by_code(maybe_code):     # already exists
+                self.uid = uuid.uuid4()
+                maybe_code = base64.b32encode(self.uid.bytes)[:10].decode('utf-8')
+            self.code = maybe_code
+        super(Page, self).save(*args, **kwargs)
 
 
 # noinspection PyUnusedLocal

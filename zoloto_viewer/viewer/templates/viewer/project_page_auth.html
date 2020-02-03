@@ -26,11 +26,11 @@
 <tr>
     <td id="project-page-pages-box" class="project-page-table-left-column">
         <h3 id="floor_caption">{{ page.floor_caption }}</h3>
-        <p>{% for uid in page_uid_list %}
-            {% if uid == page.uid %}
-                <a href="{% url 'project_page' uid %}" class="fill-button no-border">{{ forloop.counter }}</a>
+        <p>{% for code in page_code_list %}
+            {% if code == page.code %}
+                <a href="{% url 'project_page' code %}" class="fill-button no-border">{{ forloop.counter }}</a>
             {% else %}
-                <a href="{% url 'project_page' uid %}" class="fill-button-negative no-border">{{ forloop.counter }}</a>
+                <a href="{% url 'project_page' code %}" class="fill-button-negative no-border">{{ forloop.counter }}</a>
             {% endif %}
         {% endfor %}</p>
         <hr/>

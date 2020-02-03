@@ -11,10 +11,11 @@ urlpatterns = [
 
     path('projects', views.view_projects, name='projects'),
     path('', lambda request: HttpResponsePermanentRedirect(redirect_to='projects')),
-    path('project', views.load_project, name='load_project'),
-    path('project/<str:title>/edit', views.edit_project, name='edit_project'),
 
+    path('project', views.load_project, name='load_project'),
     path('project/<str:title>', views.project, name='project'),
+    path('project/<str:title>/edit', views.edit_project, name='edit_project'),
     path('project/<str:title>/remove', views.project_remove, name='remove_project'),
-    path('page/<str:page_uid>', views.project_page, name='project_page'),
+
+    path('page/<str:page_code>', views.project_page, name='project_page'),
 ]
