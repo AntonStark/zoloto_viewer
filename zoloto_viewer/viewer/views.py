@@ -124,12 +124,14 @@ def project_page(request, page_code):
     project = page.project
     page_code_list = Page.objects.filter(project=project).values_list('code', flat=True)
     layers = Layer.objects.filter(project=project).values_list('title', 'color')
+    layers_visible = set(request.GET.getlist('layer'))
 
     context = {
         'project': project,
         'page': page,
         'page_code_list': page_code_list,
         'layers': layers,
+        'layers_visible': layers_visible,
     }
     template = 'viewer/page/project_page_auth.html' if request.user.is_authenticated \
         else 'viewer/page/project_page.html'
