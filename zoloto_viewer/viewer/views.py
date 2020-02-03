@@ -131,5 +131,6 @@ def project_page(request, page_code):
         'page_code_list': page_code_list,
         'layers': layers,
     }
-    template = 'viewer/project_page_auth.html' if request.user.is_authenticated else 'viewer/project_page.html'
+    template = 'viewer/page/project_page_auth.html' if request.user.is_authenticated \
+        else 'viewer/page/project_page.html'
     return render(request, template, context=context)
