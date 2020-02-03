@@ -27,6 +27,7 @@ MEDIA_URL = '/viewer/media/'
 
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATIC_URL = '/viewer/static/'
+STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.ManifestStaticFilesStorage'
 
 # fixme after enable ssl
 # SESSION_COOKIE_SECURE = True

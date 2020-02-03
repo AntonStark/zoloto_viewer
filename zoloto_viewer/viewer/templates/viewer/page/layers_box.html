@@ -1,7 +1,8 @@
 <td id="project-page-layers-box" class="project-page-table-left-column">
-    <ul>
+    <ul style="padding-left: inherit;">
     {% for layer, color in layers %}
-        <li style="color: {{ color }};" {% if layer in layers_visible %}class="enabled_layer" {% endif %}
+        <li style="color: {{ color }};"
+            {% if layer in layers_visible %}class="enabled_layer" {% endif %}
             onclick="toggleLayer(this, '{{ layer }}')">
             <p>{{ layer }}</p>
         </li>
