@@ -75,13 +75,13 @@ def edit_project(request, title):
     layer_files, additional_files = project_form.parse_csv(request.POST, request.FILES)
 
     errors = []
+    project.update_additional_files(additional_files)
     project.store_pages(pages_data)
     try:
         project.alter_floor_captions(floor_captions)
     except IntegrityError:
         errors.append('captions not unique')
     project.create_layers(layer_files)
-    project.update_additional_files(additional_files)
 
     if errors:
         return redirect(to='edit_project', title=title)

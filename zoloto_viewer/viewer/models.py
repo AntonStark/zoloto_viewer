@@ -182,14 +182,14 @@ class Layer(models.Model):
     @staticmethod
     def update_layers_info(project, info):
         layers = Layer.objects.filter(project=project)
-        for l in layers:
-            if l.title not in info:
+        for L in layers:
+            if L.title not in info:
                 continue
-            desc, color = info[l.title]
+            desc, color = info[L.title]
 
-            l.color = additional_files.color_as_hex(color)
-            l.desc = desc
-            l.save()
+            L.color = additional_files.color_as_hex(color)
+            L.desc = desc
+            L.save()
 
 
 def _delete_file(fpath):
@@ -221,6 +221,8 @@ class Page(models.Model):
     plan = models.ImageField(upload_to=plan_upload_path, null=True, default=None)
     indd_floor = models.TextField(blank=False, null=False, editable=False)      # текст, лежащий на слое floor
     floor_caption = models.TextField(null=True)                                 # текст, отображаемый на странице
+
+    geometric_bounds = fields.ArrayField(models.FloatField(), null=True, default=None)
 
     class Meta:
         unique_together = ['project', 'floor_caption']
@@ -282,17 +284,39 @@ def delete_page_file(sender, instance: Page, *args, **kwargs):
 
 class Marker(models.Model):
     """
-    После загрузки нового csv данные об ошибках не должны пропадать из системы окончательно
-    todo Возможно, данные связанные с проверкой маркеров стоит хранить в отдельной сущности
+    После загрузки нового csv данные об ошибках стираются
     """
-    number = models.CharField(max_length=32, blank=False)
-
     layer = models.ForeignKey(Layer, on_delete=models.SET_NULL, null=True)
     floor = models.ForeignKey(Page, on_delete=models.CASCADE)
 
-    points = fields.JSONField(default=list)
-    variables = fields.JSONField(default=dict)
+    number = models.CharField(max_length=128, blank=False)
+    points = fields.JSONField(default=list)     # [(x_1, y_1), ..., (x_n, y_n)]
+
     checked = models.BooleanField(null=True, default=None)
+    comment = models.TextField(blank=True)
 
     class Meta:
         unique_together = ['floor', 'number']
+
+    def reset_variables(self, new_variables):
+        if isinstance(new_variables, dict):
+            pass
+        elif isinstance(new_variables, (list, tuple)):
+            pass
+        else:
+            raise TypeError('new_variables must be dict, list or tuple')
+
+
+class MarkerVariable(models.Model):
+    """
+    При обновлении набора переменных маркера, все становятся
+    wrong = False даже если value не изменилось
+    """
+    marker = models.ForeignKey(Marker, on_delete=models.CASCADE)
+
+    key = models.CharField(max_length=32, blank=False, editable=False)
+    value = models.TextField()
+    wrong = models.BooleanField(null=False, default=False)
+
+    class Meta:
+        unique_together = ['marker', 'key']
