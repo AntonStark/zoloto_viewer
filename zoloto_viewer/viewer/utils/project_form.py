@@ -54,6 +54,6 @@ def parse_csv(req_post, req_files):
             if ext != 'csv':
                 continue
 
-            file_index = additional_files if Project.is_additional_file(title) else layer_files
-            file_index[title] = f
+            _index = additional_files if Project.is_additional_file(title) else layer_files
+            _index[title] = f
     return layer_files, additional_files

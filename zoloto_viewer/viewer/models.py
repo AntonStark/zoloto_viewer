@@ -27,6 +27,7 @@ class Project(models.Model):
     pict_codes = models.FileField(upload_to=additional_files_upload_path, null=False, blank=True, default='')
 
     layer_info_data = fields.JSONField(null=True)
+    maps_info_data = fields.JSONField(null=True)
 
     MAPS_INFO = '_maps_info'
     LAYERS_INFO = '_layers_info'
@@ -34,29 +35,43 @@ class Project(models.Model):
     PICT_CODES = '_pict_codes'
 
     def first_page(self):
-        pages = Page.objects.filter(project=self)
+        pages = Page.objects.filter(project=self)\
+            .order_by(models.F('document_offset').asc(nulls_last=True))
         return pages.first() if pages.exists() else None
 
     @staticmethod
     def validate_title(title: str):
         return re.match(r'^[-\w]+$', title) is not None
 
+    def update_maps_info(self, file):
+        maps_add_data = additional_files.parse_maps_info(file)
+        if not maps_add_data:
+            return
+
+        if self.maps_info:
+            self.maps_info.delete()
+        self.maps_info = file
+        self.maps_info_data = maps_add_data
+        transaction.on_commit(lambda: Page.update_maps_info(self, maps_add_data))
+
+    def update_layers_info(self, file):
+        layers_add_data = additional_files.parse_layers_info(file)
+        if not layers_add_data:
+            return
+
+        if self.layers_info:
+            self.layers_info.delete()
+        self.layers_info = file
+        self.layer_info_data = layers_add_data
+        transaction.on_commit(lambda: Layer.update_layers_info(self, layers_add_data))
+
     def update_additional_files(self, files_dict):
         for title, file in files_dict.items():
             file_kind = Project.is_additional_file(title)
             if file_kind == Project.MAPS_INFO:
-                if self.maps_info:
-                    self.maps_info.delete()
-                self.maps_info = file
+                self.update_maps_info(file)
             elif file_kind == Project.LAYERS_INFO:
-                layers_add_data = additional_files.parse_layers_info(file)
-                if not layers_add_data:
-                    continue
-                if self.layers_info:
-                    self.layers_info.delete()
-                self.layers_info = file
-                self.layer_info_data = layers_add_data
-                transaction.on_commit(lambda: Layer.update_layers_info(self, layers_add_data))
+                self.update_layers_info(file)
             elif file_kind == Project.POI_NAMES:
                 if self.poi_names:
                     self.poi_names.delete()
@@ -88,7 +103,9 @@ class Project(models.Model):
         """
         for name in pages_data:
             plan, floor_caption = pages_data[name]
-            Page.create_or_replace(project=self, plan=plan, indd_floor=name, floor_caption=floor_caption)
+            Page.create_or_replace(project=self, plan=plan,
+                                   indd_floor=name, floor_caption=floor_caption,
+                                   maps_info=self.maps_info_data)
 
     def create_layers(self, csv_data):
         for title, data in csv_data.items():
@@ -176,16 +193,17 @@ class Layer(models.Model):
                 layer.client_last_modified_date = client_last_modified_date
                 layer.save()
                 return
-        Layer(project=project, title=title, desc=desc, color=additional_files.color_as_hex(color), csv_data=csv_data,
+        Layer(project=project, title=title, desc=desc,
+              color=additional_files.color_as_hex(color), csv_data=csv_data,
               client_last_modified_date=client_last_modified_date).save()
 
     @staticmethod
-    def update_layers_info(project, info):
+    def update_layers_info(project, layers_info):
         layers = Layer.objects.filter(project=project)
         for L in layers:
-            if L.title not in info:
+            if L.title not in layers_info:
                 continue
-            desc, color = info[L.title]
+            desc, color = layers_info[L.title]
 
             L.color = additional_files.color_as_hex(color)
             L.desc = desc
@@ -223,6 +241,7 @@ class Page(models.Model):
     floor_caption = models.TextField(null=True)                                 # текст, отображаемый на странице
 
     geometric_bounds = fields.ArrayField(models.FloatField(), null=True, default=None)
+    document_offset = models.PositiveSmallIntegerField(null=True, default=None)
 
     class Meta:
         unique_together = ['project', 'floor_caption']
@@ -240,7 +259,8 @@ class Page(models.Model):
                 p.delete()
 
     @staticmethod
-    def create_or_replace(project, plan, indd_floor, floor_caption):
+    def create_or_replace(project, plan, indd_floor, floor_caption, maps_info=None):
+        offset, bounds = maps_info[indd_floor] if maps_info and indd_floor in maps_info else (None, None)
         # if plan with equal filename already exists just update them
         for p in Page.objects.filter(project=project):
             if p.orig_file_name() == plan.name:
@@ -248,13 +268,30 @@ class Page(models.Model):
                 p.plan = plan
                 p.indd_floor = indd_floor
                 p.floor_caption = floor_caption
+                if offset:
+                    p.document_offset = offset
+                if bounds:
+                    p.geometric_bounds = bounds
                 p.save()
                 return
-        Page(project=project, plan=plan, indd_floor=indd_floor, floor_caption=floor_caption).save()
+        Page(project=project, plan=plan, indd_floor=indd_floor, floor_caption=floor_caption,
+             document_offset=offset, geometric_bounds=bounds).save()
 
     @staticmethod
     def validate_code(page_code):
         return page_code.upper() if isinstance(page_code, str) and len(page_code) == 10 else None
+
+    @staticmethod
+    def update_maps_info(project, maps_info):   # maps_info is { indd_floor -> (offset, bounds) }
+        pages = Page.objects.filter(project=project)
+        for P in pages:
+            if P.indd_floor not in maps_info:
+                continue
+
+            offset, bounds = maps_info[P.indd_floor]
+            P.document_offset = offset
+            P.geometric_bounds = bounds
+            P.save()
 
     @staticmethod
     def by_code(page_code):

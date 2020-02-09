@@ -5,13 +5,30 @@ RGB_SCALE = 255
 CMYK_SCALE = 100
 
 
-def parse_layers_info(info):
-    tw = io.TextIOWrapper(info.file, encoding='utf-8')
+def parse_layers_info(upload):
+    tw = io.TextIOWrapper(upload.file, encoding='utf-8')
     data = {}
     try:
         for row in csv.reader(tw):
             title, desc, color = row
             data[title] = (desc, color)
+    except csv.Error:
+        return None
+    finally:
+        tw.detach()
+    return data
+
+
+def parse_maps_info(upload):
+    """
+    :return: { indd_floor -> (offset, bounds) }
+    """
+    tw = io.TextIOWrapper(upload.file, encoding='utf-8')
+    data = {}
+    try:
+        for row in csv.reader(tw):
+            offset, indd_floor, top, left, bottom, right = row
+            data[indd_floor] = (offset, [top, left, bottom, right])
     except csv.Error:
         return None
     finally:
