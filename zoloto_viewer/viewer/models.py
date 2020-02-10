@@ -10,7 +10,7 @@ from django.dispatch import receiver
 from django.utils import timezone
 from os import path
 
-from zoloto_viewer.viewer.utils import additional_files
+from zoloto_viewer.viewer import data_files
 
 
 def additional_files_upload_path(obj: 'Project', filename):
@@ -42,25 +42,25 @@ class Project(models.Model):
     def validate_title(title: str):
         return re.match(r'^[-\w]+$', title) is not None
 
-    def update_maps_info(self, file):
-        maps_add_data = additional_files.parse_maps_info(file)
+    def update_maps_info(self, upload):
+        maps_add_data = data_files.map.parse_maps_file(upload.file)
         if not maps_add_data:
             return
 
         if self.maps_info:
             self.maps_info.delete()
-        self.maps_info = file
+        self.maps_info = upload
         self.maps_info_data = maps_add_data
         transaction.on_commit(lambda: Page.update_maps_info(self, maps_add_data))
 
-    def update_layers_info(self, file):
-        layers_add_data = additional_files.parse_layers_info(file)
+    def update_layers_info(self, upload):
+        layers_add_data = data_files.layer.parse_layers_file(upload.file)
         if not layers_add_data:
             return
 
         if self.layers_info:
             self.layers_info.delete()
-        self.layers_info = file
+        self.layers_info = upload
         self.layer_info_data = layers_add_data
         transaction.on_commit(lambda: Layer.update_layers_info(self, layers_add_data))
 
@@ -182,18 +182,19 @@ class Layer(models.Model):
 
     @staticmethod
     def create_or_replace(project, title, csv_data, client_last_modified_date, layer_info=None):
-        desc, color = layer_info[title] if layer_info and title in layer_info else ('', '#000000')
+        desc, color_str = layer_info[title] if layer_info and title in layer_info else ('', '(RGB, 0, 0, 0)')
+        color = data_files.layer.color_as_hex(color_str)
         for layer in Layer.objects.filter(project=project):
             if layer.orig_file_name() == csv_data.name:
                 layer.load_next(csv_data)
                 layer.title = title
                 layer.desc = desc
-                layer.color = additional_files.color_as_hex(color)
+                layer.color = color
                 layer.client_last_modified_date = client_last_modified_date
                 layer.save()
                 return
         Layer(project=project, title=title, desc=desc,
-              color=additional_files.color_as_hex(color), csv_data=csv_data,
+              color=data_files.layer.color_as_hex(color), csv_data=csv_data,
               client_last_modified_date=client_last_modified_date).save()
 
     @staticmethod
@@ -204,7 +205,7 @@ class Layer(models.Model):
                 continue
             desc, color = layers_info[L.title]
 
-            L.color = additional_files.color_as_hex(color)
+            L.color = data_files.layer.color_as_hex(color)
             L.desc = desc
             L.save()
 
