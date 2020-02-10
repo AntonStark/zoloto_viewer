@@ -35,8 +35,7 @@ class Project(models.Model):
     PICT_CODES = '_pict_codes'
 
     def first_page(self):
-        pages = Page.objects.filter(project=self)\
-            .order_by(models.F('document_offset').asc(nulls_last=True))
+        pages = Page.objects.filter(project=self)
         return pages.first() if pages.exists() else None
 
     @staticmethod
@@ -245,6 +244,7 @@ class Page(models.Model):
 
     class Meta:
         unique_together = ['project', 'floor_caption']
+        ordering = [models.F('document_offset').asc(nulls_last=True)]
 
     def orig_file_name(self):
         return path.basename(self.plan.name)
