@@ -155,9 +155,8 @@ class Layer(models.Model):
     desc = models.TextField(blank=True, default='')
 
     client_last_modified_date = models.DateTimeField(editable=False, null=True)
-    next_csv_data = models.FileField(upload_to=csv_upload_next_path, null=False, blank=True, default='')
     csv_data = models.FileField(upload_to=csv_upload_path, null=False, blank=False)
-    prev_csv_data = models.FileField(upload_to=csv_upload_prev_path, null=False, blank=True, default='')
+    sync_needed = models.BooleanField(default=False, null=False)
 
     class Meta:
         unique_together = ['project', 'title']
@@ -165,10 +164,16 @@ class Layer(models.Model):
     def orig_file_name(self):
         return path.basename(self.csv_data.name)
 
-    def load_next(self, csv_file):
-        if self.next_csv_data:
-            self.next_csv_data.delete(save=False)
-        self.next_csv_data = csv_file
+    def load_next_data(self, csv_file):
+        if self.csv_data:
+            _delete_file(self.csv_data.path)
+            self.csv_data.delete(save=False)
+        self.csv_data = csv_file
+        self.sync_needed = True
+        self.save()
+
+    def set_synced(self):
+        self.sync_needed = False
         self.save()
 
     def serialize(self):
@@ -186,7 +191,7 @@ class Layer(models.Model):
         color = data_files.layer.color_as_hex(color_str)
         for layer in Layer.objects.filter(project=project):
             if layer.orig_file_name() == csv_data.name:
-                layer.load_next(csv_data)
+                layer.load_next_data(csv_data)
                 layer.title = title
                 layer.desc = desc
                 layer.color = color
@@ -194,7 +199,7 @@ class Layer(models.Model):
                 layer.save()
                 return
         Layer(project=project, title=title, desc=desc,
-              color=data_files.layer.color_as_hex(color), csv_data=csv_data,
+              color=color, csv_data=csv_data, sync_needed=True,
               client_last_modified_date=client_last_modified_date).save()
 
     @staticmethod
@@ -219,13 +224,28 @@ def _delete_file(fpath):
 # noinspection PyUnusedLocal
 @receiver(models.signals.post_delete, sender=Layer)
 def delete_layer_files(sender, instance: Layer, *args, **kwargs):
-    """ Deletes layer csv files on `post_delete` """
-    if instance.next_csv_data:
-        _delete_file(instance.next_csv_data.path)
+    """ Deletes layer csv file on `post_delete` """
     if instance.csv_data:
         _delete_file(instance.csv_data.path)
-    if instance.prev_csv_data:
-        _delete_file(instance.prev_csv_data.path)
+
+
+# noinspection PyUnusedLocal
+@receiver(models.signals.post_save, sender=Layer)
+def process_layer_csv(sender, instance: Layer, *args, **kwargs):
+    #    у этого процесса есть несколько этапов:
+    # 1) найти какие маркеры исчезли в новом файле, записи для них удалить
+    # 2) создать записи в базе для совсем новых маркеров
+    # 3) у всех обновить переменные если надо
+    if not (instance.csv_data and instance.sync_needed):
+        return
+    raw_data = data_files.marker.parse_markers_file(instance.csv_data.file)
+    info = data_files.marker.extend_markers_data(raw_data)
+
+    Marker.remove_excess(instance, info.keys())
+    Marker.create_missing(instance, info)
+    Marker.update_variables(info)
+
+    instance.set_synced()
 
 
 def plan_upload_path(obj: 'Page', filename):
@@ -327,7 +347,7 @@ class Marker(models.Model):
     layer = models.ForeignKey(Layer, on_delete=models.SET_NULL, null=True)
     floor = models.ForeignKey(Page, on_delete=models.CASCADE)
 
-    number = models.CharField(max_length=128, blank=False)
+    number = models.CharField(max_length=128, blank=False, unique=True)
     points = fields.JSONField(default=list)     # [(x_1, y_1), ..., (x_n, y_n)]
 
     checked = models.BooleanField(null=True, default=None)
@@ -336,13 +356,54 @@ class Marker(models.Model):
     class Meta:
         unique_together = ['floor', 'number']
 
+    # todo move to MarkerVariable manager
     def reset_variables(self, new_variables):
+        def _reset_from_dict(marker, vars_dict):
+            MarkerVariable.objects.filter(marker=marker).delete()
+            MarkerVariable.objects.bulk_create(
+                MarkerVariable(marker=marker, key=k, value=v)
+                for k, v in vars_dict.items()
+            )
+
         if isinstance(new_variables, dict):
-            pass
+            _reset_from_dict(self, new_variables)
         elif isinstance(new_variables, (list, tuple)):
-            pass
+            _reset_from_dict(self, dict(enumerate(new_variables, 1)))
         else:
             raise TypeError('new_variables must be dict, list or tuple')
+
+    # todo next three methods should live in marker manager
+    @staticmethod
+    def remove_excess(layer, actual_numbers):
+        Marker.objects.filter(layer=layer).exclude(number__in=actual_numbers).delete()
+
+    @staticmethod
+    def create_missing(layer, marker_info):
+        existing = set(Marker.objects.filter(layer=layer).values_list('number', flat=True))
+        for number, params in marker_info.items():
+            if number in existing:
+                continue
+
+            m_path, m_vars, floor, n = params
+            try:
+                floor = Page.objects.get(project=layer.project, indd_floor=floor)
+            except Page.DoesNotExist:
+                continue    # skip marker creation if page does not loaded yet
+
+            Marker.objects.create(layer=layer, floor=floor, number=number, points=m_path)
+
+    @staticmethod
+    def update_variables(marker_info):
+        """
+        :param marker_info: { number -> (path, vars, indd_floor, n) }
+        """
+        for number, params in marker_info.items():
+            try:
+                marker = Marker.objects.get(number=number)
+            except Marker.DoesNotExist:
+                continue    # some of numbers may not have markers due to skip missing pages
+            else:
+                marker.reset_variables(params[1])
 
 
 class MarkerVariable(models.Model):

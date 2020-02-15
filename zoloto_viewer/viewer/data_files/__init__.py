@@ -1,3 +1,3 @@
-from . import layer, map
+from . import layer, map, marker
 
-__all__ = [layer, map]
+__all__ = [layer, map, marker]
