@@ -38,8 +38,6 @@ def load_project(request):
     proj.update_additional_files(additional_files)
     proj.store_pages(pages_data)
     proj.create_layers(layer_files)
-    # todo client_last_modified_date must be provided by client
-
     return redirect('projects')
 
 
@@ -103,7 +101,7 @@ def project(request, title):
 
 
 @login_required
-def project_remove(request, title):
+def remove_project(request, title):
     try:
         proj = Project.objects.get(title=title)
     except Project.DoesNotExist:

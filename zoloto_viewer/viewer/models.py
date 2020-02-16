@@ -40,7 +40,8 @@ class Project(models.Model):
 
     @staticmethod
     def validate_title(title: str):
-        return re.match(r'^[-\w]+$', title) is not None
+        return re.match(r'^[-\w]+$', title) is not None \
+               and not Project.objects.filter(title=title).exists()
 
     def update_maps_info(self, upload):
         maps_add_data = data_files.map.parse_maps_file(upload.file)
@@ -232,18 +233,18 @@ def delete_layer_files(sender, instance: Layer, *args, **kwargs):
 # noinspection PyUnusedLocal
 @receiver(models.signals.post_save, sender=Layer)
 def process_layer_csv(sender, instance: Layer, *args, **kwargs):
+    if not (instance.csv_data and instance.sync_needed):
+        return
+
+    raw_data = data_files.marker.parse_markers_file(instance.csv_data.file)
+    info = data_files.marker.extend_markers_data(raw_data)
     #    у этого процесса есть несколько этапов:
     # 1) найти какие маркеры исчезли в новом файле, записи для них удалить
     # 2) создать записи в базе для совсем новых маркеров
     # 3) у всех обновить переменные если надо
-    if not (instance.csv_data and instance.sync_needed):
-        return
-    raw_data = data_files.marker.parse_markers_file(instance.csv_data.file)
-    info = data_files.marker.extend_markers_data(raw_data)
-
-    Marker.remove_excess(instance, info.keys())
-    Marker.create_missing(instance, info)
-    Marker.update_variables(info)
+    Marker.objects.remove_excess(instance, info.keys())
+    Marker.objects.create_missing(instance, info)
+    Marker.objects.update_variables(info)
 
     instance.set_synced()
 
@@ -304,23 +305,19 @@ class Page(models.Model):
 
     @staticmethod
     def update_maps_info(project, maps_info):   # maps_info is { indd_floor -> (offset, bounds) }
-        pages = Page.objects.filter(project=project)
-        for P in pages:
-            if P.indd_floor not in maps_info:
-                continue
-
-            offset, bounds = maps_info[P.indd_floor]
-            P.document_offset = offset
-            P.geometric_bounds = bounds
-            P.save()
+        for P in Page.objects.filter(project=project):
+            if P.indd_floor in maps_info:
+                offset, bounds = maps_info[P.indd_floor]
+                P.document_offset = offset
+                P.geometric_bounds = bounds
+                P.save()
 
     @staticmethod
     def by_code(page_code):
         try:
-            page = Page.objects.get(code=page_code)
+            return Page.objects.get(code=page_code)
         except Page.DoesNotExist:
-            page = None
-        return page
+            return None
 
     def save(self, *args, **kwargs):
         if not self.code:
@@ -340,10 +337,42 @@ def delete_page_file(sender, instance: Page, *args, **kwargs):
         _delete_file(instance.plan.path)
 
 
+class MarkersManager(models.Manager):
+    def remove_excess(self, layer, actual_numbers):
+        self.filter(layer=layer).exclude(number__in=actual_numbers).delete()
+
+    def create_missing(self, layer, markers_info):
+        existing = set(self.filter(layer=layer).values_list('number', flat=True))
+        for number, params in markers_info.items():
+            if number in existing:
+                continue
+
+            m_path, m_vars, indd_floor, n = params
+            try:
+                floor = Page.objects.get(project=layer.project, indd_floor=indd_floor)
+            except Page.DoesNotExist:
+                continue    # skip marker creation if page does not loaded yet
+
+            self.create(layer=layer, floor=floor, number=number, points=m_path)
+
+    def update_variables(self, marker_info):
+        """
+        :param marker_info: { number -> (path, vars, indd_floor, n) }
+        """
+        for number, params in marker_info.items():
+            try:
+                marker = self.get(number=number)
+            except self.model.DoesNotExist:
+                continue    # some of numbers may not have markers due to skip missing pages
+            else:
+                MarkerVariable.objects.reset_variables(marker, params[1])
+
+
 class Marker(models.Model):
     """
     После загрузки нового csv данные об ошибках стираются
     """
+    uid = models.UUIDField(default=uuid.uuid4, primary_key=True)
     layer = models.ForeignKey(Layer, on_delete=models.SET_NULL, null=True)
     floor = models.ForeignKey(Page, on_delete=models.CASCADE)
 
@@ -353,57 +382,28 @@ class Marker(models.Model):
     checked = models.BooleanField(null=True, default=None)
     comment = models.TextField(blank=True)
 
+    objects = MarkersManager()
+
     class Meta:
         unique_together = ['floor', 'number']
 
-    # todo move to MarkerVariable manager
-    def reset_variables(self, new_variables):
-        def _reset_from_dict(marker, vars_dict):
-            MarkerVariable.objects.filter(marker=marker).delete()
-            MarkerVariable.objects.bulk_create(
-                MarkerVariable(marker=marker, key=k, value=v)
+
+class VariablesManager(models.Manager):
+    def reset_variables(self, marker, new_variables):
+        def _reset_from_dict(m, vars_dict):
+            self.filter(marker=m).delete()
+            self.bulk_create(
+                self.model(marker=m, key=k, value=v)
                 for k, v in vars_dict.items()
+                if v != ''
             )
 
         if isinstance(new_variables, dict):
-            _reset_from_dict(self, new_variables)
+            _reset_from_dict(marker, new_variables)
         elif isinstance(new_variables, (list, tuple)):
-            _reset_from_dict(self, dict(enumerate(new_variables, 1)))
+            _reset_from_dict(marker, dict(enumerate(new_variables, 1)))
         else:
             raise TypeError('new_variables must be dict, list or tuple')
-
-    # todo next three methods should live in marker manager
-    @staticmethod
-    def remove_excess(layer, actual_numbers):
-        Marker.objects.filter(layer=layer).exclude(number__in=actual_numbers).delete()
-
-    @staticmethod
-    def create_missing(layer, marker_info):
-        existing = set(Marker.objects.filter(layer=layer).values_list('number', flat=True))
-        for number, params in marker_info.items():
-            if number in existing:
-                continue
-
-            m_path, m_vars, floor, n = params
-            try:
-                floor = Page.objects.get(project=layer.project, indd_floor=floor)
-            except Page.DoesNotExist:
-                continue    # skip marker creation if page does not loaded yet
-
-            Marker.objects.create(layer=layer, floor=floor, number=number, points=m_path)
-
-    @staticmethod
-    def update_variables(marker_info):
-        """
-        :param marker_info: { number -> (path, vars, indd_floor, n) }
-        """
-        for number, params in marker_info.items():
-            try:
-                marker = Marker.objects.get(number=number)
-            except Marker.DoesNotExist:
-                continue    # some of numbers may not have markers due to skip missing pages
-            else:
-                marker.reset_variables(params[1])
 
 
 class MarkerVariable(models.Model):
@@ -416,6 +416,7 @@ class MarkerVariable(models.Model):
     key = models.CharField(max_length=32, blank=False, editable=False)
     value = models.TextField()
     wrong = models.BooleanField(null=False, default=False)
+    objects = VariablesManager()
 
     class Meta:
         unique_together = ['marker', 'key']
