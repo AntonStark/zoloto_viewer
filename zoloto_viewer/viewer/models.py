@@ -8,6 +8,7 @@ from django.contrib.postgres import fields
 from django.db import models, transaction
 from django.dispatch import receiver
 from django.utils import timezone
+from django.utils.safestring import mark_safe
 from os import path
 
 from zoloto_viewer.viewer import data_files
@@ -377,7 +378,7 @@ class Marker(models.Model):
     floor = models.ForeignKey(Page, on_delete=models.CASCADE)
 
     number = models.CharField(max_length=128, blank=False, unique=True)
-    points = fields.JSONField(default=list)     # [(x_1, y_1), ..., (x_n, y_n)]
+    points = fields.JSONField(default=list)     # [ [P], ..., [P] ] | [ [P1, P2, P3], ... ], P = [x: float, y: float]
 
     checked = models.BooleanField(null=True, default=None)
     comment = models.TextField(blank=True)
@@ -386,6 +387,21 @@ class Marker(models.Model):
 
     class Meta:
         unique_together = ['floor', 'number']
+
+    def svg_item(self):
+        def _multipoint(mp):
+            def _point(p):
+                return f'{p[0]} {p[1]}'
+
+            if len(mp) == 3:            # multipoint = [P1, P2, P3]
+                return _point(mp[1])    # ignore splines for now
+            elif len(mp) == 1:          # multipoint = [P]
+                return _point(mp[0])
+            else:
+                return ''
+
+        points_attr = ', '.join(_multipoint(p) for p in self.points)
+        return mark_safe(f'<polygon points="{points_attr}"/>')
 
 
 class VariablesManager(models.Manager):

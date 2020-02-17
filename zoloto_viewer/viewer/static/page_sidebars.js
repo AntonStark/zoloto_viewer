@@ -1,9 +1,14 @@
 "use strict";
 const LAYER_PARAM = 'layer';
+const ENABLED_LAYER_CLASS = 'enabled_layer';
 
 function toggleLayer(elem, title) {
-    console.debug('toggleLayer', elem, title);
-    elem.classList.toggle('enabled_layer');
+    // console.debug('toggleLayer', elem, title);
+    const elemsRelated = document.getElementsByClassName(title);
+    for (const el of elemsRelated)
+        el.classList.toggle(ENABLED_LAYER_CLASS);
+    // console.debug('found', elemsRelated);
+
     const newUrl = toggleLayerUrlParam(title);
     window.history.pushState({}, '', newUrl.toString())
 }

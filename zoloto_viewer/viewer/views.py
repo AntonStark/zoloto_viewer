@@ -3,7 +3,7 @@ from django.db import IntegrityError
 from django.http import Http404
 from django.shortcuts import render, redirect
 
-from zoloto_viewer.viewer.models import Project, Layer, Page
+from zoloto_viewer.viewer.models import Project, Layer, Page, Marker
 from zoloto_viewer.viewer.view_helpers import project_form
 
 
@@ -123,6 +123,9 @@ def project_page(request, page_code):
     page_code_list = Page.objects.filter(project=project).values_list('code', flat=True)
     layers = Layer.objects.filter(project=project).values_list('title', 'color')
     layers_visible = set(request.GET.getlist('layer'))
+    markers_by_layer = {l: Marker.objects.filter(layer=l, floor=page).all()
+                        for l in Layer.objects.filter(project=project)}
+    im, (gb_top, gb_left, gb_bottom, gb_right) = page.plan, page.geometric_bounds
 
     context = {
         'project': project,
@@ -130,6 +133,11 @@ def project_page(request, page_code):
         'page_code_list': page_code_list,
         'layers': layers,
         'layers_visible': layers_visible,
+        'markers_by_layer': markers_by_layer,
+        'transform_params': {
+            'scale': [im.width / (gb_right - gb_left), im.height / (gb_bottom - gb_top)],
+            'translate': [-gb_left, -gb_top],
+        },
     }
     template = 'viewer/page/project_page_auth.html' if request.user.is_authenticated \
         else 'viewer/page/project_page.html'

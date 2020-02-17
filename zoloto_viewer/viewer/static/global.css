@@ -134,3 +134,10 @@ a {
 #project-page-layers-box li.enabled_layer {
     list-style-type: disc;
 }
+
+#project-page-plan-box svg g {
+    visibility: hidden;
+}
+#project-page-plan-box svg g.enabled_layer {
+    visibility: visible;
+}

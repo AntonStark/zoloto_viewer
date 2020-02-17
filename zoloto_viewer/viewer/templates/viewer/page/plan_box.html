@@ -1,3 +1,17 @@
 <td rowspan="4" id="project-page-plan-box">
-    <img src="{{ page.plan.url }}">
+    <svg width="100%" height="100%">
+        {% with tt=transform_params.translate ts=transform_params.scale %}
+            <image href="{{ page.plan.url }}"
+{#                   transform="scale(0.977, 0.988)"#}
+                   width="{{ page.plan.width }}" height="{{ page.plan.height }}">
+            </image>
+            {% load layer_class %}
+            {% for layer, markers in markers_by_layer.items %}
+                <g transform="translate({{ tt.0 }}, {{ tt.1 }}) scale({{ ts.0 }}, {{ ts.1 }})"
+                   fill="{{ layer.color }}"
+                   class="{{ layer.title }} {{ layer.title|is_enabled:layers_visible }}">
+                {% for marker in markers %}{{ marker.svg_item }}{% endfor %}
+            </g>{% endfor %}
+        {% endwith %}
+    </svg>
 </td>
