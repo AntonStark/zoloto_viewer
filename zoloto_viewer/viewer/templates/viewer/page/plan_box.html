@@ -5,7 +5,7 @@
 {#                   transform="scale(0.977, 0.988)"#}
                    width="{{ page.plan.width }}" height="{{ page.plan.height }}">
             </image>
-            {% load layer_class %}
+            {% load layers_visibility %}
             {% for layer, markers in markers_by_layer.items %}
                 <g transform="translate({{ tt.0 }}, {{ tt.1 }}) scale({{ ts.0 }}, {{ ts.1 }})"
                    fill="{{ layer.color }}"

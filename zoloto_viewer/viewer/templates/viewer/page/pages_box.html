@@ -1,11 +1,14 @@
 <td id="project-page-pages-box" class="project-page-table-left-column">
     <h3 id="floor_caption">{{ page.floor_caption }}</h3>
+    {% load layers_visibility %}
     <p>{% for code in page_code_list %}
-        {% if code == page.code %}
-            <a href="{% url 'project_page' code %}" class="fill-button no-border">{{ forloop.counter }}</a>
-        {% else %}
-            <a href="{% url 'project_page' code %}" class="fill-button-negative no-border">{{ forloop.counter }}</a>
-        {% endif %}
+        <a href="{% url 'project_page' code %}{{ layers_visible|layer_params }}"
+            {% if code == page.code %}
+               class="project-page-link fill-button no-border"
+            {% else %}
+               class="project-page-link fill-button-negative no-border"
+            {% endif %}>
+            {{ forloop.counter }}</a>
     {% endfor %}</p>
     <hr/>
 </td>

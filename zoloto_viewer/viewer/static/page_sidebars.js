@@ -1,20 +1,27 @@
 "use strict";
 const LAYER_PARAM = 'layer';
 const ENABLED_LAYER_CLASS = 'enabled_layer';
+const PAGE_LINK_CLASS = 'project-page-link';
 
 function toggleLayer(elem, title) {
     // console.debug('toggleLayer', elem, title);
-    const elemsRelated = document.getElementsByClassName(title);
-    for (const el of elemsRelated)
+    const layerRelatedElements = document.getElementsByClassName(title);
+    for (const el of layerRelatedElements)
         el.classList.toggle(ENABLED_LAYER_CLASS);
-    // console.debug('found', elemsRelated);
+    // console.debug('found', layerRelatedElements);
 
-    const newUrl = toggleLayerUrlParam(title);
-    window.history.pushState({}, '', newUrl.toString())
+    let actualUrl = new URL(document.location.href);
+    const newUrl = toggleLayerUrlParam(title, actualUrl);
+    window.history.pushState({}, '', newUrl.toString());
+
+    const projectPageLinks = document.getElementsByClassName(PAGE_LINK_CLASS);
+    for (const linkItem of projectPageLinks) {
+        let targetUrl = new URL(linkItem.href);
+        linkItem.href = toggleLayerUrlParam(title, targetUrl);
+    }
 }
 
-function toggleLayerUrlParam(title) {
-    let actualUrl = new URL(document.location.href);
+function toggleLayerUrlParam(title, actualUrl) {
     let enabledLayers = actualUrl.searchParams.getAll(LAYER_PARAM)
         .reduce((hash, l, _) => {
             hash[l] = true;
