@@ -103,3 +103,5 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR, "viewer/static"),
     '/var/www/zoloto_viewer/static/',
 ]
+
+APPEND_SLASH=False

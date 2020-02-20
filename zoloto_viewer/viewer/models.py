@@ -380,7 +380,7 @@ class Marker(models.Model):
     number = models.CharField(max_length=128, blank=False, unique=True)
     points = fields.JSONField(default=list)     # [ [P], ..., [P] ] | [ [P1, P2, P3], ... ], P = [x: float, y: float]
 
-    checked = models.BooleanField(null=True, default=None)
+    correct = models.BooleanField(null=True, default=None)
     comment = models.TextField(blank=True)
 
     objects = MarkersManager()
@@ -432,6 +432,7 @@ class MarkerVariable(models.Model):
     key = models.CharField(max_length=32, blank=False, editable=False)
     value = models.TextField()
     wrong = models.BooleanField(null=False, default=False)
+
     objects = VariablesManager()
 
     class Meta:
