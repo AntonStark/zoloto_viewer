@@ -366,7 +366,7 @@ class MarkersManager(models.Manager):
             except self.model.DoesNotExist:
                 continue    # some of numbers may not have markers due to skip missing pages
             else:
-                MarkerVariable.objects.reset_variables(marker, params[1])
+                MarkerVariable.objects.reset_values(marker, params[1])
 
 
 class Marker(models.Model):
@@ -403,9 +403,30 @@ class Marker(models.Model):
         points_attr = ', '.join(_multipoint(p) for p in self.points)
         return mark_safe(f'<polygon points="{points_attr}"/>')
 
+    def to_json(self):
+        return {'marker': self.uid, 'correct': self.correct, 'has_comment': self.has_comment()}
+
+    def has_comment(self):
+        return bool(self.comment)
+
+    def has_errors(self):
+        return self.markervariable_set.filter(wrong=True).exists()
+
+    def deduce_correctness(self, force_true_false=False):
+        """
+        В случае явного (explicit) выхода отсутствие ошибок -- достаточное условие для correct = True,
+        а при неявном -- в отсутствии ошибок необходимо наличие коммента
+        """
+        if self.has_errors():
+            self.correct = False
+        else:
+            if force_true_false or self.has_comment() or not self.correct is None:
+                self.correct = True
+        self.save()
+
 
 class VariablesManager(models.Manager):
-    def reset_variables(self, marker, new_variables):
+    def reset_values(self, marker, new_variables):
         def _reset_from_dict(m, vars_dict):
             self.filter(marker=m).delete()
             self.bulk_create(
@@ -420,6 +441,13 @@ class VariablesManager(models.Manager):
             _reset_from_dict(marker, dict(enumerate(new_variables, 1)))
         else:
             raise TypeError('new_variables must be dict, list or tuple')
+
+    def reset_wrong_statuses(self, marker, dict_of_wrongness: dict):
+        vars_by_key = dict(map(lambda v: (v.key, v), self.filter(marker=marker).all()))
+        for key, is_wrong in dict_of_wrongness.items():
+            if key in vars_by_key:
+                vars_by_key[key].wrong = bool(is_wrong)
+        self.bulk_update(vars_by_key.values(), 'wrong')
 
 
 class MarkerVariable(models.Model):
@@ -437,3 +465,6 @@ class MarkerVariable(models.Model):
 
     class Meta:
         unique_together = ['marker', 'key']
+
+    def to_json(self):
+        return {'key': self.key, 'value': self.value, 'wrong': self.wrong}
