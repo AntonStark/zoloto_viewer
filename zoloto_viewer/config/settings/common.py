@@ -25,7 +25,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'zoloto_viewer.viewer.apps.ViewerConfig',
+    'zoloto_viewer.viewer',
+    'zoloto_viewer.infoplan',
 ]
 
 MIDDLEWARE = [
@@ -39,6 +40,9 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'zoloto_viewer.config.urls'
+
+APPEND_SLASH = False
+
 
 TEMPLATES = [
     {
@@ -103,5 +107,3 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR, "viewer/static"),
     '/var/www/zoloto_viewer/static/',
 ]
-
-APPEND_SLASH=False

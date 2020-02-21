@@ -1,10 +1,10 @@
 import json
 import operator
 import uuid
-from django.http import Http404, JsonResponse
-from django.views.decorators import csrf, http
+from django.http import JsonResponse, Http404
+from django.views.decorators import http, csrf
 
-from zoloto_viewer.viewer.models import Marker, MarkerVariable
+from zoloto_viewer.infoplan.models import Marker, MarkerVariable
 
 
 def marker_api(method):

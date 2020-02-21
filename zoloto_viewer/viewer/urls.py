@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.urls import include, path
 from django.shortcuts import HttpResponsePermanentRedirect
 
-from zoloto_viewer.viewer import api_views, views
+from zoloto_viewer.viewer import views
 
 
 urlpatterns = [
@@ -19,7 +19,5 @@ urlpatterns = [
 
     path('page/<str:page_code>', views.project_page, name='project_page'),
 
-    path('api/marker/<str:marker_uid>', api_views.get_marker_data, name='marker_get_data'),
-    path('api/marker/<str:marker_uid>/variable/', api_views.update_wrong_status, name='variable_alter_wrong'),
-    path('api/marker/<str:marker_uid>/review/', api_views.load_marker_review, name='marker_load_review'),
+    path('api/', include('zoloto_viewer.infoplan.urls')),
 ]

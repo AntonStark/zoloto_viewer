@@ -3,7 +3,8 @@ from django.db import IntegrityError
 from django.http import Http404
 from django.shortcuts import render, redirect
 
-from zoloto_viewer.viewer.models import Project, Layer, Page, Marker
+from zoloto_viewer.viewer.models import Project, Layer, Page
+from zoloto_viewer.infoplan.models import Marker
 from zoloto_viewer.viewer.view_helpers import project_form
 
 
