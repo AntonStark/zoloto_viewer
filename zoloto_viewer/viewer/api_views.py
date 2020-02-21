@@ -1,7 +1,7 @@
 import json
 import operator
 import uuid
-from django.http import Http404, HttpResponseNotAllowed, JsonResponse
+from django.http import Http404, JsonResponse
 from django.views.decorators import csrf, http
 
 from zoloto_viewer.viewer.models import Marker, MarkerVariable

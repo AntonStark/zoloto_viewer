@@ -19,7 +19,7 @@ urlpatterns = [
 
     path('page/<str:page_code>', views.project_page, name='project_page'),
 
-    path('api/marker/<str:marker_uid>', api_views.get_marker_data),
-    path('api/marker/<str:marker_uid>/variable/', api_views.update_wrong_status),
-    path('api/marker/<str:marker_uid>/review/', api_views.load_marker_review),
+    path('api/marker/<str:marker_uid>', api_views.get_marker_data, name='marker_get_data'),
+    path('api/marker/<str:marker_uid>/variable/', api_views.update_wrong_status, name='variable_alter_wrong'),
+    path('api/marker/<str:marker_uid>/review/', api_views.load_marker_review, name='marker_load_review'),
 ]
