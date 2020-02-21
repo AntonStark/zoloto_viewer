@@ -3,8 +3,8 @@ from django.db import IntegrityError
 from django.http import Http404
 from django.shortcuts import render, redirect
 
+from zoloto_viewer.infoplan import views as infoplan_views
 from zoloto_viewer.viewer.models import Project, Layer, Page
-from zoloto_viewer.infoplan.models import Marker
 from zoloto_viewer.viewer.view_helpers import project_form
 
 
@@ -116,30 +116,7 @@ def project_page(request, page_code):
     valid = Page.validate_code(page_code)
     if not valid:
         raise Http404
-    page = Page.by_code(valid)
-    if not page:
+    page_obj = Page.by_code(valid)
+    if not page_obj:
         raise Http404
-
-    project = page.project
-    page_code_list = Page.objects.filter(project=project).values_list('code', flat=True)
-    layers = Layer.objects.filter(project=project).values_list('title', 'color')
-    layers_visible = set(request.GET.getlist('layer'))
-    markers_by_layer = {l: Marker.objects.filter(layer=l, floor=page).all()
-                        for l in Layer.objects.filter(project=project)}
-    im, (gb_top, gb_left, gb_bottom, gb_right) = page.plan, page.geometric_bounds
-
-    context = {
-        'project': project,
-        'page': page,
-        'page_code_list': page_code_list,
-        'layers': layers,
-        'layers_visible': layers_visible,
-        'markers_by_layer': markers_by_layer,
-        'transform_params': {
-            'scale': [im.width / (gb_right - gb_left), im.height / (gb_bottom - gb_top)],
-            'translate': [-gb_left, -gb_top],
-        },
-    }
-    template = 'viewer/page/project_page_auth.html' if request.user.is_authenticated \
-        else 'viewer/page/project_page.html'
-    return render(request, template, context=context)
+    return infoplan_views.project_page(request, page_obj)

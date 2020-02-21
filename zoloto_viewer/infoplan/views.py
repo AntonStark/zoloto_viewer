@@ -2,6 +2,7 @@ import json
 import operator
 import uuid
 from django.http import JsonResponse, Http404
+from django.shortcuts import render
 from django.views.decorators import http, csrf
 
 from zoloto_viewer.infoplan.models import Marker, MarkerVariable
@@ -95,3 +96,29 @@ def load_marker_review(request, marker_uid: uuid.UUID):
     marker.deduce_correctness(explicit_end_review)
 
     return JsonResponse(marker.to_json())
+
+
+def project_page(request, page_obj):
+    project = page_obj.project
+    page_code_list = project.page_set.values_list('code', flat=True)
+    layers = project.layer_set.values_list('title', 'color')
+    layers_visible = set(request.GET.getlist('layer'))
+    markers_by_layer = {L: page_obj.marker_set.filter(layer=L)
+                        for L in project.layer_set.all()}
+    im, (gb_top, gb_left, gb_bottom, gb_right) = page_obj.plan, page_obj.geometric_bounds
+
+    context = {
+        'project': project,
+        'page': page_obj,
+        'page_code_list': page_code_list,
+        'layers': layers,
+        'layers_visible': layers_visible,
+        'markers_by_layer': markers_by_layer,
+        'transform_params': {
+            'scale': [im.width / (gb_right - gb_left), im.height / (gb_bottom - gb_top)],
+            'translate': [-gb_left, -gb_top],
+        },
+    }
+    template = 'infoplan/project_page_auth.html' if request.user.is_authenticated \
+        else 'infoplan/project_page.html'
+    return render(request, template, context=context)

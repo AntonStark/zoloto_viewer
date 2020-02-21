@@ -25,7 +25,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'zoloto_viewer.viewer',
+    'zoloto_viewer.viewer',     # todo rename to project_loader before full DB clean up
     'zoloto_viewer.infoplan',
 ]
 
@@ -104,6 +104,6 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.0/howto/static-files/
 
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, "viewer/static"),
+    os.path.join(BASE_DIR, "static"),
     '/var/www/zoloto_viewer/static/',
 ]
