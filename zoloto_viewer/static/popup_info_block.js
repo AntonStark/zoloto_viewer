@@ -11,7 +11,7 @@ const markerData = {
         {'key': '2', 'value': 'и второй', 'wrong': true},
     ],
     'has_comment': true,
-    'comment': 'Lorem ipsum...',
+    'comment': 'Lorem ipsum ...',
 };
 const layerColor = '#70153f';
 
@@ -28,7 +28,7 @@ function buildMessBox(data) {
         }));
 
         let variablesDiv  = document.createElement('div');
-        variablesDiv.setAttribute('style', 'flex-grow: 1;');
+        variablesDiv.setAttribute('style', 'flex-grow: 1; min-height: 0; overflow-y: scroll;');
         variablesDiv.append(variablesList);
         return variablesDiv;
     }

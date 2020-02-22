@@ -161,6 +161,12 @@ a {
     padding: 0 6px;
     list-style-type: none;
     height: 100%;
+
+    overflow-x: scroll;
+}
+
+.variables_list li {
+    white-space: nowrap;
 }
 
 .comment_field {
