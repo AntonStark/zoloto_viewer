@@ -91,6 +91,7 @@ a {
 }
 
 #project-page-plan-box {
+    height: 100vh;
 }
 
 .icon {
@@ -140,4 +141,48 @@ a {
 }
 #project-page-plan-box svg g.layer_messages.enabled_layer {
     visibility: visible;
+}
+
+.message_box {
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+    border: black solid 1px;
+    padding: 6px;
+    background: white;
+
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+}
+
+.variables_list {
+    margin: unset;
+    padding: 0 6px;
+    list-style-type: none;
+    height: 100%;
+}
+
+.comment_field {
+    overflow: scroll;
+    resize: none;
+    outline: none;
+
+    width: 100%;
+    width: -moz-available;          /* WebKit-based browsers will ignore this. */
+    width: -webkit-fill-available;  /* Mozilla-based browsers will ignore this. */
+    width: fill-available;
+}
+
+.message_confirm_btn {
+    text-decoration: none;
+    text-align: center;
+
+    background: white;
+    border: 1px solid black;
+    padding: 3px;
+}
+.message_confirm_btn:hover {
+    border: 2px solid black;
+    padding: 2px;
 }

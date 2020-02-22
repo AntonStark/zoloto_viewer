@@ -10,8 +10,11 @@
                 <g transform="translate({{ tt.0 }}, {{ tt.1 }}) scale({{ ts.0 }}, {{ ts.1 }})"
                    fill="{{ layer.color }}"
                    class="layer_markers {{ layer.title }}">
-                {% for marker in markers %}{{ marker.svg_item }}{% endfor %}
-            </g>{% endfor %}
+                {% for marker in markers %}{{ marker.svg_item }}{% endfor %}</g>
+            {% endfor %}
+            {% for layer, markers in markers_by_layer.items %}
+                <g class="layer_messages {{ layer.title }} {{ layer.title|is_enabled:layers_visible }}"></g>
+            {% endfor %}
         {% endwith %}
     </svg>
 </td>

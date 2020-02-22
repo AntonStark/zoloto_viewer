@@ -67,7 +67,7 @@ class Marker(models.Model):
                 return ''
 
         points_attr = ', '.join(_multipoint(p) for p in self.points)
-        return mark_safe(f'<polygon points="{points_attr}"/>')
+        return mark_safe(f'<polygon points="{points_attr}" data-marker-uid="{self.uid}"/>')
 
     def to_json(self):
         return {'marker': self.uid, 'correct': self.correct, 'has_comment': self.has_comment()}
