@@ -27,7 +27,8 @@ def get_marker_data(_, marker_uid: uuid.UUID):
         raise Http404
     variables = MarkerVariable.objects.filter(marker=marker).all()
 
-    rep = marker.to_json().update({
+    rep = marker.to_json()
+    rep.update({
         'comment': marker.comment,
         'variables': tuple(map(MarkerVariable.to_json, variables)),
     })
@@ -38,7 +39,7 @@ def get_marker_data(_, marker_uid: uuid.UUID):
 @csrf.csrf_exempt
 @marker_api
 def update_wrong_status(request, marker_uid: uuid.UUID):
-    """request.body is json object {marker_uid, key, wrong}"""
+    """request.body is json object {key, wrong}"""
     try:
         req = json.loads(request.body)
         key, is_wrong = operator.itemgetter('key', 'wrong')(req)
@@ -63,7 +64,8 @@ def update_wrong_status(request, marker_uid: uuid.UUID):
         target.save()
         marker.deduce_correctness()
 
-    rep = marker.to_json().update({'variable': target.to_json()})
+    rep = marker.to_json()
+    rep.update({'variable': target.to_json()})
     return JsonResponse(rep)
 
 
