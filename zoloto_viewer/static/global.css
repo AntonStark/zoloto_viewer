@@ -94,6 +94,21 @@ a {
     height: 100vh;
 }
 
+.plan_marker {
+    /*stroke: none;*/
+}
+
+.marker_circle {
+    fill-opacity: 0;    /* invisible yet clickable */
+    stroke-width: 0.5px;
+}
+.marker_circle.marker_correct {
+    stroke: green;
+}
+.marker_circle.marker_wrong {
+    stroke: red;
+}
+
 .icon {
     text-decoration: unset;
     color: grey;

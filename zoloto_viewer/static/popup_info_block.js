@@ -2,30 +2,24 @@
 
 const MESSAGE_BOX_SIZE = [160, 260];
 const WRONG_VARIABLE_CLASS = 'wrong_variable';
-const HIDDEN_MESSAGE_CLASS = 'hidden_box';
 
 const BASE_URL = 'http://localhost:8000/viewer/api/';
-const API_VARIABLE_ALTER_WRONG = (marker_uid) => `marker/${marker_uid}/variable/`;
-const API_MARKER_GET_DATA = (marker_uid) => `marker/${marker_uid}`;
-const API_MARKER_LOAD_REVIEW = (marker_uid) => `marker/${marker_uid}/review/`;
+const API_VARIABLE_ALTER_WRONG = (marker_uid) => BASE_URL + `marker/${marker_uid}/variable/`;
+const API_MARKER_GET_DATA = (marker_uid) => BASE_URL + `marker/${marker_uid}`;
+const API_MARKER_LOAD_REVIEW = (marker_uid) => BASE_URL + `marker/${marker_uid}/review/`;
 
 const mockPosition = [300, 200];
 
-const mockLayerTitle = '124_D_HAN';
-const mockMarkerData = {
-    'marker': '47735e8f-9c07-4df6-81e0-991b8c70fd65',
-    'correct': null,
-    'variables': [
-        {'key': '1', 'value': 'первый!', 'wrong': false},
-        {'key': '2', 'value': 'и второй', 'wrong': true},
-    ],
-    'has_comment': true,
-    'comment': 'Lorem ipsum ...',
-};
-const layerColor = '#70153f';
+const layerColor = '#70153f';       // todo убрать
 
 function buildMessBox(data) {
     function buildVariablesBlock(data) {
+        function toggleVariableWrong(varItem, wantedStatus) {
+            if (wantedStatus !== varItem.classList.contains(WRONG_VARIABLE_CLASS))
+                varItem.classList.toggle(WRONG_VARIABLE_CLASS);
+            varItem.dataset.isWrong = wantedStatus;
+        }
+
         let variablesList = document.createElement('ul');
         variablesList.setAttribute('class', 'variables_list');
         variablesList.setAttribute('style', `color: white; background: ${layerColor}`);
@@ -33,12 +27,11 @@ function buildMessBox(data) {
             let variableItem = document.createElement('li');
             variableItem.setAttribute('data-variable-key', varData.key);
             if (varData.wrong) {
-                toggleItemWrong(variableItem);
+                toggleVariableWrong(variableItem, varData.wrong);
             }
             variableItem.textContent = varData.value;
             variableItem.addEventListener('click', () =>
-                handleToggleWrong(data.marker, varData.key,
-                    () => toggleItemWrong(variableItem))
+                handleToggleWrong(data.marker, varData.key, variableItem, toggleVariableWrong)
             );
             return variableItem;
         }));
@@ -77,15 +70,6 @@ function buildMessBox(data) {
     return boxDiv;
 }
 
-function toggleItemWrong(element) {
-    element.classList.toggle(WRONG_VARIABLE_CLASS);
-}
-
-function test() {
-    messageBoxManager.show(mockMarkerData.marker, mockLayerTitle);
-}
-window.addEventListener('load', test);
-
 const messageBoxManager = function () {
     let renderedMessagesIndex = {};     // marker_uid -> MessageBoxNode
     function _registerMessageItem(marker_uid, item) {
@@ -104,8 +88,22 @@ const messageBoxManager = function () {
     function acquirePosition() {
         return mockPosition;
     }
-    function obtainData(marker_uid) {
-        return mockMarkerData;
+    function obtainData(marker_uid, dataDisplayCallback) {
+        let req = new XMLHttpRequest();
+        req.open('GET', API_MARKER_GET_DATA(marker_uid));
+        req.onreadystatechange = function () {
+            if (req.readyState === XMLHttpRequest.DONE) {
+                if (req.status === 200) {
+                    const markerData = JSON.parse(req.responseText);
+                    return dataDisplayCallback(markerData);
+                }
+                else {
+                    console.error(req);
+                    return undefined;
+                }
+            }
+        };
+        req.send();
     }
     function makeWrapper(position, size, mess, hideCallback) {
         const wrapper = document.createElementNS("http://www.w3.org/2000/svg",
@@ -119,6 +117,17 @@ const messageBoxManager = function () {
         wrapper.append(mess);
         wrapper.addEventListener('blur', () => hideCallback());
         return wrapper;
+    }
+    function appendMessageBox(container, markerData) {
+        const position = acquirePosition();
+        if (!position)
+            return undefined;
+
+        const messNode = makeWrapper(position, MESSAGE_BOX_SIZE,
+            buildMessBox(markerData), handlerMessBlur(markerData.marker));
+        _registerMessageItem(markerData.marker, messNode);
+        container.append(messNode);
+        messNode.focus();
     }
     function deduceContainer(layerTitle) {
         const c = document.getElementsByClassName('layer_messages ' + layerTitle);
@@ -153,18 +162,7 @@ const messageBoxManager = function () {
         if (!container)
             return;
 
-        const position = acquirePosition();
-        if (!position)
-            return;
-
-        const markerData = obtainData(marker_uid);
-        if (!markerData)
-            return;     // todo free position
-
-        const messNode = makeWrapper(position, MESSAGE_BOX_SIZE, buildMessBox(markerData), handlerMessBlur(marker_uid));
-        _registerMessageItem(marker_uid, messNode);
-        container.append(messNode);
-        messNode.focus();
+        return obtainData(marker_uid, (data) => appendMessageBox(container, data));
     }
 
     return {
@@ -179,21 +177,31 @@ function handlerMessBlur(marker_uid) {
     return () => messageBoxManager.hide(marker_uid);
 }
 
-function handleToggleWrong(marker_uid, variable_key, viewModifier) {
-    console.debug('handleToggleWrong', marker_uid, variable_key);
+function handleToggleWrong(marker_uid, variable_key, variableItem, viewModifier) {
+    // console.debug('handleToggleWrong', marker_uid, variable_key);
     let req = new XMLHttpRequest();
-    req.open('POST', BASE_URL + API_VARIABLE_ALTER_WRONG(marker_uid));
+    req.open('POST', API_VARIABLE_ALTER_WRONG(marker_uid));
     req.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
     req.onreadystatechange = function() {
         if (req.readyState === XMLHttpRequest.DONE) {
             if (req.status === 200) {
                 console.debug(req, 'modifyView');
-                viewModifier();
+                const rep = JSON.parse(req.responseText);
+                if (rep['marker'] === marker_uid && rep['variable'] !== undefined) {
+                    viewModifier(variableItem, rep['variable']['wrong']);
+                    // todo обновлять кружок корректности
+                }
             }
             else {
                 console.error(req);
             }
         }
     };
-    req.send(JSON.stringify({'key': variable_key, 'wrong': true}));
+    const currentlyWrong = variableItem.dataset.isWrong === 'true';
+    req.send(JSON.stringify({'key': variable_key, 'wrong': !currentlyWrong}));
+    // todo не позволять пометить пустую переменную
+}
+
+function handleClickMarkerCircle(circleElement) {
+    messageBoxManager.show(circleElement.dataset.markerUid, circleElement.dataset.layerTitle);
 }

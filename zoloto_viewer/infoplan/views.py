@@ -25,7 +25,7 @@ def get_marker_data(_, marker_uid: uuid.UUID):
         marker = Marker.objects.get(uid=marker_uid)
     except Marker.DoesNotExist:
         raise Http404
-    variables = MarkerVariable.objects.filter(marker=marker).all()
+    variables = sorted(MarkerVariable.objects.filter(marker=marker).all(), key=lambda v: int(v.key))
 
     rep = marker.to_json()
     rep.update({

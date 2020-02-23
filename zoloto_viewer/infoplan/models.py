@@ -50,24 +50,30 @@ class Marker(models.Model):
     comment = models.TextField(blank=True)
 
     objects = MarkersManager()
+    CIRCLE_RADIUS = 5
 
     class Meta:
         unique_together = ['floor', 'number']
 
+    @staticmethod
+    def multipoint_to_point(mp):
+        if len(mp) == 3:        # multipoint = [P1, P2, P3]
+            return mp[1]        # ignore splines for now
+        elif len(mp) == 1:      # multipoint = [P]
+            return mp[0]
+        else:
+            return None
+
     def svg_item(self):
-        def _multipoint(mp):
-            def _point(p):
-                return f'{p[0]} {p[1]}'
+        def _point(p):
+            return f'{p[0]} {p[1]}'
 
-            if len(mp) == 3:            # multipoint = [P1, P2, P3]
-                return _point(mp[1])    # ignore splines for now
-            elif len(mp) == 1:          # multipoint = [P]
-                return _point(mp[0])
-            else:
-                return ''
+        points_attr = ', '.join(_point(p) for p in map(Marker.multipoint_to_point, self.points) if p is not None)
+        return mark_safe(f'<polygon points="{points_attr}" class="plan_marker" data-marker-uid="{self.uid}"/>')
 
-        points_attr = ', '.join(_multipoint(p) for p in self.points)
-        return mark_safe(f'<polygon points="{points_attr}" data-marker-uid="{self.uid}"/>')
+    def center_position(self):
+        points = [p for p in map(Marker.multipoint_to_point, self.points) if p is not None]
+        return sum([p[0] for p in points]) / len(points), sum([p[1] for p in points]) / len(points)
 
     def to_json(self):
         return {'marker': self.uid, 'correct': self.correct, 'has_comment': self.has_comment()}
@@ -86,7 +92,7 @@ class Marker(models.Model):
         if self.has_errors():
             self.correct = False
         else:
-            if force_true_false or self.has_comment() or not self.correct is None:
+            if force_true_false or self.has_comment() or self.correct is not None:
                 self.correct = True
         self.save()
 

@@ -10,7 +10,15 @@
                 <g transform="translate({{ tt.0 }}, {{ tt.1 }}) scale({{ ts.0 }}, {{ ts.1 }})"
                    fill="{{ layer.color }}"
                    class="layer_markers {{ layer.title }}">
-                {% for marker in markers %}{{ marker.svg_item }}{% endfor %}</g>
+                {% for marker in markers %}
+                    {{ marker.svg_item }}
+                    <circle cx="{{ marker.center_position.0 }}" cy="{{ marker.center_position.1 }}"
+                            r="{{ marker.CIRCLE_RADIUS }}"
+                            class="marker_circle {{ marker.correct|yesno:'marker_correct,marker_wrong,' }}"
+                            data-marker-uid="{{ marker.uid }}" data-layer-title="{{ layer.title }}"
+                            onclick="handleClickMarkerCircle(this)"
+                    ></circle>
+                {% endfor %}</g>
             {% endfor %}
             {% for layer, markers in markers_by_layer.items %}
                 <g class="layer_messages {{ layer.title }} {{ layer.title|is_enabled:layers_visible }}"></g>
