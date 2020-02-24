@@ -32,6 +32,9 @@ def get_marker_data(_, marker_uid: uuid.UUID):
         'comment': marker.comment,
         'variables': tuple(map(MarkerVariable.to_json, variables)),
     })
+    rep.update({
+        'layer': {'title': marker.layer.title, 'color': marker.layer.color}
+    })
     return JsonResponse(rep)
 
 
@@ -60,7 +63,7 @@ def update_wrong_status(request, marker_uid: uuid.UUID):
     except MarkerVariable.DoesNotExist:
         raise Http404
     else:
-        target.wrong = is_wrong
+        target.wrong = is_wrong     # todo не позволять пометить пустую переменную
         target.save()
         marker.deduce_correctness()
 

@@ -1,43 +1,22 @@
 "use strict";
 
 const MESSAGE_BOX_SIZE = [160, 260];
-const WRONG_VARIABLE_CLASS = 'wrong_variable';
-
-const BASE_URL = 'http://localhost:8000/viewer/api/';
-const API_VARIABLE_ALTER_WRONG = (marker_uid) => BASE_URL + `marker/${marker_uid}/variable/`;
-const API_MARKER_GET_DATA = (marker_uid) => BASE_URL + `marker/${marker_uid}`;
-const API_MARKER_LOAD_REVIEW = (marker_uid) => BASE_URL + `marker/${marker_uid}/review/`;
-
-const mockPosition = [300, 200];
-
-const layerColor = '#70153f';       // todo убрать
 
 function buildMessBox(data) {
     function buildVariablesBlock(data) {
-        function toggleVariableWrong(varItem, wantedStatus) {
-            if (wantedStatus !== varItem.classList.contains(WRONG_VARIABLE_CLASS))
-                varItem.classList.toggle(WRONG_VARIABLE_CLASS);
-            varItem.dataset.isWrong = wantedStatus;
-        }
-
         let variablesList = document.createElement('ul');
-        variablesList.setAttribute('class', 'variables_list');
-        variablesList.setAttribute('style', `color: white; background: ${layerColor}`);
+        variablesList.setAttribute('style', `color: white; background: ${data.layer.color}`);
         variablesList.append(...data.variables.map(varData => {
             let variableItem = document.createElement('li');
             variableItem.setAttribute('data-variable-key', varData.key);
-            if (varData.wrong) {
-                toggleVariableWrong(variableItem, varData.wrong);
-            }
             variableItem.textContent = varData.value;
-            variableItem.addEventListener('click', () =>
-                handleToggleWrong(data.marker, varData.key, variableItem, toggleVariableWrong)
-            );
+            variableItem.addEventListener('click', () => handleToggleWrong(data.marker, varData.key));
+            varWrongnessManager.register(data.marker, varData.key, variableItem, varData.wrong);
             return variableItem;
         }));
 
         let variablesDiv  = document.createElement('div');
-        variablesDiv.setAttribute('style', 'flex-grow: 1; min-height: 0; overflow-y: scroll;');
+        variablesDiv.setAttribute('class', 'variables_container');
         variablesDiv.append(variablesList);
         return variablesDiv;
     }
@@ -72,6 +51,7 @@ function buildMessBox(data) {
 
 const messageBoxManager = function () {
     let renderedMessagesIndex = {};     // marker_uid -> MessageBoxNode
+
     function _registerMessageItem(marker_uid, item) {
         if (renderedMessagesIndex[marker_uid] !== undefined
             && renderedMessagesIndex[marker_uid] !== item)
@@ -86,6 +66,7 @@ const messageBoxManager = function () {
     }
 
     function acquirePosition() {
+        const mockPosition = [300, 200];
         return mockPosition;
     }
     function obtainData(marker_uid, dataDisplayCallback) {
@@ -118,7 +99,12 @@ const messageBoxManager = function () {
         wrapper.addEventListener('blur', () => hideCallback());
         return wrapper;
     }
-    function appendMessageBox(container, markerData) {
+    function appendMessageBox(markerData) {
+        const layer_title = markerData.layer.title;
+        const container = deduceContainer(layer_title);
+        if (!container)
+            return;
+
         const position = acquirePosition();
         if (!position)
             return undefined;
@@ -146,7 +132,7 @@ const messageBoxManager = function () {
         else
             return false;
     }
-    function showMessage(marker_uid, layer_title) {
+    function showMessage(marker_uid) {
         // проверить индекс и если есть, просто переключить видимость
         const maybeMessItem = checkMessageIndex(marker_uid);
         if (maybeMessItem !== null) {
@@ -158,11 +144,7 @@ const messageBoxManager = function () {
         //   1) запросить место
         //   2) если место нашлось запросить данные
         //   3) если данные пришли, построить Node сообщения, закинуть в индекс и отобразить в контейнере
-        const container = deduceContainer(layer_title);
-        if (!container)
-            return;
-
-        return obtainData(marker_uid, (data) => appendMessageBox(container, data));
+        return obtainData(marker_uid, (data) => appendMessageBox(data));
     }
 
     return {
@@ -171,37 +153,77 @@ const messageBoxManager = function () {
     }
 }();
 
-function handlerMessBlur(marker_uid) {
-    // todo send req
 
-    return () => messageBoxManager.hide(marker_uid);
-}
+const markerCirclesManager = function () {
+    const MARKER_CORRECT_CLASS = 'marker_correct';
+    const MARKER_INCORRECT_CLASS = 'marker_wrong';
+    let markerCorrCircles = {};         // marker_uid -> SvgCircleElement
 
-function handleToggleWrong(marker_uid, variable_key, variableItem, viewModifier) {
-    // console.debug('handleToggleWrong', marker_uid, variable_key);
-    let req = new XMLHttpRequest();
-    req.open('POST', API_VARIABLE_ALTER_WRONG(marker_uid));
-    req.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
-    req.onreadystatechange = function() {
-        if (req.readyState === XMLHttpRequest.DONE) {
-            if (req.status === 200) {
-                console.debug(req, 'modifyView');
-                const rep = JSON.parse(req.responseText);
-                if (rep['marker'] === marker_uid && rep['variable'] !== undefined) {
-                    viewModifier(variableItem, rep['variable']['wrong']);
-                    // todo обновлять кружок корректности
-                }
-            }
-            else {
-                console.error(req);
-            }
+    function _setCorrectness(element, correct) {
+        if (element.classList.contains(MARKER_CORRECT_CLASS) !== correct)
+            element.classList.toggle(MARKER_CORRECT_CLASS);
+        if (element.classList.contains(MARKER_INCORRECT_CLASS) !== !correct)
+            element.classList.toggle(MARKER_INCORRECT_CLASS);
+    }
+
+    function registerMarkerCircle(circleElement) {
+        markerCorrCircles[circleElement.dataset.markerUid] = circleElement;
+    }
+    function updateCorrectness(markerData) {
+        // console.log('updateCorrectness', markerData);
+        const [markerUid, correct] = [markerData.marker, markerData.correct];
+        const elem = markerCorrCircles[markerUid];
+        if (elem !== undefined)
+            _setCorrectness(elem, correct);
+    }
+
+    return {
+        register: registerMarkerCircle,
+        sync    : updateCorrectness,
+    }
+
+}();
+
+
+const varWrongnessManager = function () {
+    const WRONG_VARIABLE_CLASS = 'wrong_variable';
+    let variablesItemsIndex = {};       // { marker_uid -> { key -> Item} }
+    let variablesWrongnessIndex = {};       // { marker_uid -> { key -> isWrong} }
+
+    function _setVariableWrongness(varItem, wantedStatus) {
+        if (varItem.classList.contains(WRONG_VARIABLE_CLASS) !== wantedStatus)
+            varItem.classList.toggle(WRONG_VARIABLE_CLASS);
+    }
+
+    function registerVariableItem(markerUid, key, item, isWrong) {
+        if (variablesItemsIndex[markerUid] === undefined)
+            variablesItemsIndex[markerUid] = {};
+        variablesItemsIndex[markerUid][key] = item;
+
+        if (variablesWrongnessIndex[markerUid] === undefined)
+            variablesWrongnessIndex[markerUid] = {};
+        variablesWrongnessIndex[markerUid][key] = isWrong;
+        _setVariableWrongness(variablesItemsIndex[markerUid][key], isWrong);
+    }
+    function updateWrongStatus(markerVarData) {
+        const [markerUid, varData] = [markerVarData.marker, markerVarData.variable];
+        const [key, wrong] = [varData.key, varData.wrong];
+
+        if (variablesItemsIndex[markerUid] && variablesItemsIndex[markerUid][key]) {
+            variablesWrongnessIndex[markerUid][key] = wrong;
+            _setVariableWrongness(variablesItemsIndex[markerUid][key], wrong);
         }
-    };
-    const currentlyWrong = variableItem.dataset.isWrong === 'true';
-    req.send(JSON.stringify({'key': variable_key, 'wrong': !currentlyWrong}));
-    // todo не позволять пометить пустую переменную
-}
+    }
+    function isWrong(markerUid, key) {
+        if (variablesWrongnessIndex[markerUid] && variablesWrongnessIndex[markerUid][key])
+            return variablesWrongnessIndex[markerUid][key];
+        else
+            return undefined;
+    }
 
-function handleClickMarkerCircle(circleElement) {
-    messageBoxManager.show(circleElement.dataset.markerUid, circleElement.dataset.layerTitle);
-}
+    return {
+        register: registerVariableItem,
+        sync: updateWrongStatus,
+        status: isWrong,
+    }
+}();

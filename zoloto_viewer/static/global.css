@@ -171,7 +171,13 @@ a {
     align-items: stretch;
 }
 
-.variables_list {
+.variables_container {
+    flex-grow: 1;
+    min-height: 0;
+    overflow-y: scroll;
+}
+
+.variables_container ul {
     margin: unset;
     padding: 0 6px;
     list-style-type: none;
@@ -182,11 +188,12 @@ a {
     list-style-position: inside;
 }
 
-.variables_list li {
+.variables_container ul li {
     white-space: nowrap;
+    font-size: 12px;
 }
 
-.variables_list li.wrong_variable {
+.variables_container ul li.wrong_variable {
     padding-left: 20px;
 }
 
