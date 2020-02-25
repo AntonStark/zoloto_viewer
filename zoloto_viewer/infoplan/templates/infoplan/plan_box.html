@@ -1,5 +1,5 @@
 <td rowspan="4" id="project-page-plan-box">
-    <svg width="100%" height="100%">
+    <svg width="100%" height="100%" id="project-page-plan-svg">
         {% with tt=transform_params.translate ts=transform_params.scale %}
             <image href="{{ page.plan.url }}"
 {#                   transform="scale(0.977, 0.988)"#}
@@ -11,17 +11,18 @@
                    fill="{{ layer.color }}"
                    class="layer_markers {{ layer.title }}">
                 {% for marker in markers %}
-                    {{ marker.svg_item }}
+                    <polygon points="{{ marker.path }}"
+                             class="plan_marker" data-marker-uid="{{ marker.uid }}"></polygon>
                     <circle cx="{{ marker.center_position.0 }}" cy="{{ marker.center_position.1 }}"
                             r="{{ marker.CIRCLE_RADIUS }}"
                             class="marker_circle {{ marker.correct|yesno:'marker_correct,marker_wrong,' }}"
                             data-marker-uid="{{ marker.uid }}" data-layer-title="{{ layer.title }}"
-                            onclick="handleClickMarkerCircle(this)"
-                    ></circle>
+                            onclick="handleClickMarkerCircle(this)"></circle>
                 {% endfor %}</g>
             {% endfor %}
             {% for layer, markers in markers_by_layer.items %}
-                <g class="layer_messages {{ layer.title }} {{ layer.title|is_enabled:layers_visible }}"></g>
+                <g class="layer_messages {{ layer.title }} {{ layer.title|is_enabled:layers_visible }}"
+                ></g>
             {% endfor %}
         {% endwith %}
     </svg>

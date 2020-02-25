@@ -56,7 +56,7 @@ class Marker(models.Model):
         unique_together = ['floor', 'number']
 
     @staticmethod
-    def multipoint_to_point(mp):
+    def multipoint_mid(mp):
         if len(mp) == 3:        # multipoint = [P1, P2, P3]
             return mp[1]        # ignore splines for now
         elif len(mp) == 1:      # multipoint = [P]
@@ -68,11 +68,15 @@ class Marker(models.Model):
         def _point(p):
             return f'{p[0]} {p[1]}'
 
-        points_attr = ', '.join(_point(p) for p in map(Marker.multipoint_to_point, self.points) if p is not None)
+        points_attr = ', '.join(_point(p) for p in map(Marker.multipoint_mid, self.points) if p is not None)
         return mark_safe(f'<polygon points="{points_attr}" class="plan_marker" data-marker-uid="{self.uid}"/>')
 
+    def path(self):
+        middle_points = filter(None, map(Marker.multipoint_mid, self.points))
+        return ', '.join(map(lambda p: f'{p[0]} {p[1]}', middle_points))
+
     def center_position(self):
-        points = [p for p in map(Marker.multipoint_to_point, self.points) if p is not None]
+        points = [p for p in map(Marker.multipoint_mid, self.points) if p is not None]
         return sum([p[0] for p in points]) / len(points), sum([p[1] for p in points]) / len(points)
 
     def to_json(self):

@@ -1,6 +1,13 @@
 "use strict";
 
 const MESSAGE_BOX_SIZE = [160, 260];
+let SVG_VIEWPORT_BOUNDS = undefined;
+window.addEventListener('load', function () {
+    const svgElement = document.getElementById('project-page-plan-svg');
+    // console.log(svgElement.width.baseVal.value);
+    SVG_VIEWPORT_BOUNDS = [svgElement.width.baseVal.value, svgElement.height.baseVal.value];
+});
+
 
 function buildMessBox(data) {
     function buildVariablesBlock(data) {
@@ -65,18 +72,29 @@ const messageBoxManager = function () {
             return null;
     }
 
-    function acquirePosition() {
-        const mockPosition = [300, 200];
-        return mockPosition;
+    function acquirePosition(markerPosition) {
+        const [marX, marY] = markerPosition;
+        const [boxW, boxH] = MESSAGE_BOX_SIZE;
+        const [svgW, svgH] = SVG_VIEWPORT_BOUNDS;
+        const d = 10;
+
+        const x = (marX + (d + boxW) < svgW
+            ? marX + d
+            : marX - (d + boxW));
+        const y = (marY + (d + boxH) < svgH
+            ? marY + d
+            : marY - (d + boxH));
+
+        return [x, y];
     }
-    function obtainData(marker_uid, dataDisplayCallback) {
+    function onFetchData(marker_uid, dataCallback) {
         let req = new XMLHttpRequest();
         req.open('GET', API_MARKER_GET_DATA(marker_uid));
         req.onreadystatechange = function () {
             if (req.readyState === XMLHttpRequest.DONE) {
                 if (req.status === 200) {
                     const markerData = JSON.parse(req.responseText);
-                    return dataDisplayCallback(markerData);
+                    return dataCallback(markerData);
                 }
                 else {
                     console.error(req);
@@ -99,22 +117,6 @@ const messageBoxManager = function () {
         wrapper.addEventListener('blur', () => hideCallback());
         return wrapper;
     }
-    function appendMessageBox(markerData) {
-        const layer_title = markerData.layer.title;
-        const container = deduceContainer(layer_title);
-        if (!container)
-            return;
-
-        const position = acquirePosition();
-        if (!position)
-            return undefined;
-
-        const messNode = makeWrapper(position, MESSAGE_BOX_SIZE,
-            buildMessBox(markerData), handlerMessBlur(markerData.marker));
-        _registerMessageItem(markerData.marker, messNode);
-        container.append(messNode);
-        messNode.focus();
-    }
     function deduceContainer(layerTitle) {
         const c = document.getElementsByClassName('layer_messages ' + layerTitle);
         if (c.length > 0)
@@ -134,9 +136,10 @@ const messageBoxManager = function () {
     }
     function showMessage(marker_uid) {
         // проверить индекс и если есть, просто переключить видимость
+        // console.log('showMessage', markerPosition);
         const maybeMessItem = checkMessageIndex(marker_uid);
         if (maybeMessItem !== null) {
-            maybeMessItem.style.display = 'initial';
+            maybeMessItem.style.display = 'block';
             return;
         }
 
@@ -144,7 +147,25 @@ const messageBoxManager = function () {
         //   1) запросить место
         //   2) если место нашлось запросить данные
         //   3) если данные пришли, построить Node сообщения, закинуть в индекс и отобразить в контейнере
-        return obtainData(marker_uid, (data) => appendMessageBox(data));
+        return onFetchData(marker_uid, function (markerData) {
+            const layer_title = markerData.layer.title;
+            // todo вообще то стоит опредялть container и markerPosition снаружи (до запроса данных)
+            //  но для этого надо брать layer_title не из данных
+            const container = deduceContainer(layer_title);
+            if (!container)
+                return;
+
+            const markerPosition = markerCirclesManager.position(markerData.marker);
+            const position = acquirePosition(markerPosition);
+            if (!position)
+                return undefined;
+
+            const messNode = makeWrapper(position, MESSAGE_BOX_SIZE,
+                buildMessBox(markerData), handlerMessBlur(markerData.marker));
+            _registerMessageItem(markerData.marker, messNode);
+            container.append(messNode);
+            messNode.focus();
+        });
     }
 
     return {
@@ -158,6 +179,7 @@ const markerCirclesManager = function () {
     const MARKER_CORRECT_CLASS = 'marker_correct';
     const MARKER_INCORRECT_CLASS = 'marker_wrong';
     let markerCorrCircles = {};         // marker_uid -> SvgCircleElement
+    let circleCenterIndex = {};         // marker_uid -> [x, y]
 
     function _setCorrectness(element, correct) {
         if (element.classList.contains(MARKER_CORRECT_CLASS) !== correct)
@@ -165,9 +187,19 @@ const markerCirclesManager = function () {
         if (element.classList.contains(MARKER_INCORRECT_CLASS) !== !correct)
             element.classList.toggle(MARKER_INCORRECT_CLASS);
     }
+    function _evalViewportPosition(circleElement) {
+        const transform = circleElement.getCTM();
+        let probe = circleElement.ownerSVGElement.createSVGPoint();
+        probe.x = circleElement.cx.baseVal.value;
+        probe.y = circleElement.cy.baseVal.value;
+        probe = probe.matrixTransform(transform);
+        return [probe.x, probe.y];
+    }
 
     function registerMarkerCircle(circleElement) {
-        markerCorrCircles[circleElement.dataset.markerUid] = circleElement;
+        const markerUid = circleElement.dataset.markerUid;
+        markerCorrCircles[markerUid] = circleElement;
+        circleCenterIndex[markerUid] = _evalViewportPosition(circleElement);
     }
     function updateCorrectness(markerData) {
         // console.log('updateCorrectness', markerData);
@@ -176,10 +208,14 @@ const markerCirclesManager = function () {
         if (elem !== undefined)
             _setCorrectness(elem, correct);
     }
+    function getCircleCenter(markerUid) {
+        return circleCenterIndex[markerUid];
+    }
 
     return {
         register: registerMarkerCircle,
         sync    : updateCorrectness,
+        position: getCircleCenter,
     }
 
 }();
