@@ -80,7 +80,7 @@ class Marker(models.Model):
         return sum([p[0] for p in points]) / len(points), sum([p[1] for p in points]) / len(points)
 
     def to_json(self):
-        return {'marker': self.uid, 'correct': self.correct, 'has_comment': self.has_comment()}
+        return {'marker': self.uid, 'number': self.number, 'correct': self.correct, 'has_comment': self.has_comment()}
 
     def has_comment(self):
         return bool(self.comment)
@@ -123,7 +123,7 @@ class VariablesManager(models.Manager):
         for key, is_wrong in dict_of_wrongness.items():
             if key in vars_by_key:
                 vars_by_key[key].wrong = bool(is_wrong)
-        self.bulk_update(vars_by_key.values(), 'wrong')
+        self.bulk_update(vars_by_key.values(), ['wrong'])
 
 
 class MarkerVariable(models.Model):

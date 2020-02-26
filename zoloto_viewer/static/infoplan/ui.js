@@ -9,10 +9,19 @@ window.addEventListener('load', function () {
 });
 
 
+// todo переход к коментарию скрывает сообщение
+// todo передавать фокус сразу в поле комментария и передавать потерю фокуса контейнеру
 function buildMessBox(data) {
     function buildVariablesBlock(data) {
         let variablesList = document.createElement('ul');
         variablesList.setAttribute('style', `color: white; background: ${data.layer.color}`);
+
+        let [numberLine, emptyLine] = [document.createElement('li'), document.createElement('li')];
+        numberLine.style.cursor = emptyLine.style.cursor = 'unset';
+        numberLine.textContent = data.number;
+        emptyLine.innerHTML = '&nbsp;';
+        variablesList.append(numberLine, emptyLine);
+
         variablesList.append(...data.variables.map(varData => {
             let variableItem = document.createElement('li');
             variableItem.setAttribute('data-variable-key', varData.key);
@@ -47,6 +56,8 @@ function buildMessBox(data) {
         let btnLink = document.createElement('a');
         btnLink.setAttribute('class', 'message_confirm_btn');
         btnLink.textContent = 'Проверено';
+        btnLink.addEventListener('click',
+            () => handlerConfirmBtmClick(data.marker));
         return btnLink;
     }
 
@@ -87,23 +98,6 @@ const messageBoxManager = function () {
 
         return [x, y];
     }
-    function onFetchData(marker_uid, dataCallback) {
-        let req = new XMLHttpRequest();
-        req.open('GET', API_MARKER_GET_DATA(marker_uid));
-        req.onreadystatechange = function () {
-            if (req.readyState === XMLHttpRequest.DONE) {
-                if (req.status === 200) {
-                    const markerData = JSON.parse(req.responseText);
-                    return dataCallback(markerData);
-                }
-                else {
-                    console.error(req);
-                    return undefined;
-                }
-            }
-        };
-        req.send();
-    }
     function makeWrapper(position, size, mess, hideCallback) {
         const wrapper = document.createElementNS("http://www.w3.org/2000/svg",
             'foreignObject');
@@ -114,7 +108,7 @@ const messageBoxManager = function () {
         wrapper.style.outline = 'none';
 
         wrapper.append(mess);
-        wrapper.addEventListener('blur', () => hideCallback());
+        wrapper.addEventListener('blur', hideCallback);
         return wrapper;
     }
     function deduceContainer(layerTitle) {
@@ -147,7 +141,8 @@ const messageBoxManager = function () {
         //   1) запросить место
         //   2) если место нашлось запросить данные
         //   3) если данные пришли, построить Node сообщения, закинуть в индекс и отобразить в контейнере
-        return onFetchData(marker_uid, function (markerData) {
+        doApiCall('GET', API_MARKER_GET_DATA(marker_uid), undefined,
+            function (markerData) {
             const layer_title = markerData.layer.title;
             // todo вообще то стоит опредялть container и markerPosition снаружи (до запроса данных)
             //  но для этого надо брать layer_title не из данных
@@ -161,16 +156,33 @@ const messageBoxManager = function () {
                 return undefined;
 
             const messNode = makeWrapper(position, MESSAGE_BOX_SIZE,
-                buildMessBox(markerData), handlerMessBlur(markerData.marker));
+                buildMessBox(markerData),
+                () => handlerMessBlur(markerData.marker));
             _registerMessageItem(markerData.marker, messNode);
             container.append(messNode);
             messNode.focus();
         });
     }
+    function getComment(markerUid) {
+        const box = renderedMessagesIndex[markerUid];
+        if (!box)
+            return undefined;
+
+        const commentField = box.getElementsByTagName('textarea');
+        if (commentField.length > 0)
+            return commentField[0].value;
+        else
+            return undefined;
+    }
+    function getContainer(markerUid) {
+        return renderedMessagesIndex[markerUid];
+    }
 
     return {
         show: showMessage,
         hide: hideMessage,
+        read: getComment,
+        get : getContainer,
     }
 }();
 
@@ -182,6 +194,8 @@ const markerCirclesManager = function () {
     let circleCenterIndex = {};         // marker_uid -> [x, y]
 
     function _setCorrectness(element, correct) {
+        if (correct === null)
+            return;
         if (element.classList.contains(MARKER_CORRECT_CLASS) !== correct)
             element.classList.toggle(MARKER_CORRECT_CLASS);
         if (element.classList.contains(MARKER_INCORRECT_CLASS) !== !correct)
@@ -203,10 +217,11 @@ const markerCirclesManager = function () {
     }
     function updateCorrectness(markerData) {
         // console.log('updateCorrectness', markerData);
-        const [markerUid, correct] = [markerData.marker, markerData.correct];
-        const elem = markerCorrCircles[markerUid];
-        if (elem !== undefined)
+        const elem = markerCorrCircles[(markerData.marker)];
+        if (elem !== undefined) {
+            const [correct, hasComment] = [markerData.correct, markerData.has_comment];
             _setCorrectness(elem, correct);
+        }
     }
     function getCircleCenter(markerUid) {
         return circleCenterIndex[markerUid];
@@ -256,10 +271,19 @@ const varWrongnessManager = function () {
         else
             return undefined;
     }
+    function allMarkerVars(markerUid) {
+        const mData = variablesWrongnessIndex[markerUid];
+        if (!mData)
+            return undefined;
+
+        return Object.entries(mData)
+            .map((pair) => ({'key': pair[0], 'wrong': pair[1]}));
+    }
 
     return {
         register: registerVariableItem,
-        sync: updateWrongStatus,
-        status: isWrong,
+        sync    : updateWrongStatus,
+        status  : isWrong,
+        data    : allMarkerVars,
     }
 }();

@@ -73,6 +73,7 @@ def update_wrong_status(request, marker_uid: uuid.UUID):
 
 
 @http.require_POST
+@csrf.csrf_exempt
 @marker_api
 def load_marker_review(request, marker_uid: uuid.UUID):
     """
@@ -83,12 +84,12 @@ def load_marker_review(request, marker_uid: uuid.UUID):
     """
     try:
         req = json.loads(request.body)
-        is_wrong_by_key, comment, exit_type = operator.itemgetter('variables', 'comment', 'exit_type')(req)
+        variables, comment, exit_type = operator.itemgetter('variables', 'comment', 'exit_type')(req)
     except (json.JSONDecodeError, KeyError):
         return JsonResponse({
             'error': 'post body must be json with fields: \'variables\', \'comment\', \'exit_type\''
         }, status=400)
-    if not isinstance(is_wrong_by_key, list):
+    if not isinstance(variables, list):
         return JsonResponse({'error': '\'variables\' must be json array'}, status=400)
     explicit_end_review = exit_type == 'button'
 
@@ -96,6 +97,7 @@ def load_marker_review(request, marker_uid: uuid.UUID):
         marker = Marker.objects.get(uid=marker_uid)
     except Marker.DoesNotExist:
         raise Http404
+    is_wrong_by_key = dict(map(lambda v: (v['key'], v['wrong']), variables))
     MarkerVariable.objects.reset_wrong_statuses(marker, is_wrong_by_key)
     marker.comment = comment
     marker.deduce_correctness(explicit_end_review)

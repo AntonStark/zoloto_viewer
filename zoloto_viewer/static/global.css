@@ -191,12 +191,21 @@ a {
 .variables_container ul li {
     white-space: nowrap;
     font-size: 12px;
+    cursor: pointer;
+    /* to prevent selection on click */
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
 }
 
 .variables_container ul li.wrong_variable {
     padding-left: 20px;
 }
 
+/*noinspection CssInvalidPropertyValue*/
 .comment_field {
     overflow: scroll;
     resize: none;
