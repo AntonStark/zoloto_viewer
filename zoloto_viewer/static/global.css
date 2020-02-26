@@ -98,16 +98,32 @@ a {
     /*stroke: none;*/
 }
 
+
 .marker_circle {
     fill-opacity: 0;    /* invisible yet clickable */
     stroke-width: 0.5px;
+    stroke: none;
 }
-.marker_circle.marker_correct {
+.marker_correct .marker_circle {
     stroke: green;
 }
-.marker_circle.marker_wrong {
+.marker_wrong .marker_circle {
     stroke: red;
 }
+
+.marker_comment_mark {
+    stroke: none;
+    fill: none;
+}
+.marker_correct .marker_has_comment {
+    stroke: green;
+    fill: green;
+}
+.marker_wrong .marker_has_comment {
+    stroke: red;
+    fill: red;
+}
+
 
 .icon {
     text-decoration: unset;
@@ -119,7 +135,7 @@ a {
 .hidden {
     visibility: hidden;
 }
-#projects-table tr:hover .icon{
+#projects-table tr:hover .icon {
     visibility: visible;
 }
 

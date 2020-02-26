@@ -88,7 +88,8 @@ function handleToggleWrong(marker_uid, variable_key) {
 }
 
 function handleClickMarkerCircle(circleElement) {
-    const elemData = circleElement.dataset;
+    const markerElement = circleElement.parentNode.previousElementSibling;
+    messageBoxManager.reg(markerElement);
     markerCirclesManager.register(circleElement);
-    messageBoxManager.show(elemData.markerUid);
+    messageBoxManager.show(circleElement.dataset.markerUid);
 }

@@ -8,6 +8,17 @@
     <script src="{% static 'page_sidebars.js' %}"></script>
     <script src="{% static 'infoplan/api.js' %}"></script>
     <script src="{% static 'infoplan/ui.js' %}"></script>
+    <style type="text/css">
+        {% for layer, _ in markers_by_layer.items %}
+            .layer-{{ layer.title }} .variables_container {
+                background: {{ layer.color }};
+                color: white;
+            }
+            .layer_markers.layer-{{ layer.title }} {
+                fill: {{ layer.color }};
+            }
+        {% endfor %}
+    </style>
 </head>
 <body style="margin: 0;">
 <table id="project-page-table">

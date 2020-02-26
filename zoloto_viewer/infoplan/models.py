@@ -51,6 +51,7 @@ class Marker(models.Model):
 
     objects = MarkersManager()
     CIRCLE_RADIUS = 5
+    COMMENT_MARK_PADDING = 0.7 * CIRCLE_RADIUS
 
     class Meta:
         unique_together = ['floor', 'number']

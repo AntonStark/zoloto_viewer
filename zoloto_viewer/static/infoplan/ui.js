@@ -14,7 +14,6 @@ window.addEventListener('load', function () {
 function buildMessBox(data) {
     function buildVariablesBlock(data) {
         let variablesList = document.createElement('ul');
-        variablesList.setAttribute('style', `color: white; background: ${data.layer.color}`);
 
         let [numberLine, emptyLine] = [document.createElement('li'), document.createElement('li')];
         numberLine.style.cursor = emptyLine.style.cursor = 'unset';
@@ -32,7 +31,7 @@ function buildMessBox(data) {
         }));
 
         let variablesDiv  = document.createElement('div');
-        variablesDiv.setAttribute('class', 'variables_container');
+        variablesDiv.setAttribute('class', `variables_container`);
         variablesDiv.append(variablesList);
         return variablesDiv;
     }
@@ -69,6 +68,7 @@ function buildMessBox(data) {
 
 const messageBoxManager = function () {
     let renderedMessagesIndex = {};     // marker_uid -> MessageBoxNode
+    let markerElementIndex    = {};     // marker_uid -> MarkerElement
 
     function _registerMessageItem(marker_uid, item) {
         if (renderedMessagesIndex[marker_uid] !== undefined
@@ -112,7 +112,7 @@ const messageBoxManager = function () {
         return wrapper;
     }
     function deduceContainer(layerTitle) {
-        const c = document.getElementsByClassName('layer_messages ' + layerTitle);
+        const c = document.getElementsByClassName('layer_messages layer-' + layerTitle);
         if (c.length > 0)
             return c[0];
         else
@@ -141,20 +141,18 @@ const messageBoxManager = function () {
         //   1) запросить место
         //   2) если место нашлось запросить данные
         //   3) если данные пришли, построить Node сообщения, закинуть в индекс и отобразить в контейнере
+        const layer_title = markerElementIndex[marker_uid].dataset.layerTitle;
+        const container = deduceContainer(layer_title);
+        if (!container)
+            return;
+
+        const markerPosition = markerCirclesManager.position(marker_uid);
+        const position = acquirePosition(markerPosition);
+        if (!position)
+            return;
+
         doApiCall('GET', API_MARKER_GET_DATA(marker_uid), undefined,
             function (markerData) {
-            const layer_title = markerData.layer.title;
-            // todo вообще то стоит опредялть container и markerPosition снаружи (до запроса данных)
-            //  но для этого надо брать layer_title не из данных
-            const container = deduceContainer(layer_title);
-            if (!container)
-                return;
-
-            const markerPosition = markerCirclesManager.position(markerData.marker);
-            const position = acquirePosition(markerPosition);
-            if (!position)
-                return undefined;
-
             const messNode = makeWrapper(position, MESSAGE_BOX_SIZE,
                 buildMessBox(markerData),
                 () => handlerMessBlur(markerData.marker));
@@ -177,12 +175,16 @@ const messageBoxManager = function () {
     function getContainer(markerUid) {
         return renderedMessagesIndex[markerUid];
     }
+    function registerMarkerElement(markerElement) {
+        markerElementIndex[markerElement.dataset.markerUid] = markerElement;
+    }
 
     return {
         show: showMessage,
         hide: hideMessage,
         read: getComment,
         get : getContainer,
+        reg : registerMarkerElement,
     }
 }();
 
@@ -190,6 +192,7 @@ const messageBoxManager = function () {
 const markerCirclesManager = function () {
     const MARKER_CORRECT_CLASS = 'marker_correct';
     const MARKER_INCORRECT_CLASS = 'marker_wrong';
+    const MARKER_HAS_COMMENT_CLASS = 'marker_has_comment';
     let markerCorrCircles = {};         // marker_uid -> SvgCircleElement
     let circleCenterIndex = {};         // marker_uid -> [x, y]
 
@@ -200,6 +203,12 @@ const markerCirclesManager = function () {
             element.classList.toggle(MARKER_CORRECT_CLASS);
         if (element.classList.contains(MARKER_INCORRECT_CLASS) !== !correct)
             element.classList.toggle(MARKER_INCORRECT_CLASS);
+    }
+    function _setHasComment(element, has) {
+        if (!element)
+            return;
+        if (element.classList.contains(MARKER_HAS_COMMENT_CLASS) !== has)
+            element.classList.toggle(MARKER_HAS_COMMENT_CLASS);
     }
     function _evalViewportPosition(circleElement) {
         const transform = circleElement.getCTM();
@@ -220,7 +229,8 @@ const markerCirclesManager = function () {
         const elem = markerCorrCircles[(markerData.marker)];
         if (elem !== undefined) {
             const [correct, hasComment] = [markerData.correct, markerData.has_comment];
-            _setCorrectness(elem, correct);
+            _setCorrectness(elem.parentNode, correct);
+            _setHasComment(elem.nextElementSibling, hasComment);
         }
     }
     function getCircleCenter(markerUid) {
