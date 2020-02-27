@@ -1,6 +1,6 @@
 "use strict";
 
-const BASE_URL = 'http://localhost:8000';
+const BASE_URL = 'http://195.133.48.77';
 const API_MARKER_GET_DATA    = (markerUid) => `${BASE_URL}/viewer/api/marker/${markerUid}`;
 const API_VAR_ALTER_WRONG    = (markerUid) => `${BASE_URL}/viewer/api/marker/${markerUid}/variable/`;
 const API_MARKER_LOAD_REVIEW = (markerUid) => `${BASE_URL}/viewer/api/marker/${markerUid}/review/`;
