@@ -26,3 +26,6 @@ MEDIA_ROOT = os.getenv('MEDIA_ROOT', '/var/www/zoloto_viewer/media/')
 MEDIA_URL = '/media/'
 
 STATIC_URL = '/static/'
+
+# for api calls
+BASE_URL = 'http://localhost:8000'

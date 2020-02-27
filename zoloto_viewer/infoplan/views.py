@@ -1,6 +1,7 @@
 import json
 import operator
 import uuid
+from django.conf import settings
 from django.http import JsonResponse, Http404
 from django.shortcuts import render
 from django.views.decorators import http, csrf
@@ -125,6 +126,7 @@ def project_page(request, page_obj):
             'scale': [im.width / (gb_right - gb_left), im.height / (gb_bottom - gb_top)],
             'translate': [-gb_left, -gb_top],
         },
+        'base_url': settings.BASE_URL,
     }
     template = 'infoplan/project_page_auth.html' if request.user.is_authenticated \
         else 'infoplan/project_page.html'
