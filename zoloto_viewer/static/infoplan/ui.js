@@ -1,6 +1,7 @@
 "use strict";
 
 const MESSAGE_BOX_SIZE = [160, 260];
+
 let SVG_VIEWPORT_BOUNDS = undefined;
 window.addEventListener('load', function () {
     const svgElement = document.getElementById('project-page-plan-svg');
@@ -9,8 +10,6 @@ window.addEventListener('load', function () {
 });
 
 
-// todo переход к коментарию скрывает сообщение
-// todo передавать фокус сразу в поле комментария и передавать потерю фокуса контейнеру
 function buildMessBox(data) {
     function buildVariablesBlock(data) {
         let variablesList = document.createElement('ul');
@@ -68,6 +67,7 @@ function buildMessBox(data) {
 
 const messageBoxManager = function () {
     let renderedMessagesIndex = {};     // marker_uid -> MessageBoxNode
+    let visibleMessagesIndex  = {};     // marker_uid -> visibility (bool)
     let markerElementIndex    = {};     // marker_uid -> MarkerElement
 
     function _registerMessageItem(marker_uid, item) {
@@ -98,7 +98,7 @@ const messageBoxManager = function () {
 
         return [x, y];
     }
-    function makeWrapper(position, size, mess, hideCallback) {
+    function makeWrapper(position, size, mess) {
         const wrapper = document.createElementNS("http://www.w3.org/2000/svg",
             'foreignObject');
         wrapper.setAttribute('x', position[0]);
@@ -108,7 +108,7 @@ const messageBoxManager = function () {
         wrapper.style.outline = 'none';
 
         wrapper.append(mess);
-        wrapper.addEventListener('blur', hideCallback);
+        wrapper.addEventListener('focus', handlerMessageDivFocus);
         return wrapper;
     }
     function deduceContainer(layerTitle) {
@@ -123,6 +123,7 @@ const messageBoxManager = function () {
         const maybeMessItem = checkMessageIndex(marker_uid);
         if (maybeMessItem !== null) {
             maybeMessItem.style.display = 'none';
+            visibleMessagesIndex[marker_uid] = false;
             return true;
         }
         else
@@ -134,6 +135,8 @@ const messageBoxManager = function () {
         const maybeMessItem = checkMessageIndex(marker_uid);
         if (maybeMessItem !== null) {
             maybeMessItem.style.display = 'block';
+            maybeMessItem.focus();
+            visibleMessagesIndex[marker_uid] = true;
             return;
         }
 
@@ -154,12 +157,12 @@ const messageBoxManager = function () {
         doApiCall('GET', API_MARKER_GET_DATA(marker_uid), undefined,
             function (markerData) {
             const messNode = makeWrapper(position, MESSAGE_BOX_SIZE,
-                buildMessBox(markerData),
-                () => handlerMessBlur(markerData.marker));
+                buildMessBox(markerData));
             _registerMessageItem(markerData.marker, messNode);
             container.append(messNode);
             messNode.focus();
         });
+        visibleMessagesIndex[marker_uid] = true;
     }
     function getComment(markerUid) {
         const box = renderedMessagesIndex[markerUid];
@@ -179,12 +182,19 @@ const messageBoxManager = function () {
         markerElementIndex[markerElement.dataset.markerUid] = markerElement;
     }
 
+    function hideAllMessages() {
+        for (const markerUid in visibleMessagesIndex)
+            if (visibleMessagesIndex[markerUid])
+                handlerMessBlur(markerUid);
+    }
+
     return {
         show: showMessage,
         hide: hideMessage,
         read: getComment,
         get : getContainer,
         reg : registerMarkerElement,
+        hideAll: hideAllMessages,
     }
 }();
 

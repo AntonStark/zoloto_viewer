@@ -77,6 +77,13 @@ function handlerConfirmBtmClick(marker_uid) {
     messageBoxManager.hide(marker_uid);
 }
 
+function handlerMessageDivFocus(e) {
+    const wrapper = e.target;
+    const commentField = wrapper.getElementsByTagName('textarea');
+    if (commentField.length > 0)
+        commentField[0].focus();
+}
+
 function handleToggleWrong(marker_uid, variable_key) {
     const toggledStatus = !varWrongnessManager.status(marker_uid, variable_key);
     const data = {'key': variable_key, 'wrong': toggledStatus};
@@ -91,5 +98,7 @@ function handleClickMarkerCircle(circleElement) {
     const markerElement = circleElement.parentNode.previousElementSibling;
     messageBoxManager.reg(markerElement);
     markerCirclesManager.register(circleElement);
+
+    messageBoxManager.hideAll();
     messageBoxManager.show(circleElement.dataset.markerUid);
 }
