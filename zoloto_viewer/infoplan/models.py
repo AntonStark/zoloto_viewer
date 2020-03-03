@@ -76,6 +76,9 @@ class Marker(models.Model):
         middle_points = filter(None, map(Marker.multipoint_mid, self.points))
         return ', '.join(map(lambda p: f'{p[0]} {p[1]}', middle_points))
 
+    def polygon_points(self):
+        return list(map(Marker.multipoint_mid, self.points))
+
     def center_position(self):
         points = [p for p in map(Marker.multipoint_mid, self.points) if p is not None]
         return sum([p[0] for p in points]) / len(points), sum([p[1] for p in points]) / len(points)
