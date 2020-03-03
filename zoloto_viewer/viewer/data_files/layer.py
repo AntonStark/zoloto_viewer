@@ -35,12 +35,21 @@ def color_as_hex(color_str):
         b = RGB_SCALE * (1.0 - y / float(CMYK_SCALE)) * (1.0 - k / float(CMYK_SCALE))
         return int(r), int(g), int(b)
 
-    mode, *raw_vals = color_str[1:-1].split(',')
+    model, *raw_vals = color_str[1:-1].split(',')
     vals = list(map(int, raw_vals))
-    if mode == 'CMYK':
+    if model == 'CMYK':
         rgb = cmyk_to_rgb(*vals)
-    elif mode == 'RGB':
+    elif model == 'RGB':
         rgb = vals
     else:
         rgb = 0, 0, 0
     return '#{:02x}{:02x}{:02x}'.format(*rgb)
+
+
+def color_as_json(color_str):
+    """
+    :param color_str: in a form of "(CMYK, 100, 100, 100, 100)"
+    """
+    model, *raw_vals = color_str[1:-1].split(',')
+    values = tuple(map(float, raw_vals))
+    return {'model': model, 'values': values}

@@ -156,6 +156,7 @@ class Layer(models.Model):
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
     title = models.CharField(max_length=256, blank=False)
     color = models.CharField(max_length=7, default='#000000')
+    raw_color = fields.JSONField(null=True)
     desc = models.TextField(blank=True, default='')
 
     client_last_modified_date = models.DateTimeField(editable=False, null=True)
@@ -199,11 +200,13 @@ class Layer(models.Model):
                 layer.title = title
                 layer.desc = desc
                 layer.color = color
+                layer.raw_color = data_files.layer.color_as_json(color_str)
                 layer.client_last_modified_date = client_last_modified_date
                 layer.save()
                 return
         Layer(project=project, title=title, desc=desc,
-              color=color, csv_data=csv_data, sync_needed=True,
+              color=color, raw_color=data_files.layer.color_as_json(color_str),
+              csv_data=csv_data, sync_needed=True,
               client_last_modified_date=client_last_modified_date).save()
 
     @staticmethod
@@ -215,6 +218,7 @@ class Layer(models.Model):
             desc, color = layers_info[L.title]
 
             L.color = data_files.layer.color_as_hex(color)
+            L.raw_color = data_files.layer.color_as_json(color)
             L.desc = desc
             L.save()
 
@@ -247,6 +251,7 @@ def process_layer_csv(sender, instance: Layer, *args, **kwargs):
     # 1) найти какие маркеры исчезли в новом файле, записи для них удалить
     # 2) создать записи в базе для совсем новых маркеров
     # 3) у всех обновить переменные если надо
+    # todo проверять наличие изменений в переменных маркера и сбрасывать статус проверки только если изменился
     Marker.objects.remove_excess(instance, info.keys())
     Marker.objects.create_missing(instance, instance.project.pages_by_caption(), info)
     Marker.objects.update_variables(info)
