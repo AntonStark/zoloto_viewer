@@ -12,10 +12,11 @@ A4_LANDSCAPE = pagesizes.landscape(pagesizes.A4)
 
 
 class PlanBox:
-    def __init__(self, image_field: ImageFieldFile, indd_bounds):
+    def __init__(self, image_field: ImageFieldFile, indd_bounds, layer_color):
         self._img = image_field.path
         self._img_size = image_field.width, image_field.height
         self._indd_bounds = indd_bounds
+        self._color = layer_color
 
         self._box_x = None
         self._box_y = None
@@ -61,6 +62,14 @@ class PlanBox:
         canvas.drawString(x, y, number)
         canvas.restoreState()
 
+    def _set_color(self, canvas):
+        model = self._color.get('model', None)
+        values = self._color.get('values', None)
+        if model == 'CMYK' and len(values) == 4:
+            canvas.setFillColorCMYK(*[v / 100. for v in values])
+        elif model == 'RGB' and len(values) == 3:
+            canvas.setFillColorRGB(*[v / 255. for v in values])
+
     def draw(self, canvas: rc.Canvas, box_width):
         offset = (A4_LANDSCAPE[0] - box_width) / 2
         self._box_x = offset
@@ -70,7 +79,7 @@ class PlanBox:
 
         canvas.drawImage(self._img, x=self._box_x, y=self._box_y, width=self._box_width,
                          preserveAspectRatio=True, anchor='s')
-        canvas.setFillColorRGB(1, 0, 1)     # todo use layer raw_color
+        self._set_color(canvas)
         canvas.setFont(self.FONT_NAME, self.FONT_SIZE)
         for points, center, number in self._markers:
             self._draw_marker(canvas, points)
@@ -79,7 +88,7 @@ class PlanBox:
 
 
 def build_page(floor: Page, layer: Layer):
-    box = PlanBox(floor.plan, floor.geometric_bounds)
+    box = PlanBox(floor.plan, floor.geometric_bounds, layer.raw_color)
 
     for m in floor.marker_set.all().filter(layer=layer):
         box.add_marker(m)
