@@ -218,7 +218,7 @@ a {
 }
 
 .variables_container ul li.wrong_variable {
-    padding-left: 20px;
+    text-decoration: line-through;
 }
 
 /*noinspection CssInvalidPropertyValue*/

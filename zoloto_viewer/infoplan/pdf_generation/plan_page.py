@@ -9,6 +9,7 @@ django.setup()
 from zoloto_viewer.viewer.models import Layer, Page
 
 A4_LANDSCAPE = pagesizes.landscape(pagesizes.A4)
+INNER_WIDTH = 28 * units.cm
 
 
 class PlanBox:
@@ -94,7 +95,7 @@ def build_page(floor: Page, layer: Layer):
         box.add_marker(m)
 
     C = rc.Canvas(timezone.now().strftime('%d%m_%H%M.pdf'), pagesize=A4_LANDSCAPE)
-    box.draw(C, 28 * units.cm)
+    box.draw(C, INNER_WIDTH)
 
 
 if __name__ == '__main__':

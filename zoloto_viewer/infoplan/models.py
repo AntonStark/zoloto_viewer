@@ -83,6 +83,9 @@ class Marker(models.Model):
         points = [p for p in map(Marker.multipoint_mid, self.points) if p is not None]
         return sum([p[0] for p in points]) / len(points), sum([p[1] for p in points]) / len(points)
 
+    def ord_number(self):
+        return int(self.number.split('/')[-1])
+
     def to_json(self):
         return {'marker': self.uid, 'number': self.number, 'correct': self.correct, 'has_comment': self.has_comment()}
 
@@ -128,6 +131,9 @@ class VariablesManager(models.Manager):
             if key in vars_by_key:
                 vars_by_key[key].wrong = bool(is_wrong)
         self.bulk_update(vars_by_key.values(), ['wrong'])
+
+    def vars_of_marker(self, marker):
+        return sorted(MarkerVariable.objects.filter(marker=marker).all(), key=lambda v: int(v.key))
 
 
 class MarkerVariable(models.Model):
