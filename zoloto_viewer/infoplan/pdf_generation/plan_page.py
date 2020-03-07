@@ -10,6 +10,8 @@ from zoloto_viewer.viewer.models import Layer, Page
 
 A4_LANDSCAPE = pagesizes.landscape(pagesizes.A4)
 INNER_WIDTH = 28 * units.cm
+# FONT_SIZE_LEGEND = 7    # todo move to proper class
+# FONT_SIZE_CAPTION = 6
 
 
 class PlanBox:
@@ -94,7 +96,8 @@ def build_page(floor: Page, layer: Layer):
     for m in floor.marker_set.all().filter(layer=layer):
         box.add_marker(m)
 
-    C = rc.Canvas(timezone.now().strftime('%d%m_%H%M.pdf'), pagesize=A4_LANDSCAPE)
+    filename = timezone.now().strftime('%d%m_%H%M.pdf')
+    C = rc.Canvas(filename, pagesize=A4_LANDSCAPE)
     box.draw(C, INNER_WIDTH)
 
 

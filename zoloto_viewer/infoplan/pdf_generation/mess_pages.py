@@ -2,19 +2,16 @@ import django
 from django.db.models import Count
 from django.db.models.functions import Length
 from django.utils import timezone
-from reportlab.lib import pagesizes, units, colors
+from reportlab.lib import units, colors
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas as rc
 
+import zoloto_viewer.infoplan.pdf_generation.common_layout as layout
 django.setup()
 from zoloto_viewer.infoplan.models import MarkerVariable
 from zoloto_viewer.viewer.models import Page
 
-A4_LANDSCAPE = pagesizes.landscape(pagesizes.A4)
-INNER_WIDTH = 28 * units.cm
-BOTTOM_MARGIN = 2 * units.cm
-TOP_MARGIN = 2 * units.cm
 FONT_NAME = 'FreePTSans'
 FONT_SIZE = 7
 BOX_PADDING = 2 * units.cm, 1 * units.cm
@@ -39,6 +36,7 @@ def generate_box_offset(area_width, area_height, box_width, box_height):
     """returns x, y to place box while possible"""
     min_padding_h, min_padding_v = BOX_PADDING
 
+    # todo должен быть отступ между сообщениями и SECOND_LINE
     if area_height < box_height:
         raise ValueError(f'area_height < box_height, area_height={area_height}, box_height={box_height}')
     rows = int((area_height - box_height) // (box_height + min_padding_v)) + 1
@@ -69,6 +67,7 @@ def draw_message(canvas, marker, offset, size):
     x_start, y_start = offset
     canvas.rect(x_start, y_start, size[0], size[1], stroke=0, fill=1)
 
+    # todo написать второй вариант функции с заливкой только под номером и рамкой
     canvas.saveState()
     canvas.setFillColor(colors.white)
     variables = list(map(lambda v: v.value, MarkerVariable.objects.vars_of_marker(marker)))
@@ -84,27 +83,31 @@ def calc_params(canvas, markers_queryset):
     canvas.setFont(FONT_NAME, FONT_SIZE)
     longest_value, max_var_count = calc_variable_metrics(markers_queryset)
     box_size = determine_mess_box_size(canvas, longest_value, max_var_count)
-    area_size = (A4_LANDSCAPE[0] - INNER_WIDTH) / 2, BOTTOM_MARGIN
-    return area_size, box_size
+    return box_size
 
 
-def build_page(canvas, markers_iter, layer_color, area_size, box_size):
-    area_height = A4_LANDSCAPE[1] - BOTTOM_MARGIN - TOP_MARGIN
-    area_left, area_bottom = area_size
+def build_page(canvas, markers_iter, box_size, layer_color, title):
+    layout.draw_header(canvas, title)
+    layout.draw_footer(canvas, 999)
+
+    area_width, area_height = layout.work_area_size()
+    area_left, area_bottom = layout.work_area_position()
     box_width, box_height = box_size
 
     canvas.setFont(FONT_NAME, FONT_SIZE)
     set_color(canvas, layer_color)
 
     was_messages = False
-    positions = generate_box_offset(INNER_WIDTH, area_height, box_width, box_height)
+    positions = generate_box_offset(area_width, area_height, box_width, box_height)
     for offset_x, offset_y in positions:
         box_offset = area_left + offset_x, area_bottom + offset_y
         try:
-            draw_message(canvas, next(markers_iter), box_offset, box_size)
+            marker = next(markers_iter)
         except StopIteration:
             break
-        was_messages = True
+        else:
+            draw_message(canvas, marker, box_offset, box_size)
+            was_messages = True
 
     if was_messages:
         canvas.showPage()
@@ -118,11 +121,14 @@ if __name__ == '__main__':
     L = floor_6.project.layer_set.first()
     floor_layer_markers = floor_6.marker_set.filter(layer=L)
 
-    C = rc.Canvas(timezone.now().strftime('%d%m_%H%M.pdf'), pagesize=A4_LANDSCAPE)
-    area_size, box_size = calc_params(C, floor_layer_markers)
+    filename = timezone.now().strftime('%d%m_%H%M.pdf')
+    C = rc.Canvas(filename, pagesize=layout.Definitions.PAGE_SIZE)
 
+    box_size = calc_params(C, floor_layer_markers)
+
+    title = f'{floor_6.floor_caption} {L.title}'
     sorted_markers = iter(sorted(floor_layer_markers, key=lambda m: m.ord_number()))
     maybe_next = True
     while maybe_next:
-        maybe_next = build_page(C, sorted_markers, L.raw_color, area_size, box_size)
+        maybe_next = build_page(C, sorted_markers, box_size, L.raw_color, title)
     C.save()
