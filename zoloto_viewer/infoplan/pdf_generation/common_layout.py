@@ -20,16 +20,16 @@ class Definitions:
 
     HEADER_FONT_SIZE = 30
     HEADER_FONT_NAME = 'Aeroport'
-    HEADER_FONT_FILE = 'Aeroport-regular.ttf'
+    HEADER_FONT_FILE = 'fonts/Aeroport-regular.ttf'
 
     FOOTER_FONT_SIZE = 21
     FOOTER_FONT_NAME = 'Zoloto'
-    FOOTER_FONT_FILE = 'Zoloto-Display-270819.ttf'
+    FOOTER_FONT_FILE = 'fonts/Zoloto-Display-270819.ttf'
 
     PADDING_FOOTER = 15.6 * mm
     PADDING_HEADER = TOP_LINE - HEADER_FONT_SIZE
 
-    # SEPARATOR_WIDTH = 1     # N.B. need to draw rect to use other than 1
+    # SEPARATOR_WIDTH = 1     # N.B. if other than 1, need to draw rect
 
 
 def work_area_position():
@@ -57,12 +57,21 @@ def load_fonts():
 load_fonts()
 
 
-def draw_header(canvas: Canvas, title: str):
+def draw_header(canvas: Canvas, title):
     d = Definitions
     canvas.line(d.BOUND_LEFT, d.TOP_LINE, d.BOUND_RIGHT, d.TOP_LINE)
 
     canvas.setFont(d.HEADER_FONT_NAME, d.HEADER_FONT_SIZE)
-    canvas.drawString(d.BOUND_LEFT, d.PADDING_HEADER, title)
+    if isinstance(title, str):
+        canvas.drawString(d.BOUND_LEFT, d.PADDING_HEADER, title)
+    elif isinstance(title, (tuple, list)):
+        if len(title) == 1:
+            canvas.drawString(d.BOUND_LEFT, d.PADDING_HEADER, title[0])
+        elif len(title) == 2:
+            canvas.drawString(d.BOUND_LEFT, d.PADDING_HEADER, title[0])
+            canvas.drawRightString(d.BOUND_RIGHT, d.PADDING_HEADER, title[1])
+    else:
+        raise TypeError(f'title of type {type(title)} not supported')
 
     canvas.line(d.BOUND_LEFT, d.SECOND_LINE, d.BOUND_RIGHT, d.SECOND_LINE)
 

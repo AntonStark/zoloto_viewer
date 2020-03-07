@@ -1,4 +1,5 @@
 import django
+import itertools
 from django.db.models import Count
 from django.db.models.functions import Length
 from django.utils import timezone
@@ -12,10 +13,87 @@ django.setup()
 from zoloto_viewer.infoplan.models import MarkerVariable
 from zoloto_viewer.viewer.models import Page
 
-FONT_NAME = 'FreePTSans'
-FONT_SIZE = 7
-BOX_PADDING = 2 * units.cm, 1 * units.cm
-# todo собрать описание внешнего вида блока в одном классе и общей вёрстки в другом
+
+def set_colors(canvas, color):
+    model = color.get('model', None)
+    values = color.get('values', None)
+    if model == 'CMYK' and len(values) == 4:
+        canvas.setFillColorCMYK(*[v / 100. for v in values])
+        canvas.setStrokeColorCMYK(*[v / 100. for v in values])
+    elif model == 'RGB' and len(values) == 3:
+        canvas.setFillColorRGB(*[v / 255. for v in values])
+        canvas.setStrokeColorRGB(*[v / 255. for v in values])
+
+
+class MessageBox:
+    FONT_NAME = 'FreePTSans'
+    FONT_SIZE = 7
+
+    PADDING_LEFT = 0.5 * FONT_SIZE
+    PADDING_RIGHT = PADDING_LEFT
+    PADDING_BOTTOM = 0.5 * FONT_SIZE
+    PADDING_TOP = 0.1 * FONT_SIZE
+    NUMBER_RECT_HEIGHT = 1.6 * FONT_SIZE
+
+    @staticmethod
+    def deduce_mess_box_size(canvas, longest_value, max_var_count):
+        mb = MessageBox
+        canvas.saveState()
+        canvas.setFont(MessageBox.FONT_NAME, MessageBox.FONT_SIZE)
+        text_width = canvas.stringWidth(longest_value[:58])
+        canvas.restoreState()
+
+        text_height = (max_var_count + 2) * 1.2 * mb.FONT_SIZE       # 1.2 for interline space
+        box_width = text_width + mb.PADDING_LEFT + mb.PADDING_RIGHT
+        box_height = text_height + mb.PADDING_BOTTOM + mb.PADDING_TOP
+        return box_width, box_height
+
+    @staticmethod
+    def draw_message(canvas, number, variables, position, size, layer_color):
+        mb = MessageBox
+        canvas.saveState()
+        x_start, y_start = position
+        box_width, box_height = size
+        set_colors(canvas, layer_color)
+        canvas.rect(x_start, y_start, box_width, box_height, stroke=0, fill=1)
+
+        y_top = y_start + box_height
+        var_text = canvas.beginText(x_start + mb.PADDING_LEFT, y_top - mb.FONT_SIZE - mb.PADDING_TOP)
+        var_text.setFont(MessageBox.FONT_NAME, MessageBox.FONT_SIZE)
+        var_text.setFillColor(colors.white)
+        var_text.textLine(number)
+        var_text.textLine()
+        for v in variables:
+            var_text.textLine(v.value)
+        canvas.drawText(var_text)
+        canvas.restoreState()
+
+    @staticmethod
+    def draw_message_v2(canvas, number, variables, offset, size, layer_color):
+        """второй вариант функции с заливкой только под номером и рамкой"""
+        mb = MessageBox
+        canvas.saveState()
+        x_start, y_start = offset
+        box_width, box_height = size
+        set_colors(canvas, layer_color)
+        canvas.rect(x_start, y_start, box_width, box_height, stroke=1, fill=0)
+
+        canvas.setFont(MessageBox.FONT_NAME, MessageBox.FONT_SIZE)
+        nr_w = canvas.stringWidth(number) + mb.PADDING_LEFT + mb.PADDING_RIGHT
+        nr_h = mb.NUMBER_RECT_HEIGHT
+        y_top = y_start + box_height
+        canvas.rect(x_start, y_top - nr_h, nr_w, nr_h, stroke=0, fill=1)
+
+        var_text = canvas.beginText(x_start + mb.PADDING_LEFT, y_top - mb.FONT_SIZE - mb.PADDING_TOP)
+        var_text.setFont(MessageBox.FONT_NAME, MessageBox.FONT_SIZE)
+        var_text.setFillColor(colors.white)
+        var_text.textLine(number)
+        var_text.textLine()
+        var_text.setFillColor(colors.black)
+        for v in variables:
+            var_text.textLine(v.value)
+        canvas.drawText(var_text)
+        canvas.restoreState()
 
 
 def calc_variable_metrics(markers):
@@ -25,88 +103,54 @@ def calc_variable_metrics(markers):
     return longest_variable.value, max_var_marker.var_count
 
 
-def determine_mess_box_size(canvas, longest_value, max_var_count):
-    text_width = canvas.stringWidth(longest_value[:50])
-    box_width = text_width + FONT_SIZE
-    box_height = (max_var_count + 2) * 1.5 * FONT_SIZE   # 1.5 for interline space
-    return box_width, box_height
+class MessagesArea:
+    PADDING_ROW = 2 * units.cm
+    PADDING_COL = 1 * units.cm
+    PADDING_TOP = 2 * units.cm
+
+    def __init__(self, width, height, box_size):
+        self._area_width = width
+        self._area_height = height
+        self._box_width, self._box_height = box_size
+
+        if self._area_height < self._box_height:
+            raise ValueError(f'height < box_height, area_height={self._area_height}, box_height={self._box_height}')
+        if self._area_width < self._box_width:
+            raise ValueError(f'width < box_width, area_width={self._area_width}, box_width={self._box_width}')
+
+    def position_generator(self):
+        """returns x, y to place box while possible"""
+        ma = MessagesArea
+        area_height = self._area_height - MessagesArea.PADDING_TOP
+        rows = int((area_height - self._box_height) // (self._box_height + ma.PADDING_COL)) + 1
+        cols = int((self._area_width - self._box_width) // (self._box_width + ma.PADDING_ROW)) + 1
+
+        # todo предусмотреть вывод комментариев
+        for r in range(rows):
+            y = area_height - self._box_height - r * (self._box_height + ma.PADDING_COL)
+            for c in range(cols):
+                x = c * (self._box_width + ma.PADDING_ROW)
+                yield x, y
 
 
-def generate_box_offset(area_width, area_height, box_width, box_height):
-    """returns x, y to place box while possible"""
-    min_padding_h, min_padding_v = BOX_PADDING
-
-    # todo должен быть отступ между сообщениями и SECOND_LINE
-    if area_height < box_height:
-        raise ValueError(f'area_height < box_height, area_height={area_height}, box_height={box_height}')
-    rows = int((area_height - box_height) // (box_height + min_padding_v)) + 1
-    # padding_h = (area_height - rows * box_height) / (rows - 1 if rows > 1 else 1)
-
-    if area_width < box_width:
-        raise ValueError(f'area_width < box_width, area_width={area_width}, box_width={box_width}')
-    cols = int((area_width - box_width) // (box_width + min_padding_h)) + 1
-    # padding_v = (area_width - cols * box_width) / (cols - 1 if cols > 1 else 1)
-
-    for r in range(rows):
-        y = area_height - box_height - r * (box_height + min_padding_v)
-        for c in range(cols):
-            x = c * (box_width + min_padding_h)
-            yield x, y
-
-
-def set_color(canvas, color):
-    model = color.get('model', None)
-    values = color.get('values', None)
-    if model == 'CMYK' and len(values) == 4:
-        canvas.setFillColorCMYK(*[v / 100. for v in values])
-    elif model == 'RGB' and len(values) == 3:
-        canvas.setFillColorRGB(*[v / 255. for v in values])
-
-
-def draw_message(canvas, marker, offset, size):
-    x_start, y_start = offset
-    canvas.rect(x_start, y_start, size[0], size[1], stroke=0, fill=1)
-
-    # todo написать второй вариант функции с заливкой только под номером и рамкой
-    canvas.saveState()
-    canvas.setFillColor(colors.white)
-    variables = list(map(lambda v: v.value, MarkerVariable.objects.vars_of_marker(marker)))
-    lines = [marker.number, ''] + variables
-    y_pos = reversed([y_start + 1.5 * FONT_SIZE * l for l in range(len(lines))])
-    for l, y in zip(lines, y_pos):
-        canvas.drawString(x_start + 0.5 * FONT_SIZE, y + 0.5 * FONT_SIZE, l)
-
-    canvas.restoreState()
-
-
-def calc_params(canvas, markers_queryset):
-    canvas.setFont(FONT_NAME, FONT_SIZE)
-    longest_value, max_var_count = calc_variable_metrics(markers_queryset)
-    box_size = determine_mess_box_size(canvas, longest_value, max_var_count)
-    return box_size
-
-
-def build_page(canvas, markers_iter, box_size, layer_color, title):
+def build_page(canvas, markers_iter, box_size, layer_color, title, num_iter):
     layout.draw_header(canvas, title)
-    layout.draw_footer(canvas, 999)
+    layout.draw_footer(canvas, next(num_iter))
 
     area_width, area_height = layout.work_area_size()
     area_left, area_bottom = layout.work_area_position()
-    box_width, box_height = box_size
 
-    canvas.setFont(FONT_NAME, FONT_SIZE)
-    set_color(canvas, layer_color)
-
+    area = MessagesArea(area_width, area_height, box_size)
     was_messages = False
-    positions = generate_box_offset(area_width, area_height, box_width, box_height)
-    for offset_x, offset_y in positions:
+    for offset_x, offset_y in area.position_generator():
         box_offset = area_left + offset_x, area_bottom + offset_y
         try:
             marker = next(markers_iter)
         except StopIteration:
             break
         else:
-            draw_message(canvas, marker, box_offset, box_size)
+            variables = MarkerVariable.objects.vars_of_marker(marker)
+            MessageBox.draw_message_v2(canvas, marker.number, variables, box_offset, box_size, layer_color)
             was_messages = True
 
     if was_messages:
@@ -115,20 +159,22 @@ def build_page(canvas, markers_iter, box_size, layer_color, title):
 
 
 if __name__ == '__main__':
-    pdfmetrics.registerFont(TTFont(FONT_NAME, 'pt_sans.ttf'))
-
-    floor_6 = Page.objects.get(code='BEXF4ECSIV')
-    L = floor_6.project.layer_set.first()
-    floor_layer_markers = floor_6.marker_set.filter(layer=L)
-
+    pdfmetrics.registerFont(TTFont(MessageBox.FONT_NAME, 'fonts/pt_sans.ttf'))
     filename = timezone.now().strftime('%d%m_%H%M.pdf')
     C = rc.Canvas(filename, pagesize=layout.Definitions.PAGE_SIZE)
 
-    box_size = calc_params(C, floor_layer_markers)
+    P = Page.objects.get(code='BEXF4ECSIV')
+    L = P.project.layer_set.last()
+    floor_layer_markers = P.marker_set.filter(layer=L)
 
-    title = f'{floor_6.floor_caption} {L.title}'
+    longest_value, max_var_count = calc_variable_metrics(floor_layer_markers)
+    box_size = MessageBox.deduce_mess_box_size(C, longest_value, max_var_count)
+
     sorted_markers = iter(sorted(floor_layer_markers, key=lambda m: m.ord_number()))
+    title = [P.floor_caption, L.title]
+    page_nums = itertools.count(1)
+
     maybe_next = True
     while maybe_next:
-        maybe_next = build_page(C, sorted_markers, box_size, L.raw_color, title)
+        maybe_next = build_page(C, sorted_markers, box_size, L.raw_color, title, page_nums)
     C.save()
