@@ -76,10 +76,10 @@ def draw_header(canvas: Canvas, title):
     canvas.line(d.BOUND_LEFT, d.SECOND_LINE, d.BOUND_RIGHT, d.SECOND_LINE)
 
 
-def draw_footer(canvas, page_num):
+def draw_footer(canvas):
     d = Definitions
     canvas.line(d.BOUND_LEFT, d.BOTTOM_LINE, d.BOUND_RIGHT, d.BOTTOM_LINE)
 
     canvas.setFont(d.FOOTER_FONT_NAME, d.FOOTER_FONT_SIZE)
     canvas.drawString(d.BOUND_LEFT, d.PADDING_FOOTER, 'z')
-    canvas.drawRightString(d.BOUND_RIGHT, d.PADDING_FOOTER, str(page_num))
+    canvas.drawRightString(d.BOUND_RIGHT, d.PADDING_FOOTER, str(canvas.getPageNumber()))

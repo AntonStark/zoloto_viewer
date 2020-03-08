@@ -1,5 +1,5 @@
 import django
-import itertools
+import re
 from django.db.models import Count
 from django.db.models.functions import Length
 from django.utils import timezone
@@ -33,23 +33,48 @@ class MessageBox:
     PADDING_RIGHT = PADDING_LEFT
     PADDING_BOTTOM = 0.5 * FONT_SIZE
     PADDING_TOP = 0.1 * FONT_SIZE
+
     NUMBER_RECT_HEIGHT = 1.6 * FONT_SIZE
+    CORRECT_MARK_RADIUS = 10
+    CORRECT_MARK_FONT_SIZE = 1.5 * CORRECT_MARK_RADIUS
 
-    @staticmethod
-    def deduce_mess_box_size(canvas, longest_value, max_var_count):
+    def __init__(self, canvas, longest_value, max_var_count):
         mb = MessageBox
-        canvas.saveState()
-        canvas.setFont(MessageBox.FONT_NAME, MessageBox.FONT_SIZE)
-        text_width = canvas.stringWidth(longest_value[:58])
-        canvas.restoreState()
+        self._canvas = canvas
+        self._canvas.saveState()
+        self._canvas.setFont(mb.FONT_NAME, mb.FONT_SIZE)
+        text_width = self._canvas.stringWidth(longest_value)
+        self._canvas.restoreState()
 
-        text_height = (max_var_count + 2) * 1.2 * mb.FONT_SIZE       # 1.2 for interline space
-        box_width = text_width + mb.PADDING_LEFT + mb.PADDING_RIGHT
-        box_height = text_height + mb.PADDING_BOTTOM + mb.PADDING_TOP
-        return box_width, box_height
+        text_height = (max_var_count + 2) * 1.2 * mb.FONT_SIZE          # 1.2 for interline space
+        self._box_width = text_width + mb.PADDING_LEFT + mb.PADDING_RIGHT
+        self._box_height = text_height + mb.PADDING_BOTTOM + mb.PADDING_TOP
+
+    def get_size(self):
+        return self._box_width, self._box_height
+
+    def place_comment(self, comment):
+        """принимает текст коментария и возвращает набор строк, не превосходящий по ширине self._box_width"""
+        self._canvas.saveState()
+        self._canvas.setFont(MessageBox.FONT_NAME, MessageBox.FONT_SIZE)
+        words = re.split(r'\b(?=\w)', comment)
+        lines, buf = [], ''
+        for w in words:
+            if self._canvas.stringWidth(buf + w) > self._box_width:
+                lines.append(buf)
+                buf = w
+            else:
+                buf += w
+        self._canvas.restoreState()
+        return lines
+
+    def comment_height(self, comment):
+        comment_lines = len(self.place_comment(comment))
+        return (comment_lines + 1) * 1.2 * MessageBox.FONT_SIZE         # + 1 due to skip one line before comment
 
     @staticmethod
-    def draw_message(canvas, number, variables, position, size, layer_color):
+    def draw_message(canvas, number, variables, position, size, layer_color,
+                     correct: bool = None, comment_lines: list = None):
         mb = MessageBox
         canvas.saveState()
         x_start, y_start = position
@@ -65,34 +90,62 @@ class MessageBox:
         var_text.textLine()
         for v in variables:
             var_text.textLine(v.value)
+        if comment_lines:
+            var_text.textLine()
+            for l in comment_lines:
+                var_text.textLine(l)
         canvas.drawText(var_text)
         canvas.restoreState()
 
     @staticmethod
-    def draw_message_v2(canvas, number, variables, offset, size, layer_color):
+    def draw_message_v2(canvas, number, variables, position, size, layer_color,
+                        correct: bool = None, comment_lines: list = None):
         """второй вариант функции с заливкой только под номером и рамкой"""
         mb = MessageBox
         canvas.saveState()
-        x_start, y_start = offset
+        x_start, y_start = position
         box_width, box_height = size
         set_colors(canvas, layer_color)
         canvas.rect(x_start, y_start, box_width, box_height, stroke=1, fill=0)
 
-        canvas.setFont(MessageBox.FONT_NAME, MessageBox.FONT_SIZE)
+        canvas.setFont(mb.FONT_NAME, mb.FONT_SIZE)
         nr_w = canvas.stringWidth(number) + mb.PADDING_LEFT + mb.PADDING_RIGHT
         nr_h = mb.NUMBER_RECT_HEIGHT
         y_top = y_start + box_height
         canvas.rect(x_start, y_top - nr_h, nr_w, nr_h, stroke=0, fill=1)
 
         var_text = canvas.beginText(x_start + mb.PADDING_LEFT, y_top - mb.FONT_SIZE - mb.PADDING_TOP)
-        var_text.setFont(MessageBox.FONT_NAME, MessageBox.FONT_SIZE)
+        var_text.setFont(mb.FONT_NAME, mb.FONT_SIZE)
         var_text.setFillColor(colors.white)
         var_text.textLine(number)
         var_text.textLine()
         var_text.setFillColor(colors.black)
         for v in variables:
             var_text.textLine(v.value)
+
+        if comment_lines:
+            var_text.textLine()
+            for l in comment_lines:
+                var_text.textLine(l)
         canvas.drawText(var_text)
+        if correct is not None:
+            mb.draw_check_mark(canvas, (x_start + box_width, y_start + box_height), correct)
+
+        canvas.restoreState()
+
+    @staticmethod
+    def draw_check_mark(canvas, position, correct: bool):
+        x, y = position
+        canvas.saveState()
+        color = colors.green if correct else colors.red
+        canvas.setFillColor(color)
+        canvas.setStrokeColor(colors.white)
+        canvas.circle(x, y, MessageBox.CORRECT_MARK_RADIUS, stroke=1, fill=1)
+
+        canvas.setFillColor(colors.white)
+        mark = 'v' if correct else 'x'
+        canvas.setFontSize(MessageBox.CORRECT_MARK_FONT_SIZE)
+        canvas.drawCentredString(x, y - 0.3 * MessageBox.CORRECT_MARK_FONT_SIZE, mark)
         canvas.restoreState()
 
 
@@ -108,54 +161,69 @@ class MessagesArea:
     PADDING_COL = 1 * units.cm
     PADDING_TOP = 2 * units.cm
 
-    def __init__(self, width, height, box_size):
+    def __init__(self, width, height, mess_box: MessageBox):
         self._area_width = width
         self._area_height = height
-        self._box_width, self._box_height = box_size
+        self._mess_box = mess_box
+        self._box_width, self._box_height = self._mess_box.get_size()
+        self._row_start = self._area_height - MessagesArea.PADDING_TOP - self._box_height
 
         if self._area_height < self._box_height:
             raise ValueError(f'height < box_height, area_height={self._area_height}, box_height={self._box_height}')
         if self._area_width < self._box_width:
             raise ValueError(f'width < box_width, area_width={self._area_width}, box_width={self._box_width}')
+        self._column_count = int((self._area_width - self._box_width) // (self._box_width + MessagesArea.PADDING_ROW)) + 1
 
-    def position_generator(self):
-        """returns x, y to place box while possible"""
-        ma = MessagesArea
-        area_height = self._area_height - MessagesArea.PADDING_TOP
-        rows = int((area_height - self._box_height) // (self._box_height + ma.PADDING_COL)) + 1
-        cols = int((self._area_width - self._box_width) // (self._box_width + ma.PADDING_ROW)) + 1
+    def column_count(self):
+        return self._column_count
 
-        # todo предусмотреть вывод комментариев
-        for r in range(rows):
-            y = area_height - self._box_height - r * (self._box_height + ma.PADDING_COL)
-            for c in range(cols):
-                x = c * (self._box_width + ma.PADDING_ROW)
-                yield x, y
+    def place_row(self, markers):
+        row_markers = markers[:self._column_count]
+
+        comments = [m.comment for m in row_markers]
+        max_comment_height = max(map(self._mess_box.comment_height, comments))
+        if self._row_start >= self._box_height + max_comment_height:    # all comments will be ok
+            positions = [(c * (self._box_width + MessagesArea.PADDING_ROW), self._row_start)
+                         for c in range(self._column_count)]
+            self._row_start -= self._box_height + max_comment_height + MessagesArea.PADDING_COL
+            return positions
+        else:
+            return []
+
+    def reset(self):
+        self._row_start = self._area_height - MessagesArea.PADDING_TOP - self._box_height
 
 
-def build_page(canvas, markers_iter, box_size, layer_color, title, num_iter):
-    layout.draw_header(canvas, title)
-    layout.draw_footer(canvas, next(num_iter))
+def message_pages(canvas, markers, message_box, layer_color, title):
+    def chunk(seq, n):
+        for i in range(0, len(seq), n):
+            yield seq[i:i + n]
 
+    box_size = message_box.get_size()
     area_width, area_height = layout.work_area_size()
     area_left, area_bottom = layout.work_area_position()
+    area = MessagesArea(area_width, area_height, message_box)
 
-    area = MessagesArea(area_width, area_height, box_size)
-    was_messages = False
-    for offset_x, offset_y in area.position_generator():
-        box_offset = area_left + offset_x, area_bottom + offset_y
-        try:
-            marker = next(markers_iter)
-        except StopIteration:
-            break
-        else:
+    layout.draw_header(canvas, title)
+    layout.draw_footer(canvas)
+    batch_size = area.column_count()
+    for marker_chunk in chunk(markers, batch_size):
+        positions = area.place_row(marker_chunk)
+        if not positions:
+            canvas.showPage()
+            layout.draw_header(canvas, title)
+            layout.draw_footer(canvas)
+
+            area.reset()
+            positions = area.place_row(marker_chunk)
+
+        for marker, (offset_x, offset_y) in zip(marker_chunk, positions):
+            box_offset = area_left + offset_x, area_bottom + offset_y
             variables = MarkerVariable.objects.vars_of_marker(marker)
-            MessageBox.draw_message_v2(canvas, marker.number, variables, box_offset, box_size, layer_color)
-            was_messages = True
-
-    if was_messages:
-        canvas.showPage()
-    return was_messages
+            comment_lines = message_box.place_comment(marker.comment)
+            MessageBox.draw_message_v2(canvas, marker.number, variables, box_offset, box_size, layer_color,
+                                       correct=marker.correct,
+                                       comment_lines=comment_lines)
 
 
 if __name__ == '__main__':
@@ -168,13 +236,10 @@ if __name__ == '__main__':
     floor_layer_markers = P.marker_set.filter(layer=L)
 
     longest_value, max_var_count = calc_variable_metrics(floor_layer_markers)
-    box_size = MessageBox.deduce_mess_box_size(C, longest_value, max_var_count)
+    message_box = MessageBox(C, longest_value, max_var_count)
 
-    sorted_markers = iter(sorted(floor_layer_markers, key=lambda m: m.ord_number()))
+    sorted_markers = sorted(floor_layer_markers, key=lambda m: m.ord_number())
     title = [P.floor_caption, L.title]
-    page_nums = itertools.count(1)
 
-    maybe_next = True
-    while maybe_next:
-        maybe_next = build_page(C, sorted_markers, box_size, L.raw_color, title, page_nums)
+    message_pages(C, sorted_markers, message_box, L.raw_color, title)
     C.save()
