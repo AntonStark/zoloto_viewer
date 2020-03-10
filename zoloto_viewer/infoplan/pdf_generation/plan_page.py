@@ -13,6 +13,8 @@ class PlanBox:
     CAPTION_FONT_SIZE = 6
     CAPTION_DELTA = 8
 
+    CORRECT_CIRCLE_RADIUS = 10
+
     def __init__(self, image_field: ImageFieldFile, indd_bounds, layer_color):
         self._img = image_field.path
         self._img_size = image_field.width, image_field.height
@@ -28,7 +30,7 @@ class PlanBox:
         return self._box_x, self._box_y + self._box_height
 
     def add_marker(self, m):
-        self._markers.append((m.polygon_points(), m.center_position(), m.number))
+        self._markers.append((m.polygon_points(), m.center_position(), m.number, m.correct))
 
     def _scale(self, point):
         gb_top, gb_left, gb_bottom, gb_right = self._indd_bounds
@@ -54,6 +56,15 @@ class PlanBox:
         path.close()
         canvas.drawPath(path, stroke=0, fill=1)
 
+    def _draw_review_status(self, canvas, center, correct):
+        if correct is not None:
+            if correct:
+                canvas.setStrokeColor(colors.green)
+            else:
+                canvas.setStrokeColor(colors.red)
+            x, y = self._calc_pos(center)
+            canvas.circle(x, y, PlanBox.CORRECT_CIRCLE_RADIUS)
+
     def _draw_caption(self, canvas, marker_center, number):
         x, y = self._calc_pos(marker_center)
         x, y = x + PlanBox.CAPTION_DELTA, y - PlanBox.CAPTION_DELTA
@@ -75,7 +86,7 @@ class PlanBox:
         elif model == 'RGB' and len(values) == 3:
             canvas.setFillColorRGB(*[v / 255. for v in values])
 
-    def draw(self, canvas: rc.Canvas):
+    def draw(self, canvas: rc.Canvas, with_review=False):
         # ведущее направеление считаем так: берём отношение ширина/высота
         # если оно больше или равно заданному тогда горизонталь ведущее направление, в противном случае вертикаль
         # если это горизонталь, обновляем self._box_height
@@ -93,14 +104,16 @@ class PlanBox:
                              height=self._box_height, preserveAspectRatio=True, anchor='sw')
 
         self._set_color(canvas)
-        for points, center, number in self._markers:
+        for points, center, number, correct in self._markers:
             self._draw_marker(canvas, points)
             self._draw_caption(canvas, center, number)
+            if with_review:
+                self._draw_review_status(canvas, center, correct)
 
     def draw_marker_example(self, canvas, position):
         if not self._markers:
             return
-        orig_points, orig_center, number = self._markers[0]
+        orig_points, orig_center = self._markers[0][:2]
         clear_points = list(map(
             lambda point: self._scale((point[0] - orig_center[0], point[1] - orig_center[1])),
             orig_points
@@ -140,13 +153,13 @@ class PlanLegend:
 
 
 def plan_page(canvas, floor: Page, markers, title,
-              layer_color, layer_title, layer_desc):
+              layer_color, layer_title, layer_desc, with_review=False):
     box = PlanBox(floor.plan, floor.geometric_bounds, layer_color)
     for m in markers:
         box.add_marker(m)
 
     layout.draw_header(canvas, title)
     layout.draw_footer(canvas)
-    box.draw(canvas)
+    box.draw(canvas, with_review=with_review)
 
     PlanLegend.draw_legend(canvas, box, layer_title, layer_desc)

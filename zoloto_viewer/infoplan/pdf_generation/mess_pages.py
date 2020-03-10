@@ -1,7 +1,7 @@
 import re
 from reportlab.lib import units, colors
 
-import zoloto_viewer.infoplan.pdf_generation.common_layout as layout
+from zoloto_viewer.infoplan.pdf_generation import common_layout as layout, models_related
 from zoloto_viewer.infoplan.models import MarkerVariable
 
 
@@ -166,11 +166,7 @@ class MessagesArea:
     def column_count(self):
         return self._column_count
 
-    def place_row(self, markers):
-        row_markers = markers[:self._column_count]
-
-        comments = [m.comment for m in row_markers]
-        max_comment_height = max(map(self._mess_box.comment_height, comments))
+    def place_row(self, max_comment_height):
         if self._row_start >= self._box_height + max_comment_height:    # all comments will be ok
             positions = [(c * (self._box_width + MessagesArea.PADDING_ROW), self._row_start)
                          for c in range(self._column_count)]
@@ -182,13 +178,22 @@ class MessagesArea:
     def reset(self):
         self._row_start = self._area_height - MessagesArea.PADDING_TOP - self._box_height
 
+    def error_message(self, canvas, markers):
+        canvas.setFont(MessageBox.FONT_NAME, MessageBox.FONT_SIZE)
+        canvas.drawString(self._box_width + MessagesArea.PADDING_ROW, self._row_start,
+                          'Недостаточно места для отображения переменных. '
+                          + f'Блоки сообщений {", ".join(m.number for m in markers)} были пропущены.')
 
-def message_pages(canvas, markers, message_box, layer_color, title):
+
+def message_pages(canvas, markers_query_set, layer_color, title, with_review=False):
     def chunk(seq, n):
         for i in range(0, len(seq), n):
             yield seq[i:i + n]
 
+    longest_value, max_var_count = models_related.calc_variable_metrics(markers_query_set)
+    message_box = MessageBox(canvas, longest_value, max_var_count)
     box_size = message_box.get_size()
+
     area_width, area_height = layout.work_area_size()
     area_left, area_bottom = layout.work_area_position()
     area = MessagesArea(area_width, area_height, message_box)
@@ -196,23 +201,33 @@ def message_pages(canvas, markers, message_box, layer_color, title):
     layout.draw_header(canvas, title)
     layout.draw_footer(canvas)
     batch_size = area.column_count()
+    markers = sorted(markers_query_set, key=lambda m: m.ord_number())
     for marker_chunk in chunk(markers, batch_size):
-        positions = area.place_row(marker_chunk)
+        comments = [m.comment for m in marker_chunk]
+        max_comment_height = max(map(message_box.comment_height, comments)) if with_review else 0
+
+        positions = area.place_row(max_comment_height)
         if not positions:
             canvas.showPage()
             layout.draw_header(canvas, title)
             layout.draw_footer(canvas)
 
             area.reset()
-            positions = area.place_row(marker_chunk)
+            positions = area.place_row(max_comment_height)
+        if not positions:
+            area.error_message(canvas, marker_chunk)
 
         for marker, (offset_x, offset_y) in zip(marker_chunk, positions):
             box_offset = area_left + offset_x, area_bottom + offset_y
 
+            number = marker.number
             variables = MarkerVariable.objects.vars_of_marker(marker)
-            var_data = list(map(lambda v: (v.value, v.wrong), variables))
-            comment_lines = message_box.place_comment(marker.comment)
-            number, correctness = marker.number, marker.correct
+            var_data = list(map(
+                lambda v: (v.value, v.wrong if with_review else False),
+                variables
+            ))
+            correctness = marker.correct if with_review else None
+            comment_lines = message_box.place_comment(marker.comment) if with_review else []
 
             MessageBox.draw_message_v2(canvas, number, var_data, box_offset, box_size, layer_color,
                                        correct=correctness,
