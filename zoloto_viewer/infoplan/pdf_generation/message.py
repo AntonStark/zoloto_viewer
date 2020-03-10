@@ -1,7 +1,7 @@
 import re
 from reportlab.lib import units, colors
 
-from zoloto_viewer.infoplan.pdf_generation import common_layout as layout, models_related
+from zoloto_viewer.infoplan.pdf_generation import layout, utils
 from zoloto_viewer.infoplan.models import MarkerVariable
 
 
@@ -51,18 +51,23 @@ class MessageBox:
         words = re.split(r'\b(?=\w)', comment)
         lines, buf = [], ''
         for w in words:
+            if not w:
+                continue
             if self._canvas.stringWidth(buf + w) > self._box_width:
                 lines.append(buf)
                 buf = w
             else:
                 buf += w
-        lines.append(buf)
+        if buf:
+            lines.append(buf)
         self._canvas.restoreState()
         return lines
 
     def comment_height(self, comment):
         comment_lines = len(self.place_comment(comment))
-        return (comment_lines + 1) * 1.2 * MessageBox.FONT_SIZE         # + 1 due to skip one line before comment
+        if comment_lines > 0:
+            comment_lines += 1  # + 1 due to skip one line before comment
+        return comment_lines * 1.2 * MessageBox.FONT_SIZE
 
     @staticmethod
     def draw_message(canvas, number, variables, position, size, layer_color,
@@ -190,7 +195,7 @@ def message_pages(canvas, markers_query_set, layer_color, title, with_review=Fal
         for i in range(0, len(seq), n):
             yield seq[i:i + n]
 
-    longest_value, max_var_count = models_related.calc_variable_metrics(markers_query_set)
+    longest_value, max_var_count = utils.calc_variable_metrics(markers_query_set)
     message_box = MessageBox(canvas, longest_value, max_var_count)
     box_size = message_box.get_size()
 

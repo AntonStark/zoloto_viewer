@@ -2,7 +2,7 @@ from django.db.models.fields.files import ImageFieldFile
 from reportlab.lib import colors
 from reportlab.pdfgen import canvas as rc
 
-import zoloto_viewer.infoplan.pdf_generation.common_layout as layout
+from zoloto_viewer.infoplan.pdf_generation import layout
 from zoloto_viewer.viewer.models import Page
 
 
