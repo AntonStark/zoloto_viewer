@@ -119,12 +119,16 @@ class MessageBox:
         var_text.setFillColor(colors.white)
         var_text.textLine(number)
         var_text.textLine()
-        var_text.setFillColor(colors.black)
         for v in variables:
+            if v.wrong:
+                var_text.setFillColor(colors.red)
+            else:
+                var_text.setFillColor(colors.black)
             var_text.textLine(v.value)
 
         if comment_lines:
             var_text.textLine()
+            var_text.setFillColor(colors.black)
             for l in comment_lines:
                 var_text.textLine(l)
         canvas.drawText(var_text)
