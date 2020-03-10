@@ -1,17 +1,8 @@
-import django
 import re
-from django.db.models import Count
-from django.db.models.functions import Length
-from django.utils import timezone
 from reportlab.lib import units, colors
-from reportlab.pdfbase import pdfmetrics
-from reportlab.pdfbase.ttfonts import TTFont
-from reportlab.pdfgen import canvas as rc
 
 import zoloto_viewer.infoplan.pdf_generation.common_layout as layout
-django.setup()
 from zoloto_viewer.infoplan.models import MarkerVariable
-from zoloto_viewer.viewer.models import Page
 
 
 def set_colors(canvas, color):
@@ -65,6 +56,7 @@ class MessageBox:
                 buf = w
             else:
                 buf += w
+        lines.append(buf)
         self._canvas.restoreState()
         return lines
 
@@ -119,12 +111,12 @@ class MessageBox:
         var_text.setFillColor(colors.white)
         var_text.textLine(number)
         var_text.textLine()
-        for v in variables:
-            if v.wrong:
+        for value, wrong in variables:
+            if wrong:
                 var_text.setFillColor(colors.red)
             else:
                 var_text.setFillColor(colors.black)
-            var_text.textLine(v.value)
+            var_text.textLine(value)
 
         if comment_lines:
             var_text.textLine()
@@ -151,13 +143,6 @@ class MessageBox:
         canvas.setFontSize(MessageBox.CORRECT_MARK_FONT_SIZE)
         canvas.drawCentredString(x, y - 0.3 * MessageBox.CORRECT_MARK_FONT_SIZE, mark)
         canvas.restoreState()
-
-
-def calc_variable_metrics(markers):
-    longest_variable = MarkerVariable.objects.filter(marker__in=markers) \
-        .annotate(val_len=Length('value')).order_by('-val_len').first()
-    max_var_marker = markers.annotate(var_count=Count('markervariable')).order_by('-var_count').first()
-    return longest_variable.value, max_var_marker.var_count
 
 
 class MessagesArea:
@@ -223,27 +208,12 @@ def message_pages(canvas, markers, message_box, layer_color, title):
 
         for marker, (offset_x, offset_y) in zip(marker_chunk, positions):
             box_offset = area_left + offset_x, area_bottom + offset_y
+
             variables = MarkerVariable.objects.vars_of_marker(marker)
+            var_data = list(map(lambda v: (v.value, v.wrong), variables))
             comment_lines = message_box.place_comment(marker.comment)
-            MessageBox.draw_message_v2(canvas, marker.number, variables, box_offset, box_size, layer_color,
-                                       correct=marker.correct,
+            number, correctness = marker.number, marker.correct
+
+            MessageBox.draw_message_v2(canvas, number, var_data, box_offset, box_size, layer_color,
+                                       correct=correctness,
                                        comment_lines=comment_lines)
-
-
-if __name__ == '__main__':
-    pdfmetrics.registerFont(TTFont(MessageBox.FONT_NAME, 'fonts/pt_sans.ttf'))
-    filename = timezone.now().strftime('%d%m_%H%M.pdf')
-    C = rc.Canvas(filename, pagesize=layout.Definitions.PAGE_SIZE)
-
-    P = Page.objects.get(code='BEXF4ECSIV')
-    L = P.project.layer_set.last()
-    floor_layer_markers = P.marker_set.filter(layer=L)
-
-    longest_value, max_var_count = calc_variable_metrics(floor_layer_markers)
-    message_box = MessageBox(C, longest_value, max_var_count)
-
-    sorted_markers = sorted(floor_layer_markers, key=lambda m: m.ord_number())
-    title = [P.floor_caption, L.title]
-
-    message_pages(C, sorted_markers, message_box, L.raw_color, title)
-    C.save()

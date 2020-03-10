@@ -1,14 +1,8 @@
-import django
-
-from django.utils import timezone
 from django.db.models.fields.files import ImageFieldFile
 from reportlab.lib import colors
 from reportlab.pdfgen import canvas as rc
-from reportlab.pdfbase import pdfmetrics
-from reportlab.pdfbase.ttfonts import TTFont
 
 import zoloto_viewer.infoplan.pdf_generation.common_layout as layout
-django.setup()
 from zoloto_viewer.viewer.models import Page
 
 
@@ -156,17 +150,3 @@ def plan_page(canvas, floor: Page, markers, title,
     box.draw(canvas)
 
     PlanLegend.draw_legend(canvas, box, layer_title, layer_desc)
-
-
-if __name__ == '__main__':
-    pdfmetrics.registerFont(TTFont(PlanLegend.FONT_NAME, 'fonts/pt_sans.ttf'))
-    filename = timezone.now().strftime('%d%m_%H%M.pdf')
-    C = rc.Canvas(filename, pagesize=layout.Definitions.PAGE_SIZE)
-
-    P = Page.objects.get(code='BEXF4ECSIV')
-    L = P.project.layer_set.first()
-    markers = P.marker_set.all().filter(layer=L)
-    title = [P.floor_caption, L.title]
-
-    plan_page(C, P, markers, title, L.raw_color, L.title, L.desc)
-    C.save()
