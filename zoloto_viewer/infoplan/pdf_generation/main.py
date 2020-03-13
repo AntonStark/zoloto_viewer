@@ -1,20 +1,23 @@
+import os
 from django.utils import timezone
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas
 
-import django
-django.setup()
 from zoloto_viewer.infoplan.pdf_generation import layout, message, plan
 from zoloto_viewer.viewer.models import Project, Page
 
 
-def generate_pdf(project: Project, with_review: bool):
-    pdfmetrics.registerFont(TTFont('FreePTSans', 'fonts/pt_sans.ttf'))
+def generate_pdf(project: Project, buffer, with_review: bool):
+    pt_sans_path = os.path.join(os.path.dirname(__file__), 'fonts/pt_sans.ttf')
+    pdfmetrics.registerFont(TTFont('FreePTSans', pt_sans_path))
 
     timestamp = timezone.now().strftime('%d%m_%H%M')
     filename = '_'.join([project.title, 'reviewed' if with_review else 'original', timestamp]) + '.pdf'
-    file_canvas = canvas.Canvas(filename, pagesize=layout.Definitions.PAGE_SIZE)
+    if buffer:
+        file_canvas = canvas.Canvas(buffer, pagesize=layout.Definitions.PAGE_SIZE)
+    else:
+        file_canvas = canvas.Canvas(filename, pagesize=layout.Definitions.PAGE_SIZE)
 
     first_iteration = True
     for L in project.layer_set.order_by('title').all():
@@ -35,17 +38,9 @@ def generate_pdf(project: Project, with_review: bool):
     return filename
 
 
-def generate_pdf_original(project: Project):
-    return generate_pdf(project, False)
+def generate_pdf_original(project: Project, buffer=None):
+    return generate_pdf(project, buffer, with_review=False)
 
 
-def generate_pdf_reviewed(project: Project):
-    return generate_pdf(project, True)
-
-
-if __name__ == '__main__':
-    project = Project.objects.get(id=41)
-    r = generate_pdf_original(project)
-    print(r)
-    r = generate_pdf_reviewed(project)
-    print(r)
+def generate_pdf_reviewed(project: Project, buffer=None):
+    return generate_pdf(project, buffer, with_review=True)

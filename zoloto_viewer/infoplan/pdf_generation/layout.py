@@ -1,3 +1,4 @@
+import os
 from reportlab.lib.pagesizes import A3, landscape
 from reportlab.lib.units import mm
 from reportlab.pdfbase import pdfmetrics, ttfonts
@@ -20,11 +21,11 @@ class Definitions:
 
     HEADER_FONT_SIZE = 30
     HEADER_FONT_NAME = 'Aeroport'
-    HEADER_FONT_FILE = 'fonts/Aeroport-regular.ttf'
+    HEADER_FONT_FILE = os.path.join(os.path.dirname(__file__), 'fonts/Aeroport-regular.ttf')
 
     FOOTER_FONT_SIZE = 21
     FOOTER_FONT_NAME = 'Zoloto'
-    FOOTER_FONT_FILE = 'fonts/Zoloto-Display-270819.ttf'
+    FOOTER_FONT_FILE = os.path.join(os.path.dirname(__file__), 'fonts/Zoloto-Display-270819.ttf')
 
     PADDING_FOOTER = 15.6 * mm
     PADDING_HEADER = TOP_LINE - HEADER_FONT_SIZE
