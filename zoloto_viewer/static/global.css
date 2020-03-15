@@ -245,3 +245,15 @@ a {
     border: 2px solid black;
     padding: 2px;
 }
+
+.pdf_generation_label {
+    float: right;
+    color: lightgray;
+}
+#pdf_generation_link {
+    cursor: pointer;
+}
+#pdf_generation_link:hover {
+    color: black;
+    text-decoration: underline;
+}

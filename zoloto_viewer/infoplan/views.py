@@ -64,7 +64,9 @@ def update_wrong_status(request, marker_uid: uuid.UUID):
     except MarkerVariable.DoesNotExist:
         raise Http404
     else:
-        target.wrong = is_wrong     # todo не позволять пометить пустую переменную
+        if not target.value:    # не позволять пометить пустую переменную
+            return JsonResponse({'error': 'empty variable could not be wrong'}, status=400)
+        target.wrong = is_wrong
         target.save()
         marker.deduce_correctness()
 
@@ -106,7 +108,14 @@ def load_marker_review(request, marker_uid: uuid.UUID):
     return JsonResponse(marker.to_json())
 
 
-def project_page(request, page_obj):
+def project_page(request, **more_context):
+    page_obj = more_context['page_obj']
+
+    pdf_original = more_context['pdf_original']
+    pdf_reviewed = more_context['pdf_reviewed']
+    pdf_created_time = more_context['pdf_created_time']
+    pdf_refresh_timeout = more_context['pdf_refresh_timeout']
+
     project = page_obj.project
     page_code_list = project.page_set.values_list('code', flat=True)
     layers = project.layer_set.values_list('title', 'color')
@@ -127,6 +136,11 @@ def project_page(request, page_obj):
             'translate': [-gb_left, -gb_top],
         },
         'base_url': settings.BASE_URL,
+
+        'pdf_original': pdf_original,
+        'pdf_reviewed': pdf_reviewed,
+        'pdf_created_time': pdf_created_time,
+        'pdf_refresh_timeout': str(pdf_refresh_timeout),
     }
     template = 'infoplan/project_page_auth.html' if request.user.is_authenticated \
         else 'infoplan/project_page.html'

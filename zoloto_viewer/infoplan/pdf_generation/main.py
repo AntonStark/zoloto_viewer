@@ -34,6 +34,7 @@ def generate_pdf(project: Project, buffer, with_review: bool):
             message.message_pages(file_canvas, floor_layer_markers,
                                   L.raw_color, title, with_review=with_review)
             first_iteration = False
+    file_canvas.setTitle(filename)      # todo construct proper file title
     file_canvas.save()
     return filename
 

@@ -9,6 +9,7 @@
     <script>var BASE_URL = '{{ base_url }}'</script>
     <script src="{% static 'infoplan/api.js' %}"></script>
     <script src="{% static 'infoplan/ui.js' %}"></script>
+    <script src="{% static 'pdf_generation.js' %}"></script>
     <style type="text/css">
         {% for layer, _ in markers_by_layer.items %}
             .layer-{{ layer.title }} .variables_container {

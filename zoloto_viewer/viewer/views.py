@@ -1,10 +1,12 @@
+from datetime import timedelta
 from django.contrib.auth.decorators import login_required
 from django.db import IntegrityError
-from django.http import Http404
+from django.http import Http404, JsonResponse
 from django.shortcuts import render, redirect
+from django.views.decorators import csrf, http
 
 from zoloto_viewer.infoplan import views as infoplan_views
-from zoloto_viewer.viewer.models import Project, Layer, Page
+from zoloto_viewer.viewer.models import Project, Layer, Page, PdfGenerated
 from zoloto_viewer.viewer.view_helpers import project_form
 
 
@@ -112,6 +114,23 @@ def remove_project(request, title):
     return redirect(to='projects')
 
 
+@login_required
+@http.require_POST
+@csrf.csrf_exempt
+def rebuild_pdf_files(request, title):
+    try:
+        project = Project.objects.get(title=title)
+    except Project.DoesNotExist:
+        raise Http404
+
+    # todo удалять прежние файлы после сохранения новых
+    pdf_generated = project.generate_pdf_files()
+    if not pdf_generated:
+        return JsonResponse({'error': f'at least {Project.PDF_GENERATION_TIMEOUT} seconds during calls'}, status=429)
+    else:
+        return JsonResponse({'generation_time': project.pdf_started}, status=201)
+
+
 def project_page(request, page_code):
     valid = Page.validate_code(page_code)
     if not valid:
@@ -119,4 +138,13 @@ def project_page(request, page_code):
     page_obj = Page.by_code(valid)
     if not page_obj:
         raise Http404
-    return infoplan_views.project_page(request, page_obj)
+
+    pdf_orig_set = page_obj.project.pdfgenerated_set.filter(mode=PdfGenerated.ORIGINAL)
+    pdf_rev_set = page_obj.project.pdfgenerated_set.filter(mode=PdfGenerated.REVIEWED)
+    pdf_original = pdf_orig_set.latest('created') if pdf_orig_set.exists() else None
+    pdf_reviewed = pdf_rev_set.latest('created') if pdf_rev_set.exists() else None
+    pdf_created_time = PdfGenerated.get_latest_time([pdf_original, pdf_reviewed])
+    pdf_refresh_timeout = pdf_created_time + timedelta(seconds=Project.PDF_GENERATION_TIMEOUT)
+
+    return infoplan_views.project_page(request, page_obj=page_obj, pdf_original=pdf_original, pdf_reviewed=pdf_reviewed,
+                                       pdf_created_time=pdf_created_time, pdf_refresh_timeout=pdf_refresh_timeout)

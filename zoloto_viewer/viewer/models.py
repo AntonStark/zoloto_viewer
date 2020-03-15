@@ -1,10 +1,12 @@
 import base64
+import io
 import os
 import re
 import shutil
 import uuid
 from django.conf import settings
 from django.contrib.postgres import fields
+from django.core.files import File
 from django.db import models, transaction
 from django.dispatch import receiver
 from django.utils import timezone
@@ -29,10 +31,13 @@ class Project(models.Model):
     layer_info_data = fields.JSONField(null=True)
     maps_info_data = fields.JSONField(null=True)
 
+    pdf_started = models.DateTimeField(null=True)
+
     MAPS_INFO = '_maps_info'
     LAYERS_INFO = '_layers_info'
     POI_NAMES = '_poi_names'
     PICT_CODES = '_pict_codes'
+    PDF_GENERATION_TIMEOUT = 600
 
     def first_page(self):
         pages = Page.objects.filter(project=self)
@@ -122,6 +127,22 @@ class Project(models.Model):
             if filename in captions_dict.keys():
                 p.floor_caption = captions_dict[filename]
                 p.save()
+
+    def generate_pdf_files(self):
+        """Build new pdf files if timeout exceed"""
+        if self.pdf_started and \
+                (timezone.now() - self.pdf_started).seconds < Project.PDF_GENERATION_TIMEOUT:
+            return None
+
+        orig_pdf = PdfGenerated(mode=PdfGenerated.ORIGINAL, project=self)
+        reviewed_pdf = PdfGenerated(mode=PdfGenerated.REVIEWED, project=self)
+
+        orig_pdf.setup()
+        reviewed_pdf.setup()
+
+        self.pdf_started = timezone.now()
+        self.save()
+        return [orig_pdf, reviewed_pdf]
 
     @staticmethod
     def is_additional_file(title):
@@ -345,3 +366,38 @@ def delete_page_file(sender, instance: Page, *args, **kwargs):
     """ Deletes page image on `post_delete` """
     if instance.plan:
         _delete_file(instance.plan.path)
+
+
+def pdf_upload_path(obj: 'PdfGenerated', filename):
+    return f'project_{obj.project.title}/pdf/{filename}'
+
+
+class PdfGenerated(models.Model):
+    ORIGINAL = 'o'
+    REVIEWED = 'r'
+    PDF_MODE_CHOICES = [
+        (ORIGINAL, 'original'),
+        (REVIEWED, 'reviewed'),
+    ]
+
+    file = models.FileField(upload_to=pdf_upload_path)
+    mode = models.CharField(max_length=1, choices=PDF_MODE_CHOICES)
+    project = models.ForeignKey(Project, on_delete=models.CASCADE)
+    created = models.DateTimeField(auto_now_add=True)
+
+    def setup(self):
+        from zoloto_viewer.infoplan.pdf_generation import main as pdf_module
+
+        bytes_buf = io.BytesIO()
+        if self.mode == PdfGenerated.ORIGINAL:
+            proposed_filename = pdf_module.generate_pdf_original(self.project, bytes_buf)
+        elif self.mode == PdfGenerated.REVIEWED:
+            proposed_filename = pdf_module.generate_pdf_reviewed(self.project, bytes_buf)
+        else:
+            raise ValueError('unexpeced mode value')
+        self.file.save(proposed_filename, File(bytes_buf))
+
+    @staticmethod
+    def get_latest_time(*pdf_files):
+        pdf_list = list(map(lambda pdf: pdf.created, filter(None, *pdf_files)))
+        return timezone.localtime(max(pdf_list)) if pdf_list else None
