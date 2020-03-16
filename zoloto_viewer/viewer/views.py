@@ -1,4 +1,3 @@
-from datetime import timedelta
 from django.contrib.auth.decorators import login_required
 from django.db import IntegrityError
 from django.http import Http404, JsonResponse
@@ -35,54 +34,54 @@ def load_project(request):
     if not pages_data or not pages_data:
         return redirect('load_project')
 
-    proj = Project(title=title)
-    proj.save()
+    project_obj = Project(title=title)
+    project_obj.save()
 
-    proj.update_additional_files(additional_files)
-    proj.store_pages(pages_data)
-    proj.create_layers(layer_files)
+    project_obj.update_additional_files(additional_files)
+    project_obj.store_pages(pages_data)
+    project_obj.create_layers(layer_files)
     return redirect('projects')
 
 
 @login_required
 def edit_project(request, title):
     try:
-        project = Project.objects.get(title=title)
+        project_obj = Project.objects.get(title=title)
     except Project.DoesNotExist:
         raise Http404
     if request.method != 'POST':
-        pages = Page.objects.filter(project=project)
-        layers = Layer.objects.filter(project=project)
+        pages = Page.objects.filter(project=project_obj)
+        layers = Layer.objects.filter(project=project_obj)
         context = {
-            'project': project,
+            'project': project_obj,
             'pages_list': map(Page.serialize, pages),
-            'csv_list': list(map(Layer.serialize, layers)) + project.additional_files_info(),
+            'csv_list': list(map(Layer.serialize, layers)) + project_obj.additional_files_info(),
         }
         return render(request, 'viewer/edit_project.html', context=context)
 
     title = request.POST['title']
-    if project.title != title:
-        project.title = title
-        project.save()
+    if project_obj.title != title:
+        project_obj.title = title
+        project_obj.save()
 
     csv_to_delete, pages_to_delete = project_form.files_to_delete(request.POST)
     for csv_name in csv_to_delete:
-        Layer.remove_from_project(project, csv_name)
+        Layer.remove_from_project(project_obj, csv_name)
     for page_name in pages_to_delete:
-        Page.remove_from_project(project, page_name)
-    project.remove_additional_files(csv_to_delete)
+        Page.remove_from_project(project_obj, page_name)
+    project_obj.remove_additional_files(csv_to_delete)
 
     pages_data, floor_captions = project_form.parse_pages(request.POST, request.FILES)
     layer_files, additional_files = project_form.parse_csv(request.POST, request.FILES)
 
     errors = []
-    project.update_additional_files(additional_files)
-    project.store_pages(pages_data)
+    project_obj.update_additional_files(additional_files)
+    project_obj.store_pages(pages_data)
     try:
-        project.alter_floor_captions(floor_captions)
+        project_obj.alter_floor_captions(floor_captions)
     except IntegrityError:
         errors.append('captions not unique')
-    project.create_layers(layer_files)
+    project_obj.create_layers(layer_files)
 
     if errors:
         return redirect(to='edit_project', title=title)
@@ -106,11 +105,11 @@ def project(request, title):
 @login_required
 def remove_project(request, title):
     try:
-        proj = Project.objects.get(title=title)
+        project_obj = Project.objects.get(title=title)
     except Project.DoesNotExist:
         raise Http404
 
-    proj.delete()
+    project_obj.delete()
     return redirect(to='projects')
 
 
@@ -119,23 +118,23 @@ def remove_project(request, title):
 @csrf.csrf_exempt
 def rebuild_pdf_files(_, title):
     try:
-        project = Project.objects.get(title=title)
+        project_obj = Project.objects.get(title=title)
     except Project.DoesNotExist:
         raise Http404
 
     # todo удалять прежние файлы после сохранения новых
-    pdf_generated = project.generate_pdf_files()
+    pdf_generated = project_obj.generate_pdf_files()
     if not pdf_generated:
         return JsonResponse({
             'error': f'at least {Project.PDF_GENERATION_TIMEOUT} seconds during calls',
-            'try_after': str(project.pdf_refresh_timeout()),
+            'try_after': str(project_obj.pdf_refresh_timeout()),
         }, status=429)
     else:
         from zoloto_viewer.viewer.templatetags.timedelta import timedelta_pretty
         pdf_gen_orig, pdf_gen_rev = pdf_generated
         return JsonResponse({
             'pdf_created_time': timedelta_pretty(PdfGenerated.get_latest_time(pdf_generated)),
-            'pdf_refresh_timeout': project.pdf_refresh_timeout(),
+            'pdf_refresh_timeout': project_obj.pdf_refresh_timeout(),
             'pdf_original': pdf_gen_orig.file.url,
             'pdf_reviewed': pdf_gen_rev.file.url,
         }, status=201)
