@@ -52,6 +52,15 @@ class Project(models.Model):
     def pages_by_caption(self):
         return {p.indd_floor: p for p in self.page_set.all()}
 
+    def rename_project(self, title):
+        # todo после переименования проекта должны обновляться
+        #  - пути в атрибутах моделей Layer, Page, PdfGenerated, Project (в одну транзакцию)
+        #  - и (в случае успеха транзакции) имя папки проекта
+        #  иначе будет конфликт имён при создании проекта со старым именем
+        if title != self.title:
+            self.title = title
+            self.save()
+
     def update_maps_info(self, upload):
         maps_add_data = data_files.map.parse_maps_file(upload.file)
         if not maps_add_data:
@@ -145,7 +154,8 @@ class Project(models.Model):
         return orig_pdf, reviewed_pdf
 
     def pdf_refresh_timeout(self):
-        return self.pdf_started + timedelta(seconds=Project.PDF_GENERATION_TIMEOUT)
+        return self.pdf_started + timedelta(seconds=Project.PDF_GENERATION_TIMEOUT) if self.pdf_started \
+            else -float('Inf')
 
     @staticmethod
     def is_additional_file(title):
@@ -404,3 +414,19 @@ class PdfGenerated(models.Model):
     def get_latest_time(*pdf_files):
         pdf_list = list(map(lambda pdf: pdf.created, filter(None, *pdf_files)))
         return timezone.localtime(max(pdf_list)) if pdf_list else None
+
+
+# noinspection PyUnusedLocal
+@receiver(models.signals.post_delete, sender=PdfGenerated)
+def delete_pdf_docs(sender, instance: PdfGenerated, *args, **kwargs):
+    """ Deletes pdf documents on `post_delete` """
+    if instance.file:
+        _delete_file(instance.file.path)
+
+
+# noinspection PyUnusedLocal
+@receiver(models.signals.post_save, sender=PdfGenerated)
+def remove_previous_versions(sender, instance: PdfGenerated, *args, **kwargs):
+    """Remove previous entries for same project and move"""
+    PdfGenerated.objects.filter(project=instance.project, mode=instance.mode)\
+        .exclude(id=instance.id).delete()       # exclude itself

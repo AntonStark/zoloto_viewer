@@ -60,9 +60,7 @@ def edit_project(request, title):
         return render(request, 'viewer/edit_project.html', context=context)
 
     title = request.POST['title']
-    if project_obj.title != title:
-        project_obj.title = title
-        project_obj.save()
+    project_obj.rename_project(title)
 
     csv_to_delete, pages_to_delete = project_form.files_to_delete(request.POST)
     for csv_name in csv_to_delete:
@@ -114,15 +112,13 @@ def remove_project(request, title):
 
 
 @login_required
-@http.require_POST
 @csrf.csrf_exempt
-def rebuild_pdf_files(_, title):
+def rebuild_pdf_files(request, title):
     try:
         project_obj = Project.objects.get(title=title)
     except Project.DoesNotExist:
         raise Http404
 
-    # todo удалять прежние файлы после сохранения новых
     pdf_generated = project_obj.generate_pdf_files()
     if not pdf_generated:
         return JsonResponse({
@@ -130,6 +126,9 @@ def rebuild_pdf_files(_, title):
             'try_after': str(project_obj.pdf_refresh_timeout()),
         }, status=429)
     else:
+        if request.method == 'GET':
+            return redirect(to=request.META.get('HTTP_REFERER', '/'))   # just push reload if GET
+
         from zoloto_viewer.viewer.templatetags.timedelta import timedelta_pretty
         pdf_gen_orig, pdf_gen_rev = pdf_generated
         return JsonResponse({
