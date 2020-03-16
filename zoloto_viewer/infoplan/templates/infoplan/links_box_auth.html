@@ -5,18 +5,15 @@
         <span class="pdf_generation_label">
             <small title="{{ pdf_created_time }}">от {{ pdf_created_time|timedelta_pretty }}</small>
             <span id="pdf_generation_link" data-activate-after="{{ pdf_refresh_timeout }}"
-                  onclick="pdfRequest('{% url 'rebuild_pdf_files' project.title %}')">
-                {% if pdf_original or pdf_reviewed %}
-                    &#8635;
-                {% endif %}
-            </span>
+                  onclick="pdfRequest('{% url 'rebuild_pdf_files' project.title %}')"
+            >{% if pdf_original or pdf_reviewed %}&#8635;{% endif %}</span>
         </span>
         <br>
         {% if pdf_original or pdf_reviewed %}
-            <a {% if pdf_original %} href="{{ pdf_original.file.url }}"
+            <a id="pdf_original_link" {% if pdf_original %} href="{{ pdf_original.file.url }}"
             {% else %} style="color: lightgrey"{% endif %}>Оригинальный</a>
 
-            <a {% if pdf_reviewed %} href="{{ pdf_reviewed.file.url }}" style="white-space: nowrap"
+            <a id="pdf_reviewed_link" {% if pdf_reviewed %} href="{{ pdf_reviewed.file.url }}" style="white-space: nowrap"
             {% else %} style="white-space: nowrap; color: lightgrey;" {% endif %}>С ошибками и комментариями</a>
         {% else %}
             <small>

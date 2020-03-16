@@ -117,7 +117,7 @@ def remove_project(request, title):
 @login_required
 @http.require_POST
 @csrf.csrf_exempt
-def rebuild_pdf_files(request, title):
+def rebuild_pdf_files(_, title):
     try:
         project = Project.objects.get(title=title)
     except Project.DoesNotExist:
@@ -126,9 +126,19 @@ def rebuild_pdf_files(request, title):
     # todo удалять прежние файлы после сохранения новых
     pdf_generated = project.generate_pdf_files()
     if not pdf_generated:
-        return JsonResponse({'error': f'at least {Project.PDF_GENERATION_TIMEOUT} seconds during calls'}, status=429)
+        return JsonResponse({
+            'error': f'at least {Project.PDF_GENERATION_TIMEOUT} seconds during calls',
+            'try_after': str(project.pdf_refresh_timeout()),
+        }, status=429)
     else:
-        return JsonResponse({'generation_time': project.pdf_started}, status=201)
+        from zoloto_viewer.viewer.templatetags.timedelta import timedelta_pretty
+        pdf_gen_orig, pdf_gen_rev = pdf_generated
+        return JsonResponse({
+            'pdf_created_time': timedelta_pretty(PdfGenerated.get_latest_time(pdf_generated)),
+            'pdf_refresh_timeout': project.pdf_refresh_timeout(),
+            'pdf_original': pdf_gen_orig.file.url,
+            'pdf_reviewed': pdf_gen_rev.file.url,
+        }, status=201)
 
 
 def project_page(request, page_code):
@@ -144,7 +154,7 @@ def project_page(request, page_code):
     pdf_original = pdf_orig_set.latest('created') if pdf_orig_set.exists() else None
     pdf_reviewed = pdf_rev_set.latest('created') if pdf_rev_set.exists() else None
     pdf_created_time = PdfGenerated.get_latest_time([pdf_original, pdf_reviewed])
-    pdf_refresh_timeout = pdf_created_time + timedelta(seconds=Project.PDF_GENERATION_TIMEOUT)
+    pdf_refresh_timeout = page_obj.project.pdf_refresh_timeout()
 
     return infoplan_views.project_page(request, page_obj=page_obj, pdf_original=pdf_original, pdf_reviewed=pdf_reviewed,
                                        pdf_created_time=pdf_created_time, pdf_refresh_timeout=pdf_refresh_timeout)

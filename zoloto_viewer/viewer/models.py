@@ -4,6 +4,7 @@ import os
 import re
 import shutil
 import uuid
+from datetime import timedelta
 from django.conf import settings
 from django.contrib.postgres import fields
 from django.core.files import File
@@ -130,8 +131,7 @@ class Project(models.Model):
 
     def generate_pdf_files(self):
         """Build new pdf files if timeout exceed"""
-        if self.pdf_started and \
-                (timezone.now() - self.pdf_started).seconds < Project.PDF_GENERATION_TIMEOUT:
+        if self.pdf_started and timezone.now() < self.pdf_refresh_timeout():
             return None
 
         orig_pdf = PdfGenerated(mode=PdfGenerated.ORIGINAL, project=self)
@@ -142,7 +142,10 @@ class Project(models.Model):
 
         self.pdf_started = timezone.now()
         self.save()
-        return [orig_pdf, reviewed_pdf]
+        return orig_pdf, reviewed_pdf
+
+    def pdf_refresh_timeout(self):
+        return self.pdf_started + timedelta(seconds=Project.PDF_GENERATION_TIMEOUT)
 
     @staticmethod
     def is_additional_file(title):
@@ -394,7 +397,7 @@ class PdfGenerated(models.Model):
         elif self.mode == PdfGenerated.REVIEWED:
             proposed_filename = pdf_module.generate_pdf_reviewed(self.project, bytes_buf)
         else:
-            raise ValueError('unexpeced mode value')
+            raise ValueError('unexpected mode value')
         self.file.save(proposed_filename, File(bytes_buf))
 
     @staticmethod
