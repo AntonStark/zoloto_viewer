@@ -2,7 +2,7 @@ from django.contrib.auth.decorators import login_required
 from django.db import IntegrityError
 from django.http import Http404, JsonResponse
 from django.shortcuts import render, redirect
-from django.views.decorators import csrf, http
+from django.views.decorators import csrf
 
 from zoloto_viewer.infoplan import views as infoplan_views
 from zoloto_viewer.viewer.models import Project, Layer, Page, PdfGenerated

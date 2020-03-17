@@ -17,10 +17,12 @@ from zoloto_viewer.viewer import data_files
 
 
 def additional_files_upload_path(obj: 'Project', filename):
+    # return path.join(obj.project_files_dir(), f'additional_files/{filename}')
     return f'project_{obj.title}/additional_files/{filename}'
 
 
 class Project(models.Model):
+    uid = models.UUIDField(unique=True, default=uuid.uuid4, editable=False)
     title = models.TextField(blank=False, unique=True)
     created = models.DateTimeField(auto_now_add=True)
 
@@ -53,13 +55,12 @@ class Project(models.Model):
         return {p.indd_floor: p for p in self.page_set.all()}
 
     def rename_project(self, title):
-        # todo после переименования проекта должны обновляться
-        #  - пути в атрибутах моделей Layer, Page, PdfGenerated, Project (в одну транзакцию)
-        #  - и (в случае успеха транзакции) имя папки проекта
-        #  иначе будет конфликт имён при создании проекта со старым именем
         if title != self.title:
             self.title = title
             self.save()
+
+    def project_files_dir(self):
+        return f'project_{self.uid}'
 
     def update_maps_info(self, upload):
         maps_add_data = data_files.map.parse_maps_file(upload.file)
