@@ -17,8 +17,7 @@ from zoloto_viewer.viewer import data_files
 
 
 def additional_files_upload_path(obj: 'Project', filename):
-    # return path.join(obj.project_files_dir(), f'additional_files/{filename}')
-    return f'project_{obj.title}/additional_files/{filename}'
+    return path.join(obj.project_files_dir(), f'additional_files/{filename}')
 
 
 class Project(models.Model):
@@ -180,7 +179,7 @@ def csv_upload_next_path(obj: 'Layer', filename):
 
 
 def csv_upload_path(obj: 'Layer', filename):
-    return f'project_{obj.project.title}/layers/{filename}'
+    return path.join(obj.project.project_files_dir(), f'layers/{filename}')
 
 
 def csv_upload_prev_path(obj: 'Layer', filename):
@@ -295,7 +294,7 @@ def process_layer_csv(sender, instance: Layer, *args, **kwargs):
 
 
 def plan_upload_path(obj: 'Page', filename):
-    return f'project_{obj.project.title}/pages/{filename}'
+    return path.join(obj.project.project_files_dir(), f'pages/{filename}')
 
 
 class Page(models.Model):
@@ -383,7 +382,7 @@ def delete_page_file(sender, instance: Page, *args, **kwargs):
 
 
 def pdf_upload_path(obj: 'PdfGenerated', filename):
-    return f'project_{obj.project.title}/pdf/{filename}'
+    return path.join(obj.project.project_files_dir(), f'pdf/{filename}')
 
 
 class PdfGenerated(models.Model):
