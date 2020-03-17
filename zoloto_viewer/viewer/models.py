@@ -288,7 +288,7 @@ def process_layer_csv(sender, instance: Layer, *args, **kwargs):
     # todo проверять наличие изменений в переменных маркера и сбрасывать статус проверки только если изменился
     Marker.objects.remove_excess(instance, info.keys())
     Marker.objects.create_missing(instance, instance.project.pages_by_caption(), info)
-    Marker.objects.update_variables(info)
+    Marker.objects.update_variables(instance, info)
 
     instance.set_synced()
 

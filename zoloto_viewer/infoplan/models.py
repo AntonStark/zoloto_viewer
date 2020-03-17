@@ -22,13 +22,13 @@ class MarkersManager(models.Manager):
 
             self.create(layer=layer, floor=floor, number=number, points=m_path)
 
-    def update_variables(self, marker_info):
+    def update_variables(self, layer, marker_info):
         """
         :param marker_info: { number -> (path, vars, indd_floor, n) }
         """
         for number, params in marker_info.items():
             try:
-                marker = self.get(number=number)
+                marker = self.get(layer=layer, number=number)
             except self.model.DoesNotExist:
                 continue    # some of numbers may not have markers due to skip missing pages
             else:
@@ -43,7 +43,7 @@ class Marker(models.Model):
     layer = models.ForeignKey('viewer.Layer', on_delete=models.SET_NULL, null=True)
     floor = models.ForeignKey('viewer.Page', on_delete=models.CASCADE)
 
-    number = models.CharField(max_length=128, blank=False, unique=True)
+    number = models.CharField(max_length=128, blank=False)
     points = fields.JSONField(default=list)     # [ [P], ..., [P] ] | [ [P1, P2, P3], ... ], P = [x: float, y: float]
 
     correct = models.BooleanField(null=True, default=None)
@@ -54,7 +54,7 @@ class Marker(models.Model):
     COMMENT_MARK_PADDING = 0.7 * CIRCLE_RADIUS
 
     class Meta:
-        unique_together = ['floor', 'number']
+        unique_together = [('floor', 'number'), ('layer', 'number')]
 
     @staticmethod
     def multipoint_mid(mp):
