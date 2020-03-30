@@ -50,6 +50,31 @@ a {
     table-layout: fixed;
 }
 
+.scrollable {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: auto;
+}
+
+.map_controls {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.map_controls .disabled {
+    stroke: grey;
+    fill-opacity: 0;
+}
+
+.map_control {
+    stroke: black;
+    fill: white;
+}
+
 .project-page-table-left-column {
     border-right: 1px solid black;
     padding-left: 12px;

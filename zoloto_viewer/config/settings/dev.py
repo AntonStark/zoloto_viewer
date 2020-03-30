@@ -6,7 +6,7 @@ SECRET_KEY = 'vh2)6un#nhgh%ytl^%edf7=n^ihkc0$nl5o)6*+$(4sv@lu_61'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 # Database
 # https://docs.djangoproject.com/en/3.0/ref/settings/#databases
@@ -27,5 +27,13 @@ MEDIA_URL = '/media/'
 
 STATIC_URL = '/static/'
 
+
 # for api calls
-BASE_URL = 'http://localhost:8000'
+def discover_ip(target_ip):
+    import socket
+    with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
+        s.connect((target_ip, 80))
+        return s.getsockname()[0]
+
+
+BASE_URL = f'http://{discover_ip("192.168.0.1")}:8000'
