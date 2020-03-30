@@ -192,12 +192,6 @@ a {
     list-style-type: disc;
 }
 
-#project-page-plan-box svg g.layer_messages {
-    visibility: hidden;
-}
-#project-page-plan-box svg g.layer_messages.enabled_layer {
-    visibility: visible;
-}
 
 .message_box {
     width: 100%;
