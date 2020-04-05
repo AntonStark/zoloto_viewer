@@ -1,7 +1,5 @@
 "use strict";
 
-const MESSAGE_BOX_SIZE = [160, 260];
-
 let SVG_VIEWPORT_BOUNDS = undefined;
 window.addEventListener('load', function () {
     const svgElement = document.getElementById('project-page-plan-svg');
@@ -85,7 +83,7 @@ const messageBoxManager = function () {
 
     function acquirePosition(markerPosition) {
         const [marX, marY] = markerPosition;
-        const [boxW, boxH] = MESSAGE_BOX_SIZE;
+        const [boxW, boxH] = [0, 0];    // stub for a while
         const [svgW, svgH] = SVG_VIEWPORT_BOUNDS;
         const d = 10;
 
@@ -105,8 +103,10 @@ const messageBoxManager = function () {
         wrapper.style.position = 'absolute';
         wrapper.style.left = position[0] + 'px';
         wrapper.style.top = position[1] + 'px';
-        wrapper.style.width = size[0] + 'px';
-        wrapper.style.height = size[1] + 'px';
+        if (size !== undefined) {
+            wrapper.style.width = size[0] + 'px';
+            wrapper.style.height = size[1] + 'px';
+        }
         wrapper.style.outline = 'none';
 
         wrapper.append(mess);
@@ -158,7 +158,7 @@ const messageBoxManager = function () {
 
         doApiCall('GET', API_MARKER_GET_DATA(marker_uid), undefined,
             function (markerData) {
-            const messNode = makeWrapper(position, MESSAGE_BOX_SIZE,
+            const messNode = makeWrapper(position, undefined,
                 buildMessBox(markerData));
             _registerMessageItem(markerData.marker, messNode);
             container.append(messNode);

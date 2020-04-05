@@ -38,6 +38,7 @@ const mapController = (function() {
         mapObj.setAttribute('transform', transform);
     }
     function displayScale() {
+        // todo update messages positions
         switch (possibleScales[scaleIndex]) {
             case 125:
                 set125();
