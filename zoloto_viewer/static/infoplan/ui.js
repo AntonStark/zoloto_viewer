@@ -99,12 +99,14 @@ const messageBoxManager = function () {
         return [x, y];
     }
     function makeWrapper(position, size, mess) {
-        const wrapper = document.createElementNS("http://www.w3.org/2000/svg",
-            'foreignObject');
-        wrapper.setAttribute('x', position[0]);
-        wrapper.setAttribute('y', position[1]);
-        wrapper.setAttribute('width', size[0]);
-        wrapper.setAttribute('height', size[1]);
+        // const wrapper = document.createElementNS("http://www.w3.org/2000/svg",
+        //     'foreignObject');
+        const wrapper = document.createElement('div');
+        wrapper.style.position = 'absolute';
+        wrapper.style.left = position[0] + 'px';
+        wrapper.style.top = position[1] + 'px';
+        wrapper.style.width = size[0] + 'px';
+        wrapper.style.height = size[1] + 'px';
         wrapper.style.outline = 'none';
 
         wrapper.append(mess);

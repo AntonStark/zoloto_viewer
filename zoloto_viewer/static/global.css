@@ -58,6 +58,10 @@ a {
     overflow: auto;
 }
 
+#project-page-plan-svg {
+    position: absolute;
+}
+
 .map_controls {
     position: absolute;
     right: 10px;
