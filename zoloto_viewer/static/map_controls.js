@@ -1,57 +1,44 @@
-const mapController = (function() {
+const mapScaleController = function() {
+    const POSSIBLE_SCALES = [100, 125, 150, 200];
+    let scaleIndex = 0;
     let mapObj = undefined;
     let scrollDiv = undefined;
+
+
     function setMapObj() {
         mapObj = document.getElementById('project-page-plan-svg');
         scrollDiv = document.getElementById('project-page-plan-box')
             .getElementsByClassName('scrollable')[0];
     }
+    function currentScale() {
+        return POSSIBLE_SCALES[scaleIndex] / 100;
+    }
 
-    const possibleScales = [100, 125, 150, 200];
-    let scaleIndex = 0;
     function couldIncrease() {
-        return scaleIndex < (possibleScales.length - 1);
+        return scaleIndex < (POSSIBLE_SCALES.length - 1);
     }
     function couldDecrease() {
         return scaleIndex > 0;
     }
 
-    function setNormal() {
+    function _setScaled() {
+        const scale = currentScale();
+        const deltaFactor = scale - 1;    // relative size of difference of scaled plan over original
+        const width = mapObj.width.baseVal.value;
+        const height = mapObj.height.baseVal.value;
+        const transform = `translate(${deltaFactor / 2 * width}, ${deltaFactor / 2 * height}) scale(${scale})`;
+        mapObj.setAttribute('transform', transform);
+    }
+    function _setNormal() {
         mapObj.removeAttribute('transform');
     }
-    function set125() {
-        const width = document.getElementById('project-page-plan-svg').width.baseVal.value;
-        const height = document.getElementById('project-page-plan-svg').height.baseVal.value;
-        const transform = `translate(${width/2}, ${height/2}) scale(1.25)`;
-        mapObj.setAttribute('transform', transform);
-    }
-    function set150() {
-        const width = document.getElementById('project-page-plan-svg').width.baseVal.value;
-        const height = document.getElementById('project-page-plan-svg').height.baseVal.value;
-        const transform = `translate(${width/2}, ${height/2}) scale(1.5)`;
-        mapObj.setAttribute('transform', transform);
-    }
-    function set200() {
-        const width = document.getElementById('project-page-plan-svg').width.baseVal.value;
-        const height = document.getElementById('project-page-plan-svg').height.baseVal.value;
-        const transform = `translate(${width/2}, ${height/2}) scale(2)`;
-        mapObj.setAttribute('transform', transform);
-    }
     function displayScale() {
-        // todo update messages positions
-        switch (possibleScales[scaleIndex]) {
-            case 125:
-                set125();
-                break;
-            case 150:
-                set150();
-                break;
-            case 200:
-                set200();
-                break;
-            default:
-                setNormal();
-        }
+        if (scaleIndex > 0)
+            _setScaled();
+        else
+            _setNormal();
+
+        messageBoxManager.onMapScaleChange();
     }
 
     function increase() {
@@ -80,6 +67,7 @@ const mapController = (function() {
 
     return {
         setup: setMapObj,
+        current: currentScale,
 
         couldIncrease: couldIncrease,
         couldDecrease: couldDecrease,
@@ -87,25 +75,25 @@ const mapController = (function() {
         increase: increase,
         decrease: decrease,
     }
-})();
+}();
 
 
 function handleClickMapPlus() {
-    if (!mapController.couldIncrease())
+    if (!mapScaleController.couldIncrease())
         return;
-    mapController.increase();
+    mapScaleController.increase();
     updateControlStyle();
 }
 
 function handleClickMapMinus() {
-    if (!mapController.couldDecrease())
+    if (!mapScaleController.couldDecrease())
         return;
-    mapController.decrease();
+    mapScaleController.decrease();
     updateControlStyle();
 }
 
 function setHandlers() {
-    mapController.setup();
+    mapScaleController.setup();
     document.getElementById('map_control_plus').addEventListener('click', handleClickMapPlus);
     document.getElementById('map_control_minus').addEventListener('click', handleClickMapMinus);
 }
@@ -113,10 +101,10 @@ window.addEventListener('load', setHandlers);
 
 function updateControlStyle() {
     const plus = document.getElementById('map_control_plus');
-    if (plus.classList.contains('disabled') !== !mapController.couldIncrease())
+    if (plus.classList.contains('disabled') !== !mapScaleController.couldIncrease())
         plus.classList.toggle('disabled');
 
     const minus = document.getElementById('map_control_minus');
-    if (minus.classList.contains('disabled') !== !mapController.couldDecrease())
+    if (minus.classList.contains('disabled') !== !mapScaleController.couldDecrease())
         minus.classList.toggle('disabled');
 }

@@ -81,8 +81,11 @@ const messageBoxManager = function () {
             return null;
     }
 
-    function acquirePosition(markerPosition) {
-        const [marX, marY] = markerPosition;
+    function acquireMessagePosition(marker_uid) {
+        const [rawMarX, rawMarY] = markerCirclesManager.position(marker_uid);
+        const planScale = mapScaleController.current();
+
+        const [marX, marY] = [planScale * rawMarX, planScale * rawMarY];
         const [boxW, boxH] = [0, 0];    // stub for a while
         const [svgW, svgH] = SVG_VIEWPORT_BOUNDS;
         const d = 10;
@@ -95,6 +98,15 @@ const messageBoxManager = function () {
             : marY - (d + boxH));
 
         return [x, y];
+    }
+    function onMapScaleChange() {
+        // обходим индекс renderedMessagesIndex и для каждого messageBox обновляем атрибуты left и top
+        for (let [marker_uid, messageBox] of Object.entries(renderedMessagesIndex)) {
+            const newPos = acquireMessagePosition(marker_uid);
+            messageBox.style.left = newPos[0] + 'px';
+            messageBox.style.top = newPos[1] + 'px';
+        }
+        // console.debug('map scale set to ', newScale);
     }
     function makeWrapper(position, size, mess) {
         // const wrapper = document.createElementNS("http://www.w3.org/2000/svg",
@@ -142,18 +154,17 @@ const messageBoxManager = function () {
             return;
         }
 
-        // если сообщения ещё нет в индексе, нужно:
-        //   1) запросить место
-        //   2) если место нашлось запросить данные
-        //   3) если данные пришли, построить Node сообщения, закинуть в индекс и отобразить в контейнере
         const layer_title = markerElementIndex[marker_uid].dataset.layerTitle;
         const container = deduceContainer(layer_title);
         if (!container)
             return;
 
-        const markerPosition = markerCirclesManager.position(marker_uid);
-        const position = acquirePosition(markerPosition);
-        if (!position)
+        // если сообщения ещё нет в индексе, нужно:
+        //   1) запросить место
+        //   2) если место нашлось запросить данные
+        //   3) если данные пришли, построить Node сообщения, закинуть в индекс и отобразить в контейнере
+        const position = acquireMessagePosition(marker_uid);
+        if (!position)      // todo нужны разные коды ошибок для разных ситуаций (какие ситуации описаны в тз?)
             return;
 
         doApiCall('GET', API_MARKER_GET_DATA(marker_uid), undefined,
@@ -197,6 +208,7 @@ const messageBoxManager = function () {
         get : getContainer,
         reg : registerMarkerElement,
         hideAll: hideAllMessages,
+        onMapScaleChange: onMapScaleChange,
     }
 }();
 
