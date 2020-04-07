@@ -2,7 +2,7 @@
     <div class="scrollable">
         <div style="position: relative;">
             <svg width="{{ page.plan.width }}" height="{{ page.plan.height }}" id="project-page-plan-svg">
-                {% with tt=transform_params.translate ts=transform_params.scale %}
+                <g id="project-page-svg-origin">{% with tt=transform_params.translate ts=transform_params.scale %}
                     <image href="{{ page.plan.url }}"
                             {#                   transform="scale(0.977, 0.988)"#}
                            width="{{ page.plan.width }}" height="{{ page.plan.height }}">
@@ -35,7 +35,7 @@
                                 </g>
                             {% endfor %}</g>
                     {% endfor %}
-                {% endwith %}
+                {% endwith %}</g>
             </svg>
             <div id="project-page-messages-container"
                  style="width: {{ page.plan.width }}px; height: {{ page.plan.height }}px;">

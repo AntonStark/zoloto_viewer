@@ -2,16 +2,24 @@ const mapScaleController = function() {
     const POSSIBLE_SCALES = [100, 125, 150, 200];
     let scaleIndex = 0;
     let mapObj = undefined;
+    let svgOrigin = undefined;
     let scrollDiv = undefined;
+    let originalSize = undefined;
 
 
     function setMapObj() {
         mapObj = document.getElementById('project-page-plan-svg');
+        originalSize = [mapObj.width.baseVal.value, mapObj.height.baseVal.value];
+
+        svgOrigin = document.getElementById('project-page-svg-origin');
         scrollDiv = document.getElementById('project-page-plan-box')
             .getElementsByClassName('scrollable')[0];
     }
     function currentScale() {
         return POSSIBLE_SCALES[scaleIndex] / 100;
+    }
+    function getOriginalSize() {
+        return originalSize;
     }
 
     function couldIncrease() {
@@ -23,14 +31,20 @@ const mapScaleController = function() {
 
     function _setScaled() {
         const scale = currentScale();
-        const deltaFactor = scale - 1;    // relative size of difference of scaled plan over original
-        const width = mapObj.width.baseVal.value;
-        const height = mapObj.height.baseVal.value;
-        const transform = `translate(${deltaFactor * width / 2}, ${deltaFactor * height / 2}) scale(${scale})`;
-        mapObj.setAttribute('transform', transform);
+        // const deltaFactor = scale - 1;    // relative size of difference of scaled plan over original
+        // const width = mapObj.width.baseVal.value;
+        // const height = mapObj.height.baseVal.value;
+        // const transform = `translate(${deltaFactor * width / 2}, ${deltaFactor * height / 2}) scale(${scale})`;
+        const transform = `scale(${scale})`;
+        svgOrigin.setAttribute('transform', transform);
+
+        mapObj.setAttribute('width', scale * originalSize[0]);
+        mapObj.setAttribute('height', scale * originalSize[1]);
     }
     function _setNormal() {
-        mapObj.removeAttribute('transform');
+        svgOrigin.removeAttribute('transform');
+        mapObj.setAttribute('width', originalSize[0]);
+        mapObj.setAttribute('height', originalSize[1]);
     }
     function displayScale() {
         if (scaleIndex > 0)
@@ -68,6 +82,7 @@ const mapScaleController = function() {
     return {
         setup: setMapObj,
         current: currentScale,
+        origSize: getOriginalSize,
 
         couldIncrease: couldIncrease,
         couldDecrease: couldDecrease,
