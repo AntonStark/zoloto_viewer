@@ -1,69 +1,67 @@
-<td rowspan="4" id="project-page-plan-box">
-    <div class="scrollable">
-        <div style="position: relative;">
-            <svg width="{{ page.plan.width }}" height="{{ page.plan.height }}" id="project-page-plan-svg">
-                <g id="project-page-svg-origin">{% with tt=transform_params.translate ts=transform_params.scale %}
-                    <image href="{{ page.plan.url }}"
-                            {#                   transform="scale(0.977, 0.988)"#}
-                           width="{{ page.plan.width }}" height="{{ page.plan.height }}">
-                    </image>
-                    <rect fill-opacity="0" width="{{ page.plan.width }}" height="{{ page.plan.height }}"
-                          onclick="messageBoxManager.hideAll()">>
-                    </rect>
-                    {% load layers_visibility %}
-                    {% for layer, markers in markers_by_layer.items %}
-                        <g transform="translate({{ tt.0 }}, {{ tt.1 }}) scale({{ ts.0 }}, {{ ts.1 }})"
-                           class="layer_markers layer-{{ layer.title }}">
-                            {% for marker in markers %}
-                                <polygon points="{{ marker.path }}" class="plan_marker"
-                                         data-marker-uid="{{ marker.uid }}"
-                                         data-layer-title="{{ layer.title }}"></polygon>
-                                <g class="marker_group {{ marker.correct|yesno:'marker_correct,marker_wrong,' }}">
-                                    <line class="marker_link" data-mr="{{ marker.CIRCLE_RADIUS }}"
-                                          data-cx="{{ marker.center_position.0 }}" data-cy="{{ marker.center_position.1 }}"
-                                          x1="{{ marker.center_position.0 }}" y1="{{ marker.center_position.1 }}"
-                                          x2="{{ marker.center_position.0 }}" y2="{{ marker.center_position.1 }}"></line>
-                                    <circle cx="{{ marker.center_position.0 }}" cy="{{ marker.center_position.1 }}"
-                                            r="{{ marker.CIRCLE_RADIUS }}"
-                                            class="marker_circle"
-                                            data-marker-uid="{{ marker.uid }}" data-layer-title="{{ layer.title }}"
-                                            onclick="handleClickMarkerCircle(this)"></circle>
-                                    <circle cx="{{ marker.center_position.0 }}" cy="{{ marker.center_position.1 }}"
-                                            r="1"
-                                            transform="translate({{ marker.COMMENT_MARK_PADDING }}, -{{ marker.COMMENT_MARK_PADDING }})"
-                                            class="marker_comment_mark {{ marker.has_comment|yesno:'marker_has_comment,' }}"></circle>
-                                </g>
-                            {% endfor %}</g>
-                    {% endfor %}
-                {% endwith %}</g>
-            </svg>
-            <div id="project-page-messages-container"
-                 style="width: {{ page.plan.width }}px; height: {{ page.plan.height }}px;">
-                <div style="position: relative">
-                    {% for layer, markers in markers_by_layer.items %}
-                        <div class="layer_messages layer-{{ layer.title }}"></div>
-                    {% endfor %}
-                </div>
+<div class="scrollable">
+    <div style="position: relative;">
+        <svg width="{{ page.plan.width }}" height="{{ page.plan.height }}" id="project-page-plan-svg">
+            <g id="project-page-svg-origin">{% with tt=transform_params.translate ts=transform_params.scale %}
+                <image href="{{ page.plan.url }}"
+                        {#                   transform="scale(0.977, 0.988)"#}
+                       width="{{ page.plan.width }}" height="{{ page.plan.height }}">
+                </image>
+                <rect fill-opacity="0" width="{{ page.plan.width }}" height="{{ page.plan.height }}"
+                      onclick="messageBoxManager.hideAll()">>
+                </rect>
+                {% load layers_visibility %}
+                {% for layer, markers in markers_by_layer.items %}
+                    <g transform="translate({{ tt.0 }}, {{ tt.1 }}) scale({{ ts.0 }}, {{ ts.1 }})"
+                       class="layer_markers layer-{{ layer.title }}">
+                        {% for marker in markers %}
+                            <polygon points="{{ marker.path }}" class="plan_marker"
+                                     data-marker-uid="{{ marker.uid }}"
+                                     data-layer-title="{{ layer.title }}"></polygon>
+                            <g class="marker_group {{ marker.correct|yesno:'marker_correct,marker_wrong,' }}">
+                                <line class="marker_link" data-mr="{{ marker.CIRCLE_RADIUS }}"
+                                      data-cx="{{ marker.center_position.0 }}" data-cy="{{ marker.center_position.1 }}"
+                                      x1="{{ marker.center_position.0 }}" y1="{{ marker.center_position.1 }}"
+                                      x2="{{ marker.center_position.0 }}" y2="{{ marker.center_position.1 }}"></line>
+                                <circle cx="{{ marker.center_position.0 }}" cy="{{ marker.center_position.1 }}"
+                                        r="{{ marker.CIRCLE_RADIUS }}"
+                                        class="marker_circle"
+                                        data-marker-uid="{{ marker.uid }}" data-layer-title="{{ layer.title }}"
+                                        onclick="handleClickMarkerCircle(this)"></circle>
+                                <circle cx="{{ marker.center_position.0 }}" cy="{{ marker.center_position.1 }}"
+                                        r="1"
+                                        transform="translate({{ marker.COMMENT_MARK_PADDING }}, -{{ marker.COMMENT_MARK_PADDING }})"
+                                        class="marker_comment_mark {{ marker.has_comment|yesno:'marker_has_comment,' }}"></circle>
+                            </g>
+                        {% endfor %}</g>
+                {% endfor %}
+            {% endwith %}</g>
+        </svg>
+        <div id="project-page-messages-container"
+             style="width: {{ page.plan.width }}px; height: {{ page.plan.height }}px;">
+            <div style="position: relative">
+                {% for layer, markers in markers_by_layer.items %}
+                    <div class="layer_messages layer-{{ layer.title }}"></div>
+                {% endfor %}
             </div>
         </div>
     </div>
-    <div class="map_controls">
-        <div>
-            <svg width="32" height="32">
-                <g id="map_control_plus" class="map_control">
-                    <circle r="15" cx="16" cy="16"></circle>
-                    <line x1="6" y1="16" x2="26" y2="16" style="stroke-width: 2;"></line>
-                    <line x1="16" y1="6" x2="16" y2="26" style="stroke-width: 2;"></line>
-                </g>
-            </svg>
-        </div>
-        <div>
-            <svg width="32" height="32">
-                <g id="map_control_minus" class="map_control disabled">
-                    <circle r="15" cx="16" cy="16"></circle>
-                    <line x1="6" y1="16" x2="26" y2="16" style="stroke-width: 2;"></line>
-                </g>
-            </svg>
-        </div>
+</div>
+<div class="map_controls">
+    <div>
+        <svg width="32" height="32">
+            <g id="map_control_plus" class="map_control">
+                <circle r="15" cx="16" cy="16"></circle>
+                <line x1="6" y1="16" x2="26" y2="16" style="stroke-width: 2;"></line>
+                <line x1="16" y1="6" x2="16" y2="26" style="stroke-width: 2;"></line>
+            </g>
+        </svg>
     </div>
-</td>
+    <div>
+        <svg width="32" height="32">
+            <g id="map_control_minus" class="map_control disabled">
+                <circle r="15" cx="16" cy="16"></circle>
+                <line x1="6" y1="16" x2="26" y2="16" style="stroke-width: 2;"></line>
+            </g>
+        </svg>
+    </div>
+</div>

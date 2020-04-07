@@ -23,27 +23,25 @@
     </style>
 </head>
 <body style="margin: 0;">
-<table id="project-page-table">
-<colgroup>
-    <col style="width: 16%;">
-    <col style="width: 84%;">
-</colgroup>
-<thead></thead>
-<tbody>
-<tr>
-    {% include 'infoplan/nav_box.html' %}
-    {% include 'infoplan/plan_box.html' %}
-</tr>
-<tr>
-    {% include 'infoplan/pages_box.html' %}
-</tr>
-<tr>
-    {% include 'infoplan/layers_box.html' %}
-</tr>
-<tr>
-    {% include 'infoplan/links_box.html' %}
-</tr>
-</tbody>
-</table>
+<div id="project-page-table">
+    <div id="project-page-left-column">
+        <div id="project-page-nav-box" class="project-page-table-left-column">
+            {% include 'infoplan/nav_box.html' %}
+        </div>
+        <div id="project-page-pages-box" class="project-page-table-left-column">
+            {% include 'infoplan/pages_box.html' %}
+        </div>
+        <div id="project-page-layers-box" class="project-page-table-left-column">
+            {% include 'infoplan/layers_box.html' %}
+        </div>
+        <div id="project-page-links-box" class="project-page-table-left-column">
+            {% include 'infoplan/links_box.html' %}
+        </div>
+    </div>
+    <div id="project-page-plan-box">
+        {% include 'infoplan/plan_box.html' %}
+    </div>
+    <div style="clear: both;"></div>
+</div>
 </body>
 </html>
