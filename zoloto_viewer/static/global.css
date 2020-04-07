@@ -42,13 +42,33 @@ a {
     white-space: nowrap;
 }
 
+
+
+
 #project-page-table {
-    width: 100%;
     height: 100vh;
-    border-collapse: collapse;
-    /*border: 2px solid white; !* Прячем рамку вокруг таблицы *!*/
     border: none;
-    table-layout: fixed;
+    margin-left: 231px;
+}
+
+#project-page-left-column {
+    float: left;
+     height: 100%;
+    width: 230px;
+    margin-left: -231px;
+    border-right: 1px solid black;
+}
+
+#project-page-plan-box {
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    float: right;
+}
+
+.project-page-table-left-column {
+    padding-left: 12px;
+    padding-right: 12px;
 }
 
 .scrollable {
@@ -58,6 +78,44 @@ a {
     padding: 0;
     overflow: auto;
 }
+
+#floor_caption {
+    margin-left: 6px;
+    word-break: break-all;
+}
+
+#project-page-nav-box {
+    height: 18px;
+}
+
+#project-page-pages-box {
+    height: 97px;
+}
+
+#project-page-layers-box {
+    height: calc(100% - 251.72px);
+}
+
+#project-page-links-box {
+    height: 70px;
+}
+
+
+
+#project-page-pages-box hr {
+    border: none;
+    border-bottom: solid 1px black;
+}
+
+#project-page-pages-box p {
+    width: 12vw;
+    overflow: auto;
+    white-space: nowrap;
+    padding-top: 2px;
+    padding-bottom: 20px;
+}
+
+
 
 #project-page-plan-svg {
     position: absolute;
@@ -80,50 +138,7 @@ a {
     fill: white;
 }
 
-.project-page-table-left-column {
-    border-right: 1px solid black;
-    padding-left: 12px;
-    padding-right: 12px;
-}
 
-#floor_caption {
-    margin-left: 6px;
-    word-break: break-all;
-}
-
-#project-page-pages-box hr {
-    border: none;
-    border-bottom: solid 1px black;
-}
-
-#project-page-pages-box p {
-    width: 12vw;
-    overflow: auto;
-    white-space: nowrap;
-    padding-top: 2px;
-    padding-bottom: 20px;
-}
-
-#project-page-nav-box {
-    height: 10%;
-}
-
-#project-page-layers-box {
-    height: 60%;
-}
-
-#project-page-pages-box {
-    height: 20%;
-}
-
-#project-page-links-box {
-    height: 10%;
-}
-
-#project-page-plan-box {
-    height: 100vh;
-    padding: 0;
-}
 
 .plan_marker {
     /*stroke: none;*/
@@ -190,6 +205,11 @@ a {
     padding: 4px;
 }
 
+#project-page-layers-box ul {
+    padding-left: 18px;
+    height: 100%;
+    overflow: auto;
+}
 
 #project-page-layers-box li {
     list-style-type: circle;
@@ -223,7 +243,6 @@ a {
 .variables_container {
     flex-grow: 1;
     min-height: 0;
-    overflow-y: scroll;
 }
 
 .variables_container ul {
@@ -231,9 +250,6 @@ a {
     padding: 0 6px;
     list-style-type: none;
     height: 100%;
-
-    overflow-x: scroll;
-
     list-style-position: inside;
 }
 
@@ -256,7 +272,6 @@ a {
 
 /*noinspection CssInvalidPropertyValue*/
 .comment_field {
-    overflow: scroll;
     resize: none;
     outline: none;
 

@@ -1,30 +1,28 @@
 {% load timedelta %}
-<td id="project-page-links-box" class="project-page-table-left-column">
-    <p>
-        <b>PDF</b>
-        {% if pdf_original or pdf_reviewed %}
-            <span class="pdf_generation_label">
-                <small title="{{ pdf_created_time }}"
-                >{% if pdf_original or pdf_reviewed %} от {{ pdf_created_time|timedelta_pretty }} {% endif %}</small>
-                <span id="pdf_generation_link" data-activate-after="{{ pdf_refresh_timeout }}"
-                      onclick="pdfRequest('{% url 'rebuild_pdf_files' project.title %}')"
-                >{% if pdf_original or pdf_reviewed %}&#8635;{% endif %}</span>
-            </span>
-            <br>
-            <a id="pdf_original_link" {% if pdf_original %} href="{{ pdf_original.file.url }}"
-            {% else %} style="color: lightgrey"{% endif %}>Оригинальный</a>
+<p>
+    <b>PDF</b>
+    {% if pdf_original or pdf_reviewed %}
+        <span class="pdf_generation_label">
+            <small title="{{ pdf_created_time }}"
+            >{% if pdf_original or pdf_reviewed %} от {{ pdf_created_time|timedelta_pretty }} {% endif %}</small>
+            <span id="pdf_generation_link" data-activate-after="{{ pdf_refresh_timeout }}"
+                  onclick="pdfRequest('{% url 'rebuild_pdf_files' project.title %}')"
+            >{% if pdf_original or pdf_reviewed %}&#8635;{% endif %}</span>
+        </span>
+        <br>
+        <a id="pdf_original_link" {% if pdf_original %} href="{{ pdf_original.file.url }}"
+        {% else %} style="color: lightgrey"{% endif %}>Оригинальный</a>
 
-            <a id="pdf_reviewed_link" {% if pdf_reviewed %} href="{{ pdf_reviewed.file.url }}" style="white-space: nowrap"
-            {% else %} style="white-space: nowrap; color: lightgrey;" {% endif %}>С ошибками и комментариями</a>
-        {% else %}
-            <br>
-            <small>
-                Файлы ещё не созданы
-                <a href="{% url 'rebuild_pdf_files' project.title %}"
-                   style="float: right; cursor: pointer; text-decoration: underline;">
-                    сформировать
-                </a>
-            </small>
-        {% endif %}
-    </p>
-</td>
+        <a id="pdf_reviewed_link" {% if pdf_reviewed %} href="{{ pdf_reviewed.file.url }}" style="white-space: nowrap"
+        {% else %} style="white-space: nowrap; color: lightgrey;" {% endif %}>С ошибками и комментариями</a>
+    {% else %}
+        <br>
+        <small>
+            Файлы ещё не созданы
+            <a href="{% url 'rebuild_pdf_files' project.title %}"
+               style="float: right; cursor: pointer; text-decoration: underline;">
+                сформировать
+            </a>
+        </small>
+    {% endif %}
+</p>
