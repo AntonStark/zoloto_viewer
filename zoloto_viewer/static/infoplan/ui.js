@@ -93,16 +93,10 @@ const messageBoxManager = function () {
         const planScale = mapScaleController.current();
 
         const [marX, marY] = [planScale * rawMarX, planScale * rawMarY];
-        const [boxW, boxH] = [0, 0];    // stub for a while
-        const [svgW, svgH] = SVG_VIEWPORT_BOUNDS;
         const d = 20;
 
-        const x = (marX + (d + boxW) < svgW
-            ? marX + d
-            : marX - (d + boxW));
-        const y = (marY + (d + boxH) < svgH
-            ? marY + d
-            : marY - (d + boxH));
+        const x = marX + d;
+        const y = marY + d;
 
         return [x, y];
     }
@@ -256,7 +250,8 @@ const markerCirclesManager = function () {
         probe.x = circleElement.cx.baseVal.value;
         probe.y = circleElement.cy.baseVal.value;
         probe = probe.matrixTransform(transform);
-        return [probe.x, probe.y];
+        const scale = mapScaleController.current();
+        return [probe.x / scale, probe.y / scale];
     }
 
     function registerMarkerCircle(circleElement) {

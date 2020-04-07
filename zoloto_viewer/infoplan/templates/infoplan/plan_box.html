@@ -36,8 +36,7 @@
                 {% endfor %}
             {% endwith %}</g>
         </svg>
-        <div id="project-page-messages-container"
-             style="width: {{ page.plan.width }}px; height: {{ page.plan.height }}px;">
+        <div id="project-page-messages-container">
             <div style="position: relative">
                 {% for layer, markers in markers_by_layer.items %}
                     <div class="layer_messages layer-{{ layer.title }}"></div>
