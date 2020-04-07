@@ -19,6 +19,10 @@
                                          data-marker-uid="{{ marker.uid }}"
                                          data-layer-title="{{ layer.title }}"></polygon>
                                 <g class="marker_group {{ marker.correct|yesno:'marker_correct,marker_wrong,' }}">
+                                    <line class="marker_link" data-mr="{{ marker.CIRCLE_RADIUS }}"
+                                          data-cx="{{ marker.center_position.0 }}" data-cy="{{ marker.center_position.1 }}"
+                                          x1="{{ marker.center_position.0 }}" y1="{{ marker.center_position.1 }}"
+                                          x2="{{ marker.center_position.0 }}" y2="{{ marker.center_position.1 }}"></line>
                                     <circle cx="{{ marker.center_position.0 }}" cy="{{ marker.center_position.1 }}"
                                             r="{{ marker.CIRCLE_RADIUS }}"
                                             class="marker_circle"

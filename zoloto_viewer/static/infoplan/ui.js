@@ -68,15 +68,22 @@ const messageBoxManager = function () {
     let visibleMessagesIndex  = {};     // marker_uid -> visibility (bool)
     let markerElementIndex    = {};     // marker_uid -> MarkerElement
 
-    function _registerMessageItem(marker_uid, item) {
-        if (renderedMessagesIndex[marker_uid] !== undefined
-            && renderedMessagesIndex[marker_uid] !== item)
-            renderedMessagesIndex[marker_uid].remove();
-        renderedMessagesIndex[marker_uid] = item;
+    function _registerMessageItem(marker_uid, messageObj) {
+        const messNode = messageObj.messContainer;
+
+        if (renderedMessagesIndex[marker_uid] !== undefined) {
+            const storedContainer = renderedMessagesIndex[marker_uid].messContainer;
+            if (storedContainer !== messNode)
+                renderedMessagesIndex[marker_uid].remove();
+        }
+        renderedMessagesIndex[marker_uid] = {messContainer: messNode, messLink: undefined};
     }
-    function checkMessageIndex(marker_uid) {
+    function renderedMessagesIds() {
+        return Object.keys(renderedMessagesIndex);
+    }
+    function getContainerOrNull(marker_uid) {
         if (renderedMessagesIndex[marker_uid] !== undefined)
-            return renderedMessagesIndex[marker_uid];
+            return renderedMessagesIndex[marker_uid].messContainer;
         else
             return null;
     }
@@ -88,7 +95,7 @@ const messageBoxManager = function () {
         const [marX, marY] = [planScale * rawMarX, planScale * rawMarY];
         const [boxW, boxH] = [0, 0];    // stub for a while
         const [svgW, svgH] = SVG_VIEWPORT_BOUNDS;
-        const d = 10;
+        const d = 20;
 
         const x = (marX + (d + boxW) < svgW
             ? marX + d
@@ -100,11 +107,12 @@ const messageBoxManager = function () {
         return [x, y];
     }
     function onMapScaleChange() {
-        // обходим индекс renderedMessagesIndex и для каждого messageBox обновляем атрибуты left и top
-        for (let [marker_uid, messageBox] of Object.entries(renderedMessagesIndex)) {
-            const newPos = acquireMessagePosition(marker_uid);
-            messageBox.style.left = newPos[0] + 'px';
-            messageBox.style.top = newPos[1] + 'px';
+        for (const markerUid of renderedMessagesIds()) {
+            const newPos = acquireMessagePosition(markerUid);
+            const messageContainer = getContainerOrNull(markerUid);
+            messageContainer.style.left = newPos[0] + 'px';
+            messageContainer.style.top = newPos[1] + 'px';
+            messLinksManager.update(markerUid, messageContainer);
         }
         // console.debug('map scale set to ', newScale);
     }
@@ -134,10 +142,11 @@ const messageBoxManager = function () {
     }
 
     function hideMessage(marker_uid) {
-        const maybeMessItem = checkMessageIndex(marker_uid);
+        const maybeMessItem = getContainerOrNull(marker_uid);
         if (maybeMessItem !== null) {
             maybeMessItem.style.display = 'none';
             visibleMessagesIndex[marker_uid] = false;
+            markerCirclesManager.setShown(marker_uid, false);
             return true;
         }
         else
@@ -146,11 +155,12 @@ const messageBoxManager = function () {
     function showMessage(marker_uid) {
         // проверить индекс и если есть, просто переключить видимость
         // console.log('showMessage', markerPosition);
-        const maybeMessItem = checkMessageIndex(marker_uid);
+        const maybeMessItem = getContainerOrNull(marker_uid);
         if (maybeMessItem !== null) {
             maybeMessItem.style.display = 'block';
             maybeMessItem.focus();
             visibleMessagesIndex[marker_uid] = true;
+            markerCirclesManager.setShown(marker_uid, true);
             return;
         }
 
@@ -169,16 +179,18 @@ const messageBoxManager = function () {
 
         doApiCall('GET', API_MARKER_GET_DATA(marker_uid), undefined,
             function (markerData) {
-            const messNode = makeWrapper(position, undefined,
+            const messContainer = makeWrapper(position, undefined,
                 buildMessBox(markerData));
-            _registerMessageItem(markerData.marker, messNode);
-            container.append(messNode);
-            messNode.focus();
+            _registerMessageItem(markerData.marker, {messContainer: messContainer});
+            container.append(messContainer);
+            messLinksManager.update(marker_uid, messContainer);
+            messContainer.focus();
         });
         visibleMessagesIndex[marker_uid] = true;
+        markerCirclesManager.setShown(marker_uid, true);
     }
     function getComment(markerUid) {
-        const box = renderedMessagesIndex[markerUid];
+        const box = getContainerOrNull(markerUid);
         if (!box)
             return undefined;
 
@@ -187,9 +199,6 @@ const messageBoxManager = function () {
             return commentField[0].value;
         else
             return undefined;
-    }
-    function getContainer(markerUid) {
-        return renderedMessagesIndex[markerUid];
     }
     function registerMarkerElement(markerElement) {
         markerElementIndex[markerElement.dataset.markerUid] = markerElement;
@@ -205,7 +214,7 @@ const messageBoxManager = function () {
         show: showMessage,
         hide: hideMessage,
         read: getComment,
-        get : getContainer,
+        get : getContainerOrNull,
         reg : registerMarkerElement,
         hideAll: hideAllMessages,
         onMapScaleChange: onMapScaleChange,
@@ -217,6 +226,7 @@ const markerCirclesManager = function () {
     const MARKER_CORRECT_CLASS = 'marker_correct';
     const MARKER_INCORRECT_CLASS = 'marker_wrong';
     const MARKER_HAS_COMMENT_CLASS = 'marker_has_comment';
+    const MARKER_MESSAGE_SHOWN_CLASS = 'message_shown';
     let markerCorrCircles = {};         // marker_uid -> SvgCircleElement
     let circleCenterIndex = {};         // marker_uid -> [x, y]
 
@@ -234,6 +244,12 @@ const markerCirclesManager = function () {
         if (element.classList.contains(MARKER_HAS_COMMENT_CLASS) !== has)
             element.classList.toggle(MARKER_HAS_COMMENT_CLASS);
     }
+    function _setMessShown(element, isShown) {
+        if (!element)
+            return;
+        if (element.classList.contains(MARKER_MESSAGE_SHOWN_CLASS) !== isShown)
+            element.classList.toggle(MARKER_MESSAGE_SHOWN_CLASS);
+    }
     function _evalViewportPosition(circleElement) {
         const transform = circleElement.getCTM();
         let probe = circleElement.ownerSVGElement.createSVGPoint();
@@ -250,7 +266,7 @@ const markerCirclesManager = function () {
     }
     function updateCorrectness(markerData) {
         // console.log('updateCorrectness', markerData);
-        const elem = markerCorrCircles[(markerData.marker)];
+        const elem = markerCorrCircles[markerData.marker];
         if (elem !== undefined) {
             const [correct, hasComment] = [markerData.correct, markerData.has_comment];
             _setCorrectness(elem.parentNode, correct);
@@ -260,13 +276,67 @@ const markerCirclesManager = function () {
     function getCircleCenter(markerUid) {
         return circleCenterIndex[markerUid];
     }
+    function setShownStatus(markerUid, isShown) {
+        const elem = markerCorrCircles[markerUid];
+        _setMessShown(elem.parentNode, isShown);
+        // console.debug('setShownStatus', markerUid, isShown);
+    }
 
     return {
         register: registerMarkerCircle,
         sync    : updateCorrectness,
         position: getCircleCenter,
+        setShown: setShownStatus,
     }
 
+}();
+
+
+const messLinksManager = function () {
+    let messLinkIndex = {};         // marker_uid -> <line> elem
+    
+    function registerLinkElem(markerUid, elem) {
+        if (messLinkIndex[markerUid] !== undefined
+            && messLinkIndex[markerUid] !== elem)
+            messLinkIndex[markerUid].remove();
+        messLinkIndex[markerUid] = elem;
+    }
+
+    function _toSvgCoordinates(linkElement, screenCoordinates) {
+        const inverseTransform = linkElement.getCTM().inverse();
+        let probe = linkElement.ownerSVGElement.createSVGPoint();
+        probe.x = screenCoordinates[0];
+        probe.y = screenCoordinates[1];
+        probe = probe.matrixTransform(inverseTransform);
+        return [probe.x, probe.y];
+    }
+
+    function updateLinkParams(markerUid, messContainer) {
+        return;
+        const messLink = messLinkIndex[markerUid];
+        if (!messLink)
+             return;
+
+        const [cx, cy, mr] = [Number(messLink.dataset.cx), Number(messLink.dataset.cy), Number(messLink.dataset.mr)];
+        const htmlCoords = [messContainer.offsetLeft, messContainer.offsetTop];
+        const [left, top] = _toSvgCoordinates(messLink, htmlCoords);
+        const x2 = left;
+        const y2 = top;
+        // y = (1-l) * cy + l * y2
+        // dx^2 + dy^2 = mr^2
+        const l = Math.sqrt(mr ** 2 / ( (y2 - cy) ** 2 + (x2 - cx) ** 2));
+        const x1 = (1-l) * cx + l * x2;
+        const y1 = (1-l) * cy + l * y2;
+        messLink.setAttribute('x1', x1);
+        messLink.setAttribute('y1', y1);
+        messLink.setAttribute('x2', x2);
+        messLink.setAttribute('y2', y2);
+    }
+
+    return {
+        register: registerLinkElem,
+        update  : updateLinkParams,
+    }
 }();
 
 

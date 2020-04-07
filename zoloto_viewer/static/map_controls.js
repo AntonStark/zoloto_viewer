@@ -26,7 +26,7 @@ const mapScaleController = function() {
         const deltaFactor = scale - 1;    // relative size of difference of scaled plan over original
         const width = mapObj.width.baseVal.value;
         const height = mapObj.height.baseVal.value;
-        const transform = `translate(${deltaFactor / 2 * width}, ${deltaFactor / 2 * height}) scale(${scale})`;
+        const transform = `translate(${deltaFactor * width / 2}, ${deltaFactor * height / 2}) scale(${scale})`;
         mapObj.setAttribute('transform', transform);
     }
     function _setNormal() {
