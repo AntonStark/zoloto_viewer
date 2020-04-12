@@ -125,18 +125,18 @@ def rebuild_pdf_files(request, title):
             'error': f'at least {Project.PDF_GENERATION_TIMEOUT} seconds during calls',
             'try_after': str(project_obj.pdf_refresh_timeout()),
         }, status=429)
-    else:
-        if request.method == 'GET':
-            return redirect(to=request.META.get('HTTP_REFERER', '/'))   # just push reload if GET
 
-        from zoloto_viewer.viewer.templatetags.timedelta import timedelta_pretty
-        pdf_gen_orig, pdf_gen_rev = pdf_generated
-        return JsonResponse({
-            'pdf_created_time': timedelta_pretty(PdfGenerated.get_latest_time(pdf_generated)),
-            'pdf_refresh_timeout': project_obj.pdf_refresh_timeout(),
-            'pdf_original': pdf_gen_orig.file.url,
-            'pdf_reviewed': pdf_gen_rev.file.url,
-        }, status=201)
+    if request.method == 'GET':
+        return redirect(to=request.META.get('HTTP_REFERER', '/'))   # just push reload if GET
+
+    from zoloto_viewer.viewer.templatetags.timedelta import timedelta_pretty
+    pdf_gen_orig, pdf_gen_rev = pdf_generated
+    return JsonResponse({
+        'pdf_created_time': timedelta_pretty(PdfGenerated.get_latest_time(pdf_generated)),
+        'pdf_refresh_timeout': project_obj.pdf_refresh_timeout(),
+        'pdf_original': pdf_gen_orig.file.url,
+        'pdf_reviewed': pdf_gen_rev.file.url,
+    }, status=201)
 
 
 def project_page(request, page_code):
