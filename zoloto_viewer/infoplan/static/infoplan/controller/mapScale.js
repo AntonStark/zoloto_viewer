@@ -1,4 +1,5 @@
-const mapScaleController = function() {
+"use strict";
+function ControllerMapScale() {
     const POSSIBLE_SCALES = [100, 125, 150, 200];
     let scaleIndex = 0;
     let mapObj = undefined;
@@ -90,36 +91,4 @@ const mapScaleController = function() {
         increase: increase,
         decrease: decrease,
     }
-}();
-
-
-function handleClickMapPlus() {
-    if (!mapScaleController.couldIncrease())
-        return;
-    mapScaleController.increase();
-    updateControlStyle();
-}
-
-function handleClickMapMinus() {
-    if (!mapScaleController.couldDecrease())
-        return;
-    mapScaleController.decrease();
-    updateControlStyle();
-}
-
-function setHandlers() {
-    mapScaleController.setup();
-    document.getElementById('map_control_plus').addEventListener('click', handleClickMapPlus);
-    document.getElementById('map_control_minus').addEventListener('click', handleClickMapMinus);
-}
-window.addEventListener('load', setHandlers);
-
-function updateControlStyle() {
-    const plus = document.getElementById('map_control_plus');
-    if (plus.classList.contains('disabled') !== !mapScaleController.couldIncrease())
-        plus.classList.toggle('disabled');
-
-    const minus = document.getElementById('map_control_minus');
-    if (minus.classList.contains('disabled') !== !mapScaleController.couldDecrease())
-        minus.classList.toggle('disabled');
 }

@@ -16,24 +16,6 @@ function onPdfRefreshSuccess(rep) {
     linkPdfReviewed.href = reviewedUrl;
 }
 
-function pdfRequest(url) {
-    console.log('pdfRequest', url);
-    let req = new XMLHttpRequest();
-    req.open('POST', url);
-    req.onreadystatechange = function() {
-        if (req.readyState === XMLHttpRequest.DONE) {
-            if (req.status === 201) {
-                const rep = JSON.parse(req.responseText);
-                onPdfRefreshSuccess(rep);
-            }
-            else {
-                console.error(url, 'returned status = ', req.status, req);
-            }
-        }
-    };
-    req.send();
-}
-
 function pdfRefreshLinkController() {
     const targetLink = document.getElementById('pdf_generation_link');
     const targetDate = new Date(targetLink.dataset.activateAfter);

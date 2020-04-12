@@ -3,6 +3,7 @@
 const API_MARKER_GET_DATA    = (markerUid) => `${BASE_URL}/viewer/api/marker/${markerUid}`;
 const API_VAR_ALTER_WRONG    = (markerUid) => `${BASE_URL}/viewer/api/marker/${markerUid}/variable/`;
 const API_MARKER_LOAD_REVIEW = (markerUid) => `${BASE_URL}/viewer/api/marker/${markerUid}/review/`;
+const API_PROJECT_PDF_GENERATION = (title) => `${BASE_URL}/viewer/project/${title}/pdf/generate/`
 
 function doApiCall(method, url, data, onResponse) {
     let req = new XMLHttpRequest();
@@ -23,6 +24,25 @@ function doApiCall(method, url, data, onResponse) {
 
     req.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
     req.send(JSON.stringify(data));
+}
+
+function pdfRequest(title) {
+    const url = API_PROJECT_PDF_GENERATION(title);
+    console.log('pdfRequest', url);
+    let req = new XMLHttpRequest();
+    req.open('POST', url);
+    req.onreadystatechange = function() {
+        if (req.readyState === XMLHttpRequest.DONE) {
+            if (req.status === 201) {
+                const rep = JSON.parse(req.responseText);
+                onPdfRefreshSuccess(rep);
+            }
+            else {
+                console.error(url, 'returned status = ', req.status, req);
+            }
+        }
+    };
+    req.send();
 }
 
 function handlerMessBlur(marker_uid) {

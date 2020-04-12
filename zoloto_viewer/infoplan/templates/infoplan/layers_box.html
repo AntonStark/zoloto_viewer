@@ -3,7 +3,7 @@
 {% for layer_title, color in layers %}
     <li style="color: {{ color }};"
         class="{{ layer_title }} {{ layer_title|is_enabled:layers_visible }}"
-        onclick="toggleLayer(this, '{{ layer_title }}')">
+        onclick="toggleLayerHandler('{{ layer_title }}')">
         <p>{{ layer_title }}</p>
     </li>
 {% endfor %}

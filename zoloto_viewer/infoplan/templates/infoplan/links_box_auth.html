@@ -6,7 +6,7 @@
             <small title="{{ pdf_created_time }}"
             >{% if pdf_original or pdf_reviewed %} от {{ pdf_created_time|timedelta_pretty }} {% endif %}</small>
             <span id="pdf_generation_link" data-activate-after="{{ pdf_refresh_timeout }}"
-                  onclick="pdfRequest('{% url 'rebuild_pdf_files' project.title %}')"
+                  onclick="pdfRequest('{{ project.title }}')"
             >{% if pdf_original or pdf_reviewed %}&#8635;{% endif %}</span>
         </span>
         <br>

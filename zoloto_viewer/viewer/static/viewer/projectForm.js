@@ -1,5 +1,5 @@
 "use strict";
-console.debug('project_form.js loaded');
+console.debug('projectForm.js loaded');
 
 const projectNameInput = document.getElementById('project_name_input');
 projectNameInput.addEventListener('input', function () {
