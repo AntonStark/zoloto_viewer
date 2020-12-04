@@ -17,7 +17,7 @@ function ControllerMessageLinks() {
         probe = probe.matrixTransform(inverseTransform);
         return [probe.x, probe.y];
     }
-
+    
     function updateLinkParams(markerUid, messContainer) {
         return;
         const messLink = messLinkIndex[markerUid];

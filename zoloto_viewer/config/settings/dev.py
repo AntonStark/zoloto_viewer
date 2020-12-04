@@ -31,9 +31,12 @@ STATIC_URL = '/static/'
 # for api calls
 def discover_ip(target_ip):
     import socket
-    with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
-        s.connect((target_ip, 80))
-        return s.getsockname()[0]
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
+            s.connect((target_ip, 80))
+            return s.getsockname()[0]
+    except OSError:
+        return 'localhost'
 
 
 BASE_URL = f'http://{discover_ip("192.168.0.1")}:8000'

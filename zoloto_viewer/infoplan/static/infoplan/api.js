@@ -123,6 +123,6 @@ function handleClickMarkerCircle(circleElement) {
     const messLink = circleElement.parentNode.getElementsByClassName('marker_link')[0];
     messLinksManager.register(markerUid, messLink);
 
-    messageBoxManager.hideAll();
+    // messageBoxManager.hideAll();
     messageBoxManager.show(markerUid);
 }
