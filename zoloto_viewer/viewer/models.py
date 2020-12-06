@@ -30,11 +30,12 @@ class Project(models.Model):
     poi_names = models.FileField(upload_to=additional_files_upload_path, null=False, blank=True, default='')
     pict_codes = models.FileField(upload_to=additional_files_upload_path, null=False, blank=True, default='')
 
-    layer_info_data = fields.JSONField(null=True)
+    layer_info_data = fields.JSONField(null=True)   # possibly not needed anymore
     maps_info_data = fields.JSONField(null=True)
 
     pdf_started = models.DateTimeField(null=True)
 
+    # todo check is it still needed
     MAPS_INFO = '_maps_info'
     LAYERS_INFO = '_layers_info'
     POI_NAMES = '_poi_names'
@@ -61,60 +62,6 @@ class Project(models.Model):
     def project_files_dir(self):
         return f'project_{self.uid}'
 
-    def update_maps_info(self, upload):
-        maps_add_data = data_files.map.parse_maps_file(upload.file)
-        if not maps_add_data:
-            return
-
-        if self.maps_info:
-            self.maps_info.delete()
-        self.maps_info = upload
-        self.maps_info_data = maps_add_data
-        transaction.on_commit(lambda: Page.update_maps_info(self, maps_add_data))
-
-    def update_layers_info(self, upload):
-        layers_add_data = data_files.layer.parse_layers_file(upload.file)
-        if not layers_add_data:
-            return
-
-        if self.layers_info:
-            self.layers_info.delete()
-        self.layers_info = upload
-        self.layer_info_data = layers_add_data
-        transaction.on_commit(lambda: Layer.update_layers_info(self, layers_add_data))
-
-    def update_additional_files(self, files_dict):
-        for title, file in files_dict.items():
-            file_kind = Project.is_additional_file(title)
-            if file_kind == Project.MAPS_INFO:
-                self.update_maps_info(file)
-            elif file_kind == Project.LAYERS_INFO:
-                self.update_layers_info(file)
-            elif file_kind == Project.POI_NAMES:
-                if self.poi_names:
-                    self.poi_names.delete()
-                self.poi_names = file
-            elif file_kind == Project.PICT_CODES:
-                if self.pict_codes:
-                    self.pict_codes.delete()
-                self.pict_codes = file
-        self.save()
-
-    def additional_files_info(self):
-        attrs = (self.maps_info, self.layers_info, self.poi_names, self.pict_codes)
-        return list(map(lambda attr: (path.basename(attr.name), ''), filter(None, attrs)))
-
-    def remove_additional_files(self, filenames):
-        if path.basename(self.maps_info.name) in filenames:
-            self.maps_info.delete(save=False)
-        if path.basename(self.layers_info.name) in filenames:
-            self.layers_info.delete(save=False)
-        if path.basename(self.poi_names.name) in filenames:
-            self.poi_names.delete(save=False)
-        if path.basename(self.pict_codes.name) in filenames:
-            self.pict_codes.delete(save=False)
-        self.save()
-
     def store_pages(self, pages_data):
         """
         :param pages_data: file_title -> (file, caption)
@@ -128,8 +75,7 @@ class Project(models.Model):
     def create_layers(self, csv_data):
         for title, data in csv_data.items():
             Layer.create_or_replace(project=self, title=title, csv_data=data,
-                                    client_last_modified_date=timezone.now(),
-                                    layer_info=self.layer_info_data)
+                                    client_last_modified_date=timezone.now())
 
     def alter_floor_captions(self, captions_dict):
         for p in Page.objects.filter(project=self):
@@ -156,14 +102,6 @@ class Project(models.Model):
     def pdf_refresh_timeout(self):
         return self.pdf_started + timedelta(seconds=Project.PDF_GENERATION_TIMEOUT) if self.pdf_started \
             else -float('Inf')
-
-    @staticmethod
-    def is_additional_file(title):
-        possible_suffix = (Project.MAPS_INFO, Project.LAYERS_INFO, Project.POI_NAMES, Project.PICT_CODES)
-        for s in possible_suffix:
-            if title.endswith(s):
-                return s
-        return False
 
 
 # noinspection PyUnusedLocal
@@ -226,7 +164,9 @@ class Layer(models.Model):
 
     @staticmethod
     def create_or_replace(project, title, csv_data, client_last_modified_date, layer_info=None):
-        desc, color_str = layer_info[title] if layer_info and title in layer_info else ('', '(RGB, 0, 0, 0)')
+        desc, color_str = ('', '(RGB, 0, 0, 0)')
+        if layer_info and title in layer_info:
+            desc, color_str = layer_info[title]
         color = data_files.layer.color_as_hex(color_str)
         for layer in Layer.objects.filter(project=project):
             if layer.orig_file_name() == csv_data.name:
@@ -326,7 +266,9 @@ class Page(models.Model):
 
     @staticmethod
     def create_or_replace(project, plan, indd_floor, floor_caption, maps_info=None):
-        offset, bounds = maps_info[indd_floor] if maps_info and indd_floor in maps_info else (None, None)
+        offset, bounds = (None, None)
+        if maps_info and indd_floor in maps_info:
+            offset, bounds = maps_info[indd_floor]
         # if plan with equal filename already exists just update them
         for p in Page.objects.filter(project=project):
             if p.orig_file_name() == plan.name:
@@ -372,6 +314,18 @@ class Page(models.Model):
             self.code = maybe_code
         super(Page, self).save(*args, **kwargs)
 
+
+# noinspection PyUnusedLocal
+@receiver(models.signals.post_save, sender=Page)
+def default_geometric_bounds(sender, instance: Page, *args, **kwargs):
+    print('default_geometric_bounds')
+    if not instance.geometric_bounds:
+        print('default_geometric_bounds works')
+        top = left = 0
+        bottom = instance.plan.height
+        right = instance.plan.width
+        instance.geometric_bounds = [top, left, bottom, right]
+        instance.save()
 
 # noinspection PyUnusedLocal
 @receiver(models.signals.post_delete, sender=Page)

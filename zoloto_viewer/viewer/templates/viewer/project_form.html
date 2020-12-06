@@ -25,23 +25,6 @@
             <input name="plan_files_1" id="plan_input_1" type="file" accept="image/*" multiple style="display: none">
         </label>
     </p>
-    Добавленные данные
-    <table>
-        <tbody id="csv_table">
-        {% for filename, last_modified in csv_list %}
-            <tr>
-                <td>{{ filename }}</td>
-                <td>{{ last_modified }}</td>
-                <td><a class="mark-delete" onclick="deleteFileHandler('{{ filename }}', this.parentNode.parentNode)">&#x2A09</a></td>
-            </tr>
-        {% endfor %}
-        </tbody>
-    </table>
-    <p id="csv_box">
-        <label for="csv_input_1" class="fill-button" id="csv_input_label" tabindex="0">Загрузить csv
-            <input name="csv_files_1" id="csv_input_1" type="file" accept="text/csv" multiple style="display: none">
-        </label>
-    </p>
     <p style="white-space: nowrap">
         <a class="fill-button-negative" href="{% url 'projects' %}" style="float: left;">Отмена</a>
         <input type="submit" value="{% if project %}Сохранить изменения{% else %}Добавить проект{% endif %}"

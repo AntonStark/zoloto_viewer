@@ -38,22 +38,3 @@ def files_to_delete(req_post):
     csv_files = {v for v in to_delete if v.endswith('.csv')}
     non_csv_files = {v for v in to_delete if not v.endswith('.csv')}
     return csv_files, non_csv_files
-
-
-def parse_csv(req_post, req_files):
-    ignore_files = parse_ignore_files(req_post)
-    layer_files = {}
-    additional_files = {}
-    for key in req_files.keys():
-        for f in req_files.getlist(key):
-            if f.name in ignore_files:
-                continue
-
-            mime_type, ext = f.content_type.split('/')
-            title = '.'.join(f.name.split('.')[:-1])
-            if ext != 'csv':
-                continue
-
-            _index = additional_files if Project.is_additional_file(title) else layer_files
-            _index[title] = f
-    return layer_files, additional_files
