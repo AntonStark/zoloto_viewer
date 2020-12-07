@@ -32,21 +32,29 @@
 <body style="margin: 0;">
 <div id="project-page-table">
     <div id="project-page-left-column">
-        <div id="project-page-nav-box" class="project-page-table-left-column">
+        <div id="project-page-nav-box" class="page-table-column-block">
             {% include 'infoplan/nav_box_auth.html' %}
         </div>
-        <div id="project-page-pages-box" class="project-page-table-left-column">
-            {% include 'infoplan/pages_box.html' %}
-        </div>
-        <div id="project-page-layers-box" class="project-page-table-left-column">
-            {% include 'infoplan/layers_box.html' %}
-        </div>
-        <div id="project-page-links-box" class="project-page-table-left-column">
+        <div id="project-page-links-box" class="page-table-column-block">
             {% include 'infoplan/links_box_auth.html' %}
+        </div>
+        <div id="project-page-pages-box" class="page-table-column-block">
+            {% include 'infoplan/pages_box.html' %}
         </div>
     </div>
     <div id="project-page-plan-box">
         {% include 'infoplan/plan_box.html' %}
+    </div>
+    <div id="project-page-right-column">
+        <div id="project-page-actions-box" class="page-table-column-block">
+            {% include 'infoplan/actions_box_auth.html' %}
+        </div>
+        <div id="project-page-layers-box" class="page-table-column-block">
+            {% include 'infoplan/layers_box.html' %}
+        </div>
+        <div id="project-page-deleted-box" class="page-table-column-block">
+            {% include 'infoplan/deleted_layers_box_auth.html' %}
+        </div>
     </div>
     <div style="clear: both;"></div>
 </div>

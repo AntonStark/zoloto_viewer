@@ -43,30 +43,49 @@ a {
 }
 
 
+:root {
+    --left-column-width: 230px;
+    --right-column-width: 230px;
 
+    --left-nav-height: 18px;    /*todo nav -> title */
+    --left-pages-height: calc(100% - 155px);  /*todo pages -> areas */
+    --left-links-height: 70px;  /*todo links -> docs */
+    --right-actions-height: 100px;
+    --right-deleted-height: 18px;
+    --right-layers-height: calc(100% - 252px);
+}
 
 #project-page-table {
     height: 100vh;
+    margin-left: calc(var(--left-column-width));
+    margin-right: calc(var(--right-column-width));
     border: none;
-    margin-left: 231px;
-}
-
-#project-page-left-column {
-    float: left;
-     height: 100%;
-    width: 230px;
-    margin-left: -231px;
+    border-left: 1px solid black;
     border-right: 1px solid black;
 }
 
-#project-page-plan-box {
-    width: 100%;
+#project-page-left-column {
     height: 100%;
-    padding: 0;
-    float: right;
+    float: left;
+    width: var(--left-column-width);
+    margin-left: calc(-1 * var(--left-column-width));
 }
 
-.project-page-table-left-column {
+#project-page-plan-box {
+    height: 100%;
+    float: left;
+    width: 100%;
+    padding: 0;
+}
+
+#project-page-right-column {
+    height: 100%;
+    float: right;
+    width: var(--right-column-width);
+    margin-right: calc(-1 * var(--right-column-width));
+}
+
+.page-table-column-block {
     padding-left: 12px;
     padding-right: 12px;
 }
@@ -85,19 +104,27 @@ a {
 }
 
 #project-page-nav-box {
-    height: 18px;
+    height: var(--left-nav-height);
 }
 
 #project-page-pages-box {
-    height: 97px;
-}
-
-#project-page-layers-box {
-    height: calc(100% - 252px);
+    height: var(--left-pages-height);
 }
 
 #project-page-links-box {
-    height: 70px;
+    height: var(--left-links-height);
+}
+
+#project-page-actions-box {
+    height: var(--right-actions-height);
+}
+
+#project-page-layers-box {
+    height: var(--right-layers-height);
+}
+
+#project-page-deleted-box {
+    height: var(--right-deleted-height);
 }
 
 

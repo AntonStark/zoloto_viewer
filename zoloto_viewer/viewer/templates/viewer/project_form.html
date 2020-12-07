@@ -7,7 +7,7 @@
                placeholder="Например, Табор" {% if project %} value="{{ project.title }}" {% endif %}
                pattern="[-_A-Za-z0-9ЁёА-я]+" required size="60">
     </p>
-    Добавленные пространства
+    Монтажные области
     <table>
         <tbody id="plan_table">
         {% for caption, filename in pages_list %}
@@ -21,7 +21,7 @@
         </tbody>
     </table>
     <p id="plan_box">
-        <label for="plan_input_1" class="fill-button" id="plan_input_label" tabindex="0">Загрузить jpg со схемами
+        <label for="plan_input_1" class="fill-button" id="plan_input_label" tabindex="0">Загрузить jpg
             <input name="plan_files_1" id="plan_input_1" type="file" accept="image/*" multiple style="display: none">
         </label>
     </p>
