@@ -71,7 +71,7 @@ a {
 }
 
 #project-page-left-column {
-    height: 100%;
+    height: calc(100% - 2 * var(--column-vertical-paddings));
     float: left;
     width: var(--left-column-width);
     margin-left: calc(-1 * var(--left-column-width));
@@ -87,11 +87,10 @@ a {
 }
 
 #project-page-right-column {
-    height: 100%;
+    height: calc(100% - 2 * var(--column-vertical-paddings));
     float: right;
     width: var(--right-column-width);
     margin-right: calc(-1 * var(--right-column-width));
-
     padding-top: var(--column-vertical-paddings);
     padding-bottom: var(--column-vertical-paddings);
 }
@@ -255,7 +254,7 @@ a {
 
 .page-table-column-block ul {
     padding-left: 18px;
-    height: 100%;
+    height: calc(100% - var(--column-vertical-paddings));
     overflow: auto;
 }
 
