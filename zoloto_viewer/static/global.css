@@ -46,11 +46,10 @@ a {
     --right-column-width: 230px;
 
     --column-vertical-paddings: 12px;
-    --left-nav-height: 18px;    /*todo nav -> title */
-    /*todo pages -> areas */
-    --left-pages-height: calc(100% - var(--left-nav-height) - var(--left-links-height)
+    --left-title-height: 18px;
+    --left-areas-height: calc(100% - var(--left-title-height) - var(--left-docs-height)
                               - 2 * var(--column-vertical-paddings));
-    --left-links-height: 130px;  /*todo links -> docs */
+    --left-docs-height: 130px;
 
     --right-actions-height: 150px;
     --right-layers-height: calc(100% - var(--right-actions-height) - var(--right-deleted-height)
@@ -113,16 +112,16 @@ a {
     word-break: break-all;
 }
 
-#project-page-nav-box {
-    height: var(--left-nav-height);
+#project-page-title-box {
+    height: var(--left-title-height);
 }
 
-#project-page-pages-box {
-    height: var(--left-pages-height);
+#project-page-areas-box {
+    height: var(--left-areas-height);
 }
 
-#project-page-links-box {
-    height: var(--left-links-height);
+#project-page-docs-box {
+    height: var(--left-docs-height);
 }
 
 #project-page-actions-box {
@@ -148,7 +147,7 @@ a {
     border-bottom: solid 1px black;
 }
 
-#project-page-pages-box a {
+#project-page-areas-box a {
     padding-right: 80px;
     /*todo page link full width*/
 }
@@ -273,7 +272,7 @@ a {
     list-style-type: disc;
 }
 
-#project-page-pages-box li {
+#project-page-areas-box li {
     list-style-type: none;
     padding: 2px 0;
 }
