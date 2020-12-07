@@ -1,12 +1,14 @@
-<h3 id="floor_caption">{{ page.floor_caption }}</h3>
+<div class="menu_header">монтажные области</div>
 {% load layers_visibility %}
-<p>{% for code in page_code_list %}
-    <a href="{% url 'project_page' code %}{{ layers_visible|layer_params }}"
+<ul>
+    {% for code, floor_caption in page_code_list %}
+    <li><a href="{% url 'project_page' code %}{{ layers_visible|layer_params }}"
         {% if code == page.code %}
-           class="project-page-link fill-button no-border"
+            class="pages-box-button pages-box-button-active"
         {% else %}
-           class="project-page-link fill-button-negative no-border"
+            class="pages-box-button"
         {% endif %}>
-        {{ forloop.counter }}</a>
-{% endfor %}</p>
-<hr/>
+        {{ floor_caption }}
+    </a></li>
+    {% endfor %}
+</ul>

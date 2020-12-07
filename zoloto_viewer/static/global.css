@@ -6,11 +6,10 @@ a {
     padding: 0 2px;
     text-decoration: none;
 
-    background: black;
-    border: 1px solid black;
-    color: white;
+    background: var(--button-back-color);
+    border: 1px solid var(--button-back-color);
+    color: var(--button-font-color);
 }
-
 .fill-button:hover {
     background: inherit;
     color: inherit;
@@ -20,14 +19,13 @@ a {
     padding: 0 2px;
     text-decoration: none;
 
-    background: white;
-    border: 1px solid black;
-    color: black;
+    background: var(--button-font-color);
+    border: 1px solid var(--button-back-color);
+    color: var(--button-back-color);
 }
-
 .fill-button-negative:hover {
-    background: black;
-    color: white;
+    background: var(--button-back-color);
+    color: var(--button-font-color);
 }
 
 .no-border {
@@ -47,12 +45,20 @@ a {
     --left-column-width: 230px;
     --right-column-width: 230px;
 
+    --column-vertical-paddings: 12px;
     --left-nav-height: 18px;    /*todo nav -> title */
-    --left-pages-height: calc(100% - 155px);  /*todo pages -> areas */
-    --left-links-height: 70px;  /*todo links -> docs */
-    --right-actions-height: 100px;
+    /*todo pages -> areas */
+    --left-pages-height: calc(100% - var(--left-nav-height) - var(--left-links-height)
+                              - 2 * var(--column-vertical-paddings));
+    --left-links-height: 130px;  /*todo links -> docs */
+
+    --right-actions-height: 150px;
+    --right-layers-height: calc(100% - var(--right-actions-height) - var(--right-deleted-height)
+                                - 2 * var(--column-vertical-paddings));
     --right-deleted-height: 18px;
-    --right-layers-height: calc(100% - 252px);
+
+    --button-back-color: black;
+    --button-font-color: white;
 }
 
 #project-page-table {
@@ -69,6 +75,8 @@ a {
     float: left;
     width: var(--left-column-width);
     margin-left: calc(-1 * var(--left-column-width));
+    padding-top: var(--column-vertical-paddings);
+    padding-bottom: var(--column-vertical-paddings);
 }
 
 #project-page-plan-box {
@@ -83,6 +91,9 @@ a {
     float: right;
     width: var(--right-column-width);
     margin-right: calc(-1 * var(--right-column-width));
+
+    padding-top: var(--column-vertical-paddings);
+    padding-bottom: var(--column-vertical-paddings);
 }
 
 .page-table-column-block {
@@ -127,6 +138,10 @@ a {
     height: var(--right-deleted-height);
 }
 
+.menu_header {
+    font: normal small-caps 400 14px sans-serif;
+}
+
 
 
 #project-page-left-column hr {
@@ -134,12 +149,17 @@ a {
     border-bottom: solid 1px black;
 }
 
-#project-page-pages-box p {
-    width: 12vw;
-    overflow: auto;
-    white-space: nowrap;
-    padding-top: 2px;
-    padding-bottom: 20px;
+#project-page-pages-box a {
+    padding-right: 80px;
+    /*todo page link full width*/
+}
+
+.pages-box-button {
+    text-decoration: none;
+}
+
+.pages-box-button-active {
+    background-color: lightgrey;
 }
 
 
@@ -232,13 +252,14 @@ a {
     padding: 4px;
 }
 
-#project-page-layers-box ul {
+
+.page-table-column-block ul {
     padding-left: 18px;
     height: 100%;
     overflow: auto;
 }
 
-#project-page-layers-box li {
+.page-table-column-block li {
     list-style-type: circle;
     cursor: pointer;
     /* to prevent selection on click */
@@ -249,8 +270,13 @@ a {
     -ms-user-select: none;
     user-select: none;
 }
-#project-page-layers-box li.enabled_layer {
+.page-table-column-block li.enabled_layer {
     list-style-type: disc;
+}
+
+#project-page-pages-box li {
+    list-style-type: none;
+    padding: 2px 0;
 }
 
 

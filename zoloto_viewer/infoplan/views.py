@@ -117,7 +117,7 @@ def project_page(request, **more_context):
     pdf_refresh_timeout = more_context['pdf_refresh_timeout']
 
     project = page_obj.project
-    page_code_list = project.page_set.values_list('code', flat=True)
+    page_code_list = project.page_set.values_list('code', 'floor_caption')
     layers = project.layer_set.values_list('title', 'color')
     layers_visible = set(request.GET.getlist('layer'))
     markers_by_layer = {L: page_obj.marker_set.filter(layer=L)
