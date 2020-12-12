@@ -5,13 +5,23 @@
     </a>
     <a style="float: right">+</a>
 </p>
-<ul>
+<form>
+<ul class="side_box_list">
 {% load layers_visibility %}
 {% for layer_title, color in layers %}
     <li style="color: {{ color }};"
-        class="{{ layer_title }} {{ layer_title|is_enabled:layers_visible }}"
-        onclick="toggleLayerHandler('{{ layer_title }}')">
-        <p>{{ layer_title }}</p>
+        class="{{ layer_title }}
+{{ layer_title|is_enabled:layers_visible }}
+{% if forloop.first %}active{% endif %}
+"
+        onclick="setActiveLayer(this); toggleLayerHandler('{{ layer_title }}')">
+        {{ layer_title }}
+        <span style="float: right">
+            <a href="{% url 'edit_project_layer' project_title=project.title layer_title=layer_title %}"
+               class="hidden icon">&#x270E</a>
+            <a class="hidden icon">&#x2A09</a>
+        </span>
     </li>
 {% endfor %}
 </ul>
+</form>

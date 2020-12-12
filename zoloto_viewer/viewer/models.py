@@ -210,13 +210,17 @@ class Layer(models.Model):
             L.save()
 
     @staticmethod
-    def title_free(project, title) -> bool:
-        return not Layer.objects.filter(project=project, title=title).exists()
+    def test_title_free(project, title, except_=None):
+        q = Layer.objects.filter(project=project, title=title)
+        if except_:
+            q = q.exclude(id__in=[except_.id])
+        if q.exists():
+            raise ValueError('Такой номер типа уже используется')
 
     @staticmethod
     def validate_title(title: str):
         if not re.match(r'^\d+_.+', title):
-            raise ValueError('Expected string starting with number followed by underscore.')
+            raise ValueError('Номер типа должен быть вида ЧИСЛО_БУКВЫ')
 
 
 def _delete_file(fpath):

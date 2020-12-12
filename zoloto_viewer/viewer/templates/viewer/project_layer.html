@@ -3,7 +3,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    {% if layer is None %}
+    {% if layer.id is None %}
         <title>Добавить тип</title>
     {% else %}
         <title>Изменить тип</title>
@@ -11,7 +11,7 @@
     <link rel="stylesheet" type="text/css" href="{% static 'global.css' %}">
 </head>
 <body>
-{% if layer is None %}
+{% if layer.id is None %}
     <h2>Добавление типа</h2>
 {% else %}
     <h2>Редактирование типа</h2>
@@ -21,14 +21,16 @@
     <p>
         <label for="layer_title">Номер типа</label>
         <br>
-        <input id="layer_title" name="layer_title" type="text"
-               placeholder="Например, 110_S" pattern="\d+_[A-Z_]+" required size="40">
+        <input id="layer_title" name="layer_title" type="text" required
+               pattern="\d+_[A-Z_]+" size="40"
+               placeholder="Например, 110_S" {% if layer %}value="{{ layer.title }}" {% endif %} >
     </p>
     <p>
         <label for="layer_desc">Название типа</label>
         <br>
-        <input id="layer_desc" name="layer_desc" type="text"
-               placeholder="Например, &laquo;Уличная стела&raquo;" required size="40">
+        <input id="layer_desc" name="layer_desc" type="text" required
+               placeholder="Например, &laquo;Уличная стела&raquo;"
+               size="40" {% if layer %}value="{{ layer.desc }}" {% endif %} >
     </p>
     <p>
         <label>Количество сторон</label>
@@ -37,7 +39,11 @@
             <span class="layer_maker_kind">
                 <input type="radio" id="maker_kind_op{{ forloop.counter }}"
                        name="maker_kind" value="{{ maker_kind.id }}"
-                       {% if forloop.first %}checked{% endif %}>
+                       {% if layer %}
+                           {% if maker_kind.id == layer.kind.id %}checked{% endif %}
+                       {% else %}
+                           {% if forloop.first %}checked{% endif %}
+                       {% endif %}>
                 <label for="maker_kind_op{{ forloop.counter }}">{{ maker_kind.name }}</label>
             </span>
         {% endfor %}

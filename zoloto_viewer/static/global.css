@@ -85,18 +85,15 @@ span#layer_color_view {
 :root {
     --left-column-width: 230px;
     --right-column-width: 230px;
-
     --column-vertical-paddings: 12px;
     --left-title-height: 18px;
     --left-areas-height: calc(100% - var(--left-title-height) - var(--left-docs-height)
                               - 2 * var(--column-vertical-paddings));
     --left-docs-height: 130px;
-
     --right-actions-height: 150px;
     --right-layers-height: calc(100% - var(--right-actions-height) - var(--right-deleted-height)
                                 - 2 * var(--column-vertical-paddings));
     --right-deleted-height: 18px;
-
     --button-back-color: black;
     --button-font-color: white;
 }
@@ -275,8 +272,17 @@ span#layer_color_view {
 .hidden {
     visibility: hidden;
 }
-#projects-table tr:hover .icon {
+tr:hover .icon,
+li.active .icon {
     visibility: visible;
+}
+
+ul.side_box_list li {
+    margin: 4px 0;
+}
+
+ul.side_box_list li.active{
+    background-color: lightgray;
 }
 
 #projects-table {

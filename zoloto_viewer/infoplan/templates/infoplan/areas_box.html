@@ -1,13 +1,10 @@
 <div class="menu_header">монтажные области</div>
 {% load layers_visibility %}
-<ul>
+<ul class="side_box_list">
     {% for code, floor_caption in page_code_list %}
-    <li><a href="{% url 'project_page' code %}{{ layers_visible|layer_params }}"
-        {% if code == page.code %}
-            class="pages-box-button pages-box-button-active"
-        {% else %}
-            class="pages-box-button"
-        {% endif %}>
+    <li {% if code == page.code %}class="active"{% endif %} >
+        <a href="{% url 'project_page' code %}{{ layers_visible|layer_params }}"
+           class="pages-box-button">
         {{ floor_caption }}
     </a></li>
     {% endfor %}

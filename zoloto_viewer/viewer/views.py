@@ -155,6 +155,7 @@ def add_project_layer(request, title):
         project = Project.objects.get(title=title)
     except Project.DoesNotExist:
         raise Http404
+
     context = {
         'project': project,
         'layer': None,
@@ -168,13 +169,13 @@ def add_project_layer(request, title):
     layer_title = form_data['layer_title']
     try:
         Layer.validate_title(layer_title)
-    except ValueError:
-        messages.error(request, 'Номер типа должен быть вида ЧИСЛО_БУКВЫ')
-        # todo try use render as for GET
-        return redirect(to='add_project_layer', title=title)
-    if not Layer.title_free(project, layer_title):
-        messages.error(request, 'Такой номер типа уже используется')
-        return redirect(to='add_project_layer', title=title)
+        Layer.test_title_free(project, layer_title)
+    except ValueError as e:
+        messages.error(request, e.args[0])
+        # next to "keep" input values
+        context['layer'] = Layer(project=project, title=layer_title,
+                                 desc=form_data['layer_desc'], kind_id=form_data['maker_kind'])
+        return render(request, 'viewer/project_layer.html', context=context)
 
     Layer(project=project, title=layer_title,
           desc=form_data['layer_desc'], kind_id=form_data['maker_kind']).save()
@@ -191,6 +192,7 @@ def edit_project_layer(request, project_title, layer_title):
     layer = Layer.objects.filter(project=project, title=layer_title).first()
     if not layer:
         raise Http404
+
     context = {
         'project': project,
         'layer': layer,
@@ -200,4 +202,20 @@ def edit_project_layer(request, project_title, layer_title):
     if request.method != 'POST':
         return render(request, 'viewer/project_layer.html', context=context)
 
-    pass    # todo
+    form_data = request.POST
+    layer_title = form_data['layer_title']
+    try:
+        Layer.validate_title(layer_title)
+        Layer.test_title_free(project, layer_title, except_=layer)
+    except ValueError as e:
+        messages.error(request, e.args[0])
+        # next to "keep" input values
+        context['layer'] = Layer(project=project, title=layer_title,
+                                 desc=form_data['layer_desc'], kind_id=form_data['maker_kind'])
+        return render(request, 'viewer/project_layer.html', context=context)
+
+    layer.title = form_data['layer_title']
+    layer.desc = form_data['layer_desc']
+    layer.kind_id = form_data['maker_kind']
+    layer.save()
+    return redirect(to='project_page', page_code=project.first_page().code)
