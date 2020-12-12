@@ -124,19 +124,32 @@ def csv_upload_prev_path(obj: 'Layer', filename):
     return f'project_{obj.project.title}/layers/prev_{filename}'
 
 
+class MarkerKind(models.Model):
+    id = models.AutoField(primary_key=True)
+    name = models.CharField(max_length=16, blank=False)
+
+
+class Color(models.Model):
+    hex_code = models.CharField(max_length=7, default='#000000')
+    rgb_code = models.CharField(max_length=16, default='rgb(0,0,0)')
+
+
 class Layer(models.Model):
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
     title = models.CharField(max_length=256, blank=False)
-    color = models.CharField(max_length=7, default='#000000')
-    raw_color = fields.JSONField(null=True)
     desc = models.TextField(blank=True, default='')
+
+    number = models.IntegerField(null=True)
+    color = models.ForeignKey(Color, on_delete=models.PROTECT, default=1)
+    raw_color = fields.JSONField(null=True)
+    kind = models.ForeignKey(MarkerKind, on_delete=models.PROTECT, default=1)
 
     client_last_modified_date = models.DateTimeField(editable=False, null=True)
     csv_data = models.FileField(upload_to=csv_upload_path, null=False, blank=False)
     sync_needed = models.BooleanField(default=False, null=False)
 
     class Meta:
-        unique_together = ['project', 'title']
+        unique_together = [['project', 'title'], ['project', 'number']]
 
     def orig_file_name(self):
         return path.basename(self.csv_data.name)
@@ -195,6 +208,11 @@ class Layer(models.Model):
             L.raw_color = data_files.layer.color_as_json(color)
             L.desc = desc
             L.save()
+
+    @staticmethod
+    def validate_title(title: str):
+        if not re.match(r'^\d+_.+', title):
+            raise ValueError('Expected string starting with number followed by underscore.')
 
 
 def _delete_file(fpath):
