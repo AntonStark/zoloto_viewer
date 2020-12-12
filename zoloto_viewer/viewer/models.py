@@ -210,6 +210,10 @@ class Layer(models.Model):
             L.save()
 
     @staticmethod
+    def title_free(project, title) -> bool:
+        return not Layer.objects.filter(project=project, title=title).exists()
+
+    @staticmethod
     def validate_title(title: str):
         if not re.match(r'^\d+_.+', title):
             raise ValueError('Expected string starting with number followed by underscore.')

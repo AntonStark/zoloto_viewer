@@ -5,7 +5,7 @@
         <br>
         <input name="title" id="project_name_input" type="text"
                placeholder="Например, Табор" {% if project %} value="{{ project.title }}" {% endif %}
-               pattern="[-_A-Za-z0-9ЁёА-я]+" required size="60">
+               pattern="[-_A-Za-z0-9ЁёА-я]+" required size="40">
     </p>
     Монтажные области
     <table>
@@ -26,7 +26,8 @@
         </label>
     </p>
     <p style="white-space: nowrap">
-        <a class="fill-button-negative" href="{% url 'projects' %}" style="float: left;">Отмена</a>
+        <a tabindex="-1" href="{% url 'projects' %}"
+           class="fill-button-negative" style="float: left;">Отмена</a>
         <input type="submit" value="{% if project %}Сохранить изменения{% else %}Добавить проект{% endif %}"
                class="fill-button" style="float: right; font: unset;">
     </p>

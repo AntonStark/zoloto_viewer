@@ -1,3 +1,4 @@
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db import IntegrityError
 from django.http import Http404, JsonResponse
@@ -5,7 +6,7 @@ from django.shortcuts import render, redirect
 from django.views.decorators import csrf
 
 from zoloto_viewer.infoplan import views as infoplan_views
-from zoloto_viewer.viewer.models import Project, Layer, Page, PdfGenerated
+from zoloto_viewer.viewer.models import Project, Layer, MarkerKind, Page, PdfGenerated
 from zoloto_viewer.viewer.view_helpers import project_form
 
 
@@ -145,3 +146,58 @@ def project_page(request, page_code):
 
     return infoplan_views.project_page(request, page_obj=page_obj, pdf_original=pdf_original, pdf_reviewed=pdf_reviewed,
                                        pdf_created_time=pdf_created_time, pdf_refresh_timeout=pdf_refresh_timeout)
+
+
+@login_required
+@csrf.csrf_exempt
+def add_project_layer(request, title):
+    try:
+        project = Project.objects.get(title=title)
+    except Project.DoesNotExist:
+        raise Http404
+    context = {
+        'project': project,
+        'layer': None,
+        'maker_kind_options': MarkerKind.objects.all(),
+    }
+
+    if request.method != 'POST':
+        return render(request, 'viewer/project_layer.html', context=context)
+
+    form_data = request.POST
+    layer_title = form_data['layer_title']
+    try:
+        Layer.validate_title(layer_title)
+    except ValueError:
+        messages.error(request, 'Номер типа должен быть вида ЧИСЛО_БУКВЫ')
+        # todo try use render as for GET
+        return redirect(to='add_project_layer', title=title)
+    if not Layer.title_free(project, layer_title):
+        messages.error(request, 'Такой номер типа уже используется')
+        return redirect(to='add_project_layer', title=title)
+
+    Layer(project=project, title=layer_title,
+          desc=form_data['layer_desc'], kind_id=form_data['maker_kind']).save()
+    return redirect(to='project_page', page_code=project.first_page().code)
+
+
+@login_required
+@csrf.csrf_exempt
+def edit_project_layer(request, project_title, layer_title):
+    try:
+        project = Project.objects.get(title=project_title)
+    except Project.DoesNotExist:
+        raise Http404
+    layer = Layer.objects.filter(project=project, title=layer_title).first()
+    if not layer:
+        raise Http404
+    context = {
+        'project': project,
+        'layer': layer,
+        'maker_kind_options': MarkerKind.objects.all(),
+    }
+
+    if request.method != 'POST':
+        return render(request, 'viewer/project_layer.html', context=context)
+
+    pass    # todo

@@ -16,6 +16,7 @@ urlpatterns = [
     path('project/<str:title>', views.project, name='project'),
     path('project/<str:title>/edit', views.edit_project, name='edit_project'),
     path('project/<str:title>/remove', views.remove_project, name='remove_project'),
+    path('project/<str:title>/add_layer', views.add_project_layer, name='add_project_layer'),
     path('project/<str:title>/pdf/generate/', views.rebuild_pdf_files, name='rebuild_pdf_files'),
 
     path('page/<str:page_code>', views.project_page, name='project_page'),
