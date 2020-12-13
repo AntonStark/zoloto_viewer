@@ -60,7 +60,7 @@ span.layer_maker_kind > label {
     border: 1px solid grey;
     margin-left: -4px;
 }
-span.layer_maker_kind > input[type="radio"]:checked ~ label {
+span.layer_maker_kind > input[type="radio"]:checked + label {
     border: 1px solid black;
     background-color: black;
     color: white;
@@ -322,6 +322,30 @@ ul.side_box_list li.active{
 #project-page-areas-box li {
     list-style-type: none;
     padding: 2px 0;
+}
+
+form.actions_menu{
+    display: inline-block;
+}
+#actions_menu_modes label {
+    color: lightgray;
+    font-size: x-large;
+    border: 1px solid;
+    padding: 2px 6px;
+    vertical-align: middle;
+}
+#actions_menu_modes input {
+    display: none;
+}
+#actions_menu_modes input[type="radio"]:checked + label {
+    color: black;
+}
+form#actions_menu_scale label {
+    font-size: smaller;
+    width: 54px;
+    vertical-align: middle;
+    display: inline-block;
+    white-space: pre-wrap;
 }
 
 
