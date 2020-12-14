@@ -57,6 +57,9 @@ function ControllerMapScale() {
             _setNormal();
 
         messageBoxManager.onMapScaleChange();
+        const scaleField = document.getElementById('actions_page_scale');
+        if (scaleField !== undefined)
+            scaleField.value = POSSIBLE_SCALES[scaleIndex] + '%';
     }
 
     function increase() {
