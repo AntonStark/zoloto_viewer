@@ -271,6 +271,7 @@ class Page(models.Model):
     indd_floor = models.TextField(blank=False, null=False, editable=False)      # текст, лежащий на слое floor
     floor_caption = models.TextField(null=True)                                 # текст, отображаемый на странице
 
+    # fixme floor_caption not null when taken from filename
     geometric_bounds = fields.ArrayField(models.FloatField(), null=True, default=None)
     document_offset = models.PositiveSmallIntegerField(null=True, default=None)
 

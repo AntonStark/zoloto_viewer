@@ -43,8 +43,11 @@ class Marker(models.Model):
     layer = models.ForeignKey('viewer.Layer', on_delete=models.SET_NULL, null=True)
     floor = models.ForeignKey('viewer.Page', on_delete=models.CASCADE)
 
-    number = models.CharField(max_length=128, blank=False)
+    ordinal = models.IntegerField(null=True, default=None)
     points = fields.JSONField(default=list)     # [ [P], ..., [P] ] | [ [P1, P2, P3], ... ], P = [x: float, y: float]
+    pos_x = models.IntegerField()
+    pos_y = models.IntegerField()
+    rotation = models.IntegerField(default=0)
 
     correct = models.BooleanField(null=True, default=None)
     comment = models.TextField(blank=True)
@@ -54,7 +57,11 @@ class Marker(models.Model):
     COMMENT_MARK_PADDING = 0.7 * CIRCLE_RADIUS
 
     class Meta:
-        unique_together = [('floor', 'number'), ('layer', 'number')]
+        unique_together = [('floor', 'layer', 'ordinal')]
+
+    @property
+    def number(self):
+        return '/'.join([self.layer.title, self.floor.floor_caption, str(self.ordinal)])
 
     @staticmethod
     def multipoint_mid(mp):
@@ -64,6 +71,13 @@ class Marker(models.Model):
             return mp[0]
         else:
             return None
+
+    def save(self, *args, **kwargs):
+        if self.ordinal is None and self.layer and self.floor:
+            markers_same_series = Marker.objects.filter(layer=self.layer, floor=self.floor)
+            max_ordinal = markers_same_series.aggregate(value=models.Max('ordinal'))['value']
+            self.ordinal = max_ordinal + 1 if max_ordinal else 1
+        super().save(*args, **kwargs)
 
     def svg_item(self):
         def _point(p):

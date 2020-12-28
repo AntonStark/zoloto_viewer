@@ -3,10 +3,11 @@ import operator
 import uuid
 from django.conf import settings
 from django.http import JsonResponse, Http404
-from django.shortcuts import render
+from django.shortcuts import get_object_or_404, render
 from django.views.decorators import http, csrf
 
 from zoloto_viewer.infoplan.models import Marker, MarkerVariable
+from zoloto_viewer.viewer.models import Layer, Page, Project
 
 
 def marker_api(method):
@@ -17,6 +18,33 @@ def marker_api(method):
             return JsonResponse({'error': 'after /marker/ must be uuid'}, status=400)
         return method(request, uid)
     return _decorated_method
+
+
+@http.require_POST
+@csrf.csrf_exempt
+def create_marker(request):
+    fields_ = ('project', 'page', 'layer', 'position')
+    try:
+        req = json.loads(request.body)
+        project, page, layer, position = operator.itemgetter(*fields_)(req)
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'post body must be json'}, status=400)
+    except KeyError:
+        return JsonResponse({'error': 'json object must contain fields: ' + ', '.join(fields_)}, status=400)
+
+    project = get_object_or_404(Project, pk=project)
+    page = get_object_or_404(Page, project=project, code=page)
+    layer = get_object_or_404(Layer, project=project, title=layer)
+
+    pos_schema = ('center_x', 'center_y', 'rotation')
+    center_x, center_y, rotation = operator.itemgetter(*pos_schema)(position)
+
+    marker = Marker(layer=layer, floor=page,
+                    pos_x=center_x, pos_y=center_y, rotation=rotation)
+
+    # todo need to draw markers using pos_x, pos_y, rotation, layer.kind rather then points
+    marker.save()
+    return JsonResponse(marker.to_json())
 
 
 @http.require_GET
@@ -44,13 +72,14 @@ def get_marker_data(_, marker_uid: uuid.UUID):
 @marker_api
 def update_wrong_status(request, marker_uid: uuid.UUID):
     """request.body is json object {key, wrong}"""
+    fields_ = ('key', 'wrong')
     try:
         req = json.loads(request.body)
-        key, is_wrong = operator.itemgetter('key', 'wrong')(req)
+        key, is_wrong = operator.itemgetter(*fields_)(req)
     except json.JSONDecodeError:
         return JsonResponse({'error': 'post body must be json'}, status=400)
     except KeyError:
-        return JsonResponse({'error': 'post body must contain: \'key\', \'wrong\''}, status=400)
+        return JsonResponse({'error': 'json object must contain fields: ' + ', '.join(fields_)}, status=400)
     if not isinstance(is_wrong, bool):
         return JsonResponse({'error': '\'wrong\' must be boolean'}, status=400)
 
@@ -85,13 +114,14 @@ def load_marker_review(request, marker_uid: uuid.UUID):
                     exit_type = "button" | "blur"
     :param marker_uid: uuid.UUID type
     """
+    fields_ = ('variables', 'comment', 'exit_type')
     try:
         req = json.loads(request.body)
-        variables, comment, exit_type = operator.itemgetter('variables', 'comment', 'exit_type')(req)
-    except (json.JSONDecodeError, KeyError):
-        return JsonResponse({
-            'error': 'post body must be json with fields: \'variables\', \'comment\', \'exit_type\''
-        }, status=400)
+        variables, comment, exit_type = operator.itemgetter(*fields_)(req)
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'post body must be json'}, status=400)
+    except KeyError:
+        return JsonResponse({'error': 'json object must contain fields: ' + ', '.join(fields_)}, status=400)
     if not isinstance(variables, list):
         return JsonResponse({'error': '\'variables\' must be json array'}, status=400)
     explicit_end_review = exit_type == 'button'
