@@ -1,5 +1,5 @@
 .idea
-migrations/
+#migrations/
 docker/.env.prod
 **/__pycache__
 **/.DS_Store
