@@ -127,6 +127,7 @@ def csv_upload_prev_path(obj: 'Layer', filename):
 class MarkerKind(models.Model):
     id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=16, blank=False)
+    svg_figures = models.TextField()
 
 
 class Color(models.Model):
@@ -272,7 +273,6 @@ class Page(models.Model):
     floor_caption = models.TextField(null=True)                                 # текст, отображаемый на странице
 
     # fixme floor_caption not null when taken from filename
-    geometric_bounds = fields.ArrayField(models.FloatField(), null=True, default=None)
     document_offset = models.PositiveSmallIntegerField(null=True, default=None)
 
     class Meta:
@@ -285,6 +285,14 @@ class Page(models.Model):
     def serialize(self):
         return self.floor_caption, self.orig_file_name()
 
+    @property
+    def geometric_bounds(self):
+        top = left = 0
+        bottom = self.plan.height
+        right = self.plan.width
+        geometric_bounds = [top, left, bottom, right]
+        return geometric_bounds
+
     @staticmethod
     def remove_from_project(project, filename):
         for p in Page.objects.filter(project=project):
@@ -293,9 +301,9 @@ class Page(models.Model):
 
     @staticmethod
     def create_or_replace(project, plan, indd_floor, floor_caption, maps_info=None):
-        offset, bounds = (None, None)
+        offset = None
         if maps_info and indd_floor in maps_info:
-            offset, bounds = maps_info[indd_floor]
+            offset, _ = maps_info[indd_floor]
         # if plan with equal filename already exists just update them
         for p in Page.objects.filter(project=project):
             if p.orig_file_name() == plan.name:
@@ -305,12 +313,10 @@ class Page(models.Model):
                 p.floor_caption = floor_caption
                 if offset:
                     p.document_offset = offset
-                if bounds:
-                    p.geometric_bounds = bounds
                 p.save()
                 return
         Page(project=project, plan=plan, indd_floor=indd_floor, floor_caption=floor_caption,
-             document_offset=offset, geometric_bounds=bounds).save()
+             document_offset=offset).save()
 
     @staticmethod
     def validate_code(page_code):
@@ -341,18 +347,6 @@ class Page(models.Model):
             self.code = maybe_code
         super(Page, self).save(*args, **kwargs)
 
-
-# noinspection PyUnusedLocal
-@receiver(models.signals.post_save, sender=Page)
-def default_geometric_bounds(sender, instance: Page, *args, **kwargs):
-    print('default_geometric_bounds')
-    if not instance.geometric_bounds:
-        print('default_geometric_bounds works')
-        top = left = 0
-        bottom = instance.plan.height
-        right = instance.plan.width
-        instance.geometric_bounds = [top, left, bottom, right]
-        instance.save()
 
 # noinspection PyUnusedLocal
 @receiver(models.signals.post_delete, sender=Page)

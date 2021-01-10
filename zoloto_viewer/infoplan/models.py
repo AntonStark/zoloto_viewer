@@ -90,6 +90,7 @@ class Marker(models.Model):
         middle_points = filter(None, map(Marker.multipoint_mid, self.points))
         return ', '.join(map(lambda p: f'{p[0]} {p[1]}', middle_points))
 
+    # todo review draw marker during pdf generation
     def polygon_points(self):
         return list(map(Marker.multipoint_mid, self.points))
 

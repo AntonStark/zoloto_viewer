@@ -42,7 +42,6 @@ def create_marker(request):
     marker = Marker(layer=layer, floor=page,
                     pos_x=center_x, pos_y=center_y, rotation=rotation)
 
-    # todo need to draw markers using pos_x, pos_y, rotation, layer.kind rather then points
     marker.save()
     return JsonResponse(marker.to_json())
 
@@ -152,7 +151,6 @@ def project_page(request, **more_context):
     layers_visible = set(request.GET.getlist('layer'))
     markers_by_layer = {L: page_obj.marker_set.filter(layer=L)
                         for L in project.layer_set.all()}
-    im, (gb_top, gb_left, gb_bottom, gb_right) = page_obj.plan, page_obj.geometric_bounds
 
     context = {
         'project': project,
@@ -161,10 +159,6 @@ def project_page(request, **more_context):
         'layers': layers,
         'layers_visible': layers_visible,
         'markers_by_layer': markers_by_layer,
-        'transform_params': {
-            'scale': [im.width / (gb_right - gb_left), im.height / (gb_bottom - gb_top)],
-            'translate': [-gb_left, -gb_top],
-        },
         'base_url': settings.BASE_URL,
 
         'pdf_original': pdf_original,
