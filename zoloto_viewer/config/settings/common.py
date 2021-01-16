@@ -27,6 +27,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'zoloto_viewer.viewer',     # todo rename to project_loader before full DB clean up
     'zoloto_viewer.infoplan',
+    'fontawesome-free',
 ]
 
 MIDDLEWARE = [
