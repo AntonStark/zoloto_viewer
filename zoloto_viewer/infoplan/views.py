@@ -61,7 +61,7 @@ def get_marker_data(_, marker_uid: uuid.UUID):
         'variables': tuple(map(MarkerVariable.to_json, variables)),
     })
     rep.update({
-        'layer': {'title': marker.layer.title, 'color': marker.layer.color}
+        'layer': {'title': marker.layer.title, 'color': marker.layer.color.hex_code}
     })
     return JsonResponse(rep)
 
@@ -109,28 +109,24 @@ def update_wrong_status(request, marker_uid: uuid.UUID):
 def load_marker_review(request, marker_uid: uuid.UUID):
     """
     :param request: request.body is json object
-                    {variables: [{key, wrong}], comment, exit_type}
+                    {comment, exit_type}
                     exit_type = "button" | "blur"
     :param marker_uid: uuid.UUID type
     """
-    fields_ = ('variables', 'comment', 'exit_type')
+    fields_ = ('comment', 'exit_type')
     try:
         req = json.loads(request.body)
-        variables, comment, exit_type = operator.itemgetter(*fields_)(req)
+        comment, exit_type = operator.itemgetter(*fields_)(req)
     except json.JSONDecodeError:
         return JsonResponse({'error': 'post body must be json'}, status=400)
     except KeyError:
         return JsonResponse({'error': 'json object must contain fields: ' + ', '.join(fields_)}, status=400)
-    if not isinstance(variables, list):
-        return JsonResponse({'error': '\'variables\' must be json array'}, status=400)
     explicit_end_review = exit_type == 'button'
 
     try:
         marker = Marker.objects.get(uid=marker_uid)
     except Marker.DoesNotExist:
         raise Http404
-    is_wrong_by_key = dict(map(lambda v: (v['key'], v['wrong']), variables))
-    MarkerVariable.objects.reset_wrong_statuses(marker, is_wrong_by_key)
     marker.comment = comment
     marker.deduce_correctness(explicit_end_review)
 
