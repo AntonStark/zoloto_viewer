@@ -33,7 +33,7 @@
                                         r="{{ marker.CIRCLE_RADIUS }}"
                                         class="marker_circle"
                                         data-marker-uid="{{ marker.uid }}" data-layer-title="{{ layer.title }}"
-                                        onclick="handleClickMarkerCircle(this)"></circle>
+                                        onclick="mapInteractionsController.handleClickMarkerCircle(this)"></circle>
                                 <circle cx="{{ marker.pos_x }}" cy="{{ marker.pos_y }}"
                                         r="1"
                                         transform="translate({{ marker.COMMENT_MARK_PADDING }}, -{{ marker.COMMENT_MARK_PADDING }})"

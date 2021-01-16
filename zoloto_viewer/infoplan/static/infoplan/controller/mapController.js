@@ -23,13 +23,28 @@ function ControllerMapInteractions() {
     }
 
     // map interaction handlers
-    function clickHandler(e) {
+    function handleKeyUp(e) {
+        console.log(e);
+    }
+    function handleClickMap(e) {
+        messageBoxManager.hideAll();
         const [svgX, svgY] = [e.offsetX, e.offsetY];
         console.log(svgX, svgY);
     }
-    function keyUpHandler(e) {
-        console.log(e);
+    function handleClickMarkerCircle(circleElement) {
+        const markerUid = circleElement.dataset.markerUid;
+        const markerElement = circleElement.parentNode.previousElementSibling;
+        messageBoxManager.reg(markerElement);
+
+        markerCirclesManager.register(circleElement);
+
+        const messLink = circleElement.parentNode.getElementsByClassName('marker_link')[0];
+        messLinksManager.register(markerUid, messLink);
+
+        // messageBoxManager.hideAll();
+        messageBoxManager.show(markerUid);
     }
+
 
     return {
         isInsertMode: isInsertMode,
@@ -39,7 +54,8 @@ function ControllerMapInteractions() {
         addToSelection: addToSelection,
         dropSelection: dropSelection,
 
-        clickHandler: clickHandler,
-        keyUpHandler: keyUpHandler,
+        handleKeyUp: handleKeyUp,
+        handleClickMap: handleClickMap,
+        handleClickMarkerCircle: handleClickMarkerCircle,
     }
 }

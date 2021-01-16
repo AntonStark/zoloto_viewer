@@ -91,9 +91,9 @@ function setHandlers() {
     document.getElementById('map_control_plus').addEventListener('click', handleClickMapPlus);
     document.getElementById('map_control_minus').addEventListener('click', handleClickMapMinus);
 
-    window.addEventListener('keyup', mapInteractionsController.keyUpHandler);
+    window.addEventListener('keyup', mapInteractionsController.handleKeyUp);
     document.getElementById('project-page-svg-background')
-        .addEventListener('click', mapInteractionsController.clickHandler);
+        .addEventListener('click', mapInteractionsController.handleClickMap);
 }
 window.addEventListener('load', setHandlers);
 

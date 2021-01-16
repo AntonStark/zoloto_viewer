@@ -140,7 +140,7 @@ function ControllerMessageBox(render) {
                 }
             }
         }
-        viewMatrix('red');
+        // viewMatrix('red');
         // TODO 2) удалить старый способ
         const [rawMarX, rawMarY] = markerCirclesManager.position(markerUid);
         const planScale = mapScaleController.current();

@@ -112,17 +112,3 @@ function handleToggleWrong(marker_uid, variable_key) {
         markerCirclesManager.sync(rep);
     });
 }
-
-function handleClickMarkerCircle(circleElement) {
-    const markerUid = circleElement.dataset.markerUid;
-    const markerElement = circleElement.parentNode.previousElementSibling;
-    messageBoxManager.reg(markerElement);
-
-    markerCirclesManager.register(circleElement);
-
-    const messLink = circleElement.parentNode.getElementsByClassName('marker_link')[0];
-    messLinksManager.register(markerUid, messLink);
-
-    // messageBoxManager.hideAll();
-    messageBoxManager.show(markerUid);
-}
