@@ -126,10 +126,3 @@ function handleClickMarkerCircle(circleElement) {
     // messageBoxManager.hideAll();
     messageBoxManager.show(markerUid);
 }
-
-function isInsertMode() {
-    return document.getElementById('menu_actions_option1').checked;
-}
-function isSelectMode() {
-    return document.getElementById('menu_actions_option2').checked;
-}

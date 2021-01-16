@@ -6,13 +6,14 @@
     {% load static %}
     <script>var BASE_URL = '{{ base_url }}'</script>
 
-    <script src="{% static 'infoplan/controller/pdfGeneration.js' %}"></script>
+{# temp disable fixme  <script src="{% static 'infoplan/controller/pdfGeneration.js' %}"></script>#}
     <script src="{% static 'infoplan/controller/layersEnabled.js' %}"></script>
     <script src="{% static 'infoplan/controller/markerCircles.js' %}"></script>
     <script src="{% static 'infoplan/controller/messageLinks.js' %}"></script>
     <script src="{% static 'infoplan/controller/messageBox.js' %}"></script>
     <script src="{% static 'infoplan/controller/variableWrongness.js' %}"></script>
     <script src="{% static 'infoplan/controller/mapScale.js' %}"></script>
+    <script src="{% static 'infoplan/controller/mapController.js' %}"></script>
     <script src="{% static 'infoplan/ui.js' %}"></script>
     <script src="{% static 'infoplan/api.js' %}"></script>
 

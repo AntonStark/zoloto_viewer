@@ -1,13 +1,13 @@
 <div class="scrollable">
-    <div style="position: relative;">
+    <div style="position: relative;" id="plan-page-map-container">
         <svg width="{{ page.plan.width }}" height="{{ page.plan.height }}" id="project-page-plan-svg">
             <g id="project-page-svg-origin">
                 <image href="{{ page.plan.url }}"
                         {#                   transform="scale(0.977, 0.988)"#}
                        width="{{ page.plan.width }}" height="{{ page.plan.height }}">
                 </image>
-                <rect fill-opacity="0" width="{{ page.plan.width }}" height="{{ page.plan.height }}"
-                      onclick="messageBoxManager.hideAll()">>
+                <rect id="project-page-svg-background"
+                      fill-opacity="0" width="{{ page.plan.width }}" height="{{ page.plan.height }}">
                 </rect>
                 {% load layers_visibility %}
                 {% for layer, markers in markers_by_layer.items %}
@@ -39,7 +39,8 @@
                                         transform="translate({{ marker.COMMENT_MARK_PADDING }}, -{{ marker.COMMENT_MARK_PADDING }})"
                                         class="marker_comment_mark {{ marker.has_comment|yesno:'marker_has_comment,' }}"></circle>
                             </g>
-                        {% endfor %}</g>
+                        {% endfor %}
+                    </g>
                 {% endfor %}
             </g>
         </svg>

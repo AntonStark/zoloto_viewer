@@ -6,6 +6,7 @@ const messLinksManager = ControllerMessageLinks();
 const varWrongnessManager = ControllerVariableWrongness();
 const mapScaleController = ControllerMapScale();
 const enabledLayersController = ControllerEnabledLayers();
+const mapInteractionsController = ControllerMapInteractions();
 
 
 let SVG_VIEWPORT_BOUNDS = undefined;
@@ -89,6 +90,10 @@ function setHandlers() {
     mapScaleController.setup();
     document.getElementById('map_control_plus').addEventListener('click', handleClickMapPlus);
     document.getElementById('map_control_minus').addEventListener('click', handleClickMapMinus);
+
+    window.addEventListener('keyup', mapInteractionsController.keyUpHandler);
+    document.getElementById('project-page-svg-background')
+        .addEventListener('click', mapInteractionsController.clickHandler);
 }
 window.addEventListener('load', setHandlers);
 
