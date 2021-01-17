@@ -49,8 +49,10 @@
         {% endfor %}
     </p>
     <p>
-        <label>Цвет</label>
-        <span id="layer_color_view" style="background: red"></span>
+        <label for="layer_color">Цвет</label>
+        <span id="layer_color_view" style="background: {{ color.hex_code }}"></span>
+        <input id="layer_color" name="layer_color" type="text" style="display: none;"
+               value="{{ color.id }}">
     </p>
     <div>
         {% if messages %}

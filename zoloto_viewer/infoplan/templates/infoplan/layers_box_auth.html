@@ -15,7 +15,7 @@
 {% if forloop.first %}active{% endif %}
 "
         onclick="setActiveLayer(this); toggleLayerHandler('{{ layer_title }}')">
-        {{ layer_title }}
+        <span style="color: black;">{{ layer_title }}</span>
         <span style="float: right">
             <a href="{% url 'edit_project_layer' project_title=project.title layer_title=layer_title %}"
                class="hidden icon">&#x270E</a>

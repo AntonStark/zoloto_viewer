@@ -46,6 +46,10 @@ class Project(models.Model):
         pages = Page.objects.filter(project=self)
         return pages.first() if pages.exists() else None
 
+    def last_layer(self):
+        layers = Layer.objects.filter(project=self)
+        return layers.last() if layers.exists() else None
+
     @staticmethod
     def validate_title(title: str):
         return re.match(r'^[-\w]+$', title) is not None \
@@ -133,6 +137,13 @@ class MarkerKind(models.Model):
 class Color(models.Model):
     hex_code = models.CharField(max_length=7, default='#000000')
     rgb_code = models.CharField(max_length=16, default='rgb(0,0,0)')
+
+    def next(self):
+        try:
+            c = Color.objects.get(id=self.id + 1)
+        except Color.DoesNotExist:
+            c = Color.objects.get(id=1)
+        return c
 
 
 class Layer(models.Model):

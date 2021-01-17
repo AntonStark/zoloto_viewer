@@ -5,7 +5,7 @@
     <li style="color: {{ color }};"
         class="{{ layer_title }} {{ layer_title|is_enabled:layers_visible }}"
         onclick="toggleLayerHandler('{{ layer_title }}')">
-        <p>{{ layer_title }}</p>
+        <span style="color: black">{{ layer_title }}</span>
     </li>
 {% endfor %}
 </ul>

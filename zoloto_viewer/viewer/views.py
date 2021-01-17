@@ -6,7 +6,7 @@ from django.shortcuts import render, redirect
 from django.views.decorators import csrf
 
 from zoloto_viewer.infoplan import views as infoplan_views
-from zoloto_viewer.viewer.models import Project, Layer, MarkerKind, Page, PdfGenerated
+from zoloto_viewer.viewer.models import Color, Project, Layer, MarkerKind, Page, PdfGenerated
 from zoloto_viewer.viewer.view_helpers import project_form
 
 
@@ -156,9 +156,13 @@ def add_project_layer(request, title):
     except Project.DoesNotExist:
         raise Http404
 
+    last_layer = project.last_layer()
+    color = last_layer.color.next() if last_layer else Color.objects.all().first()
+
     context = {
         'project': project,
         'layer': None,
+        'color': color,
         'maker_kind_options': MarkerKind.objects.all(),
     }
 
@@ -177,8 +181,9 @@ def add_project_layer(request, title):
                                  desc=form_data['layer_desc'], kind_id=form_data['maker_kind'])
         return render(request, 'viewer/project_layer.html', context=context)
 
-    Layer(project=project, title=layer_title,
-          desc=form_data['layer_desc'], kind_id=form_data['maker_kind']).save()
+    Layer(project=project, title=layer_title, desc=form_data['layer_desc'],
+          kind_id=form_data['maker_kind'],
+          color_id=form_data['layer_color']).save()
     return redirect(to='project_page', page_code=project.first_page().code)
 
 
@@ -196,6 +201,7 @@ def edit_project_layer(request, project_title, layer_title):
     context = {
         'project': project,
         'layer': layer,
+        'color': layer.color,
         'maker_kind_options': MarkerKind.objects.all(),
     }
 
