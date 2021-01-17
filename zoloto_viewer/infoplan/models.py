@@ -110,17 +110,20 @@ class Marker(models.Model):
     def has_errors(self):
         return self.markervariable_set.filter(wrong=True).exists()
 
-    def deduce_correctness(self, force_true_false=False):
+    def deduce_correctness(self, force_true_false=False, save=False):
         """
         В случае явного (explicit) выхода отсутствие ошибок -- достаточное условие для correct = True,
         а при неявном -- в отсутствии ошибок необходимо наличие коммента
         """
+        return  # disable marker correctness for now
+
         if self.has_errors():
             self.correct = False
         else:
             if force_true_false or self.has_comment() or self.correct is not None:
                 self.correct = True
-        self.save()
+        if save:
+            self.save()
 
 
 class VariablesManager(models.Manager):

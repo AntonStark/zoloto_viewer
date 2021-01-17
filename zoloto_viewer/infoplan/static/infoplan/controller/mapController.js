@@ -28,11 +28,17 @@ function ControllerMapInteractions() {
     }
     function handleClickMap(e) {
         messageBoxManager.hideAll();
+        dropSelection();
+
         const [svgX, svgY] = [e.offsetX, e.offsetY];
         console.log(svgX, svgY);
+        markerCirclesManager.render(mapInteractionsController.isInSelection);
     }
     function handleClickMarkerCircle(circleElement) {
         const markerUid = circleElement.dataset.markerUid;
+
+        addToSelection(markerUid);
+
         const markerElement = circleElement.parentNode.previousElementSibling;
         messageBoxManager.reg(markerElement);
 
@@ -43,6 +49,7 @@ function ControllerMapInteractions() {
 
         // messageBoxManager.hideAll();
         messageBoxManager.show(markerUid);
+        markerCirclesManager.render(mapInteractionsController.isInSelection);
     }
 
 

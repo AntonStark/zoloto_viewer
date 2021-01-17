@@ -96,6 +96,7 @@ function setHandlers() {
         .addEventListener('click', mapInteractionsController.handleClickMap);
 }
 window.addEventListener('load', setHandlers);
+window.addEventListener('load', markerCirclesManager.init);
 
 function updateControlStyle() {
     const plus = document.getElementById('map_control_plus');

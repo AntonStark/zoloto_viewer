@@ -195,7 +195,6 @@ function ControllerMessageBox(render) {
         if (maybeMessItem !== null) {
             _setDisplay(maybeMessItem, false);
             visibleMessagesIndex[markerUid] = false;
-            markerCirclesManager.setShown(markerUid, false);
             return true;
         }
         else
@@ -209,7 +208,6 @@ function ControllerMessageBox(render) {
             _setDisplay(maybeMessItem);
             maybeMessItem.focus();
             visibleMessagesIndex[markerUid] = true;
-            markerCirclesManager.setShown(markerUid, true);
             return;
         }
 
@@ -247,8 +245,6 @@ function ControllerMessageBox(render) {
                 messLinksManager.update(markerUid, messContainer);
                 messContainer.focus();
             });
-        if (visibleMessagesIndex[markerUid])
-            markerCirclesManager.setShown(markerUid, true);
     }
     function getComment(markerUid) {
         const box = getContainerOrNull(markerUid);

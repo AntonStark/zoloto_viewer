@@ -27,6 +27,11 @@ function ControllerMarkerCircles() {
         if (element.classList.contains(MARKER_MESSAGE_SHOWN_CLASS) !== isShown)
             element.classList.toggle(MARKER_MESSAGE_SHOWN_CLASS);
     }
+    function _setShownStatus(markerUid, isShown) {
+        const elem = markerCorrCircles[markerUid];
+        _setMessShown(elem.parentNode, isShown);
+        // console.debug('setShownStatus', markerUid, isShown);
+    }
     function _evalViewportPosition(circleElement) {
         const transform = circleElement.getCTM();
         let probe = circleElement.ownerSVGElement.createSVGPoint();
@@ -54,16 +59,25 @@ function ControllerMarkerCircles() {
     function getCircleCenter(markerUid) {
         return circleCenterIndex[markerUid];
     }
-    function setShownStatus(markerUid, isShown) {
-        const elem = markerCorrCircles[markerUid];
-        _setMessShown(elem.parentNode, isShown);
-        // console.debug('setShownStatus', markerUid, isShown);
+
+    // регистрируем все circleElement при создании контроллера
+    function init() {
+        const svgElem = document.getElementById('project-page-plan-svg');
+        for (const circleElement of svgElem.getElementsByClassName('marker_circle')) {
+            registerMarkerCircle(circleElement);
+        }
+    }
+    function renderSelection(isInSelectionMethod) {
+        for (const markerUid in markerCorrCircles) {
+            _setShownStatus(markerUid, isInSelectionMethod(markerUid));
+        }
     }
 
     return {
+        init    : init,
         register: registerMarkerCircle,
         sync    : updateCorrectness,
         position: getCircleCenter,
-        setShown: setShownStatus,
+        render  : renderSelection,
     }
 }

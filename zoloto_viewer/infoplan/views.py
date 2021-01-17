@@ -97,6 +97,7 @@ def update_wrong_status(request, marker_uid: uuid.UUID):
         target.wrong = is_wrong
         target.save()
         marker.deduce_correctness()
+        marker.save()
 
     rep = marker.to_json()
     rep.update({'variable': target.to_json()})
@@ -129,6 +130,7 @@ def load_marker_review(request, marker_uid: uuid.UUID):
         raise Http404
     marker.comment = comment
     marker.deduce_correctness(explicit_end_review)
+    marker.save()
 
     return JsonResponse(marker.to_json())
 
