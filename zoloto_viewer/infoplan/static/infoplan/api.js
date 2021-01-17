@@ -1,5 +1,7 @@
 "use strict";
 
+const API_MARKER_CREATE      = `${BASE_URL}/viewer/api/marker/`;
+const API_MARKER_DELETE      = (markerUid) => `${BASE_URL}/viewer/api/marker/${markerUid}`;
 const API_MARKER_GET_DATA    = (markerUid) => `${BASE_URL}/viewer/api/marker/${markerUid}`;
 const API_VAR_ALTER_WRONG    = (markerUid) => `${BASE_URL}/viewer/api/marker/${markerUid}/variable/`;
 const API_MARKER_LOAD_REVIEW = (markerUid) => `${BASE_URL}/viewer/api/marker/${markerUid}/review/`;
@@ -110,5 +112,15 @@ function handleToggleWrong(marker_uid, variable_key) {
         function (rep) {
         varWrongnessManager.sync(rep);
         markerCirclesManager.sync(rep);
+    });
+}
+
+function deleteMarker(marker_uid) {
+    doApiCall('DELETE', API_MARKER_DELETE(marker_uid), null,
+        function (rep) {
+        if (rep['status'] === 'ok') {
+            markerCirclesManager.delete(marker_uid);
+            messageBoxManager.del(marker_uid);
+        }
     });
 }

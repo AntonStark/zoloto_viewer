@@ -25,6 +25,10 @@ function ControllerMapInteractions() {
     // map interaction handlers
     function handleKeyUp(e) {
         console.log(e);
+        if (e.key === 'Backspace') {
+            deleteRoutine(markerSelection);
+        }
+
     }
     function handleClickMap(e) {
         messageBoxManager.hideAll();
@@ -64,5 +68,12 @@ function ControllerMapInteractions() {
         handleKeyUp: handleKeyUp,
         handleClickMap: handleClickMap,
         handleClickMarkerCircle: handleClickMarkerCircle,
+    }
+}
+
+function deleteRoutine(markerUidArray) {
+    console.debug('deleteRoutine', markerUidArray);
+    for (const markerUid of markerUidArray) {
+        deleteMarker(markerUid);
     }
 }

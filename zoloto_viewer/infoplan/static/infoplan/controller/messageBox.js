@@ -260,6 +260,13 @@ function ControllerMessageBox(render) {
     function registerMarkerElement(markerElement) {
         markerElementIndex[markerElement.dataset.markerUid] = markerElement;
     }
+    function deleteMarkerAndMessage(markerUid) {
+        markerElementIndex[markerUid].remove();
+        delete markerElementIndex[markerUid];
+
+        _renderedMessagesIndex[markerUid].messContainer.remove();
+        delete _renderedMessagesIndex[markerUid];
+    }
 
     function hideAllMessages() {
         for (const markerUid in visibleMessagesIndex)
@@ -273,6 +280,7 @@ function ControllerMessageBox(render) {
         read: getComment,
         get : getContainerOrNull,
         reg : registerMarkerElement,
+        del : deleteMarkerAndMessage,
         hideAll: hideAllMessages,
         onMapScaleChange: onMapScaleChange,
     }

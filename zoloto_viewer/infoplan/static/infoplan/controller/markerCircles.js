@@ -47,6 +47,10 @@ function ControllerMarkerCircles() {
         markerCorrCircles[markerUid] = circleElement;
         circleCenterIndex[markerUid] = _evalViewportPosition(circleElement);
     }
+    function deleteMarkerCircleGroup(markerUid) {
+        markerCorrCircles[markerUid].parentNode.remove();
+        delete markerCorrCircles[markerUid];
+    }
     function updateCorrectness(markerData) {
         // console.log('updateCorrectness', markerData);
         const elem = markerCorrCircles[markerData.marker];
@@ -76,6 +80,7 @@ function ControllerMarkerCircles() {
     return {
         init    : init,
         register: registerMarkerCircle,
+        delete  : deleteMarkerCircleGroup,
         sync    : updateCorrectness,
         position: getCircleCenter,
         render  : renderSelection,

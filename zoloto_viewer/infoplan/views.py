@@ -2,9 +2,12 @@ import json
 import operator
 import uuid
 from django.conf import settings
+from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse, Http404
 from django.shortcuts import get_object_or_404, render
+from django.views import View
 from django.views.decorators import http, csrf
+from django.utils.decorators import method_decorator
 
 from zoloto_viewer.infoplan.models import Marker, MarkerVariable
 from zoloto_viewer.viewer.models import Layer, Page, Project
@@ -46,24 +49,36 @@ def create_marker(request):
     return JsonResponse(marker.to_json())
 
 
-@http.require_GET
-@marker_api
-def get_marker_data(_, marker_uid: uuid.UUID):
-    try:
-        marker = Marker.objects.get(uid=marker_uid)
-    except Marker.DoesNotExist:
-        raise Http404
-    variables = MarkerVariable.objects.vars_of_marker(marker)
+@method_decorator(csrf.csrf_exempt, name='dispatch')
+class MarkerView(View):
+    @method_decorator(marker_api)
+    def get(self, _, marker_uid: uuid.UUID):
+        try:
+            marker = Marker.objects.get(uid=marker_uid)
+        except Marker.DoesNotExist:
+            raise Http404
+        variables = MarkerVariable.objects.vars_of_marker(marker)
 
-    rep = marker.to_json()
-    rep.update({
-        'comment': marker.comment,
-        'variables': tuple(map(MarkerVariable.to_json, variables)),
-    })
-    rep.update({
-        'layer': {'title': marker.layer.title, 'color': marker.layer.color.hex_code}
-    })
-    return JsonResponse(rep)
+        rep = marker.to_json()
+        rep.update({
+            'comment': marker.comment,
+            'variables': tuple(map(MarkerVariable.to_json, variables)),
+        })
+        rep.update({
+            'layer': {'title': marker.layer.title, 'color': marker.layer.color.hex_code}
+        })
+        return JsonResponse(rep)
+
+    @method_decorator(login_required)
+    @method_decorator(marker_api)
+    def delete(self, _, marker_uid: uuid.UUID):
+        try:
+            marker = Marker.objects.get(uid=marker_uid)
+        except Marker.DoesNotExist:
+            raise Http404
+        else:
+            marker.delete()
+            return JsonResponse({'status': 'ok'}, status=200)
 
 
 @http.require_POST
