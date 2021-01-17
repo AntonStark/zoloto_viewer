@@ -231,34 +231,12 @@ span#layer_color_view {
 .marker_circle {
     fill-opacity: 0;    /* invisible yet clickable */
     stroke-width: 0.5px;
-    stroke: none;
+    /* stroke: none; */
 }
 
-.message_shown .marker_circle {
-    stroke: grey;
-}
-.message_shown .marker_link {
-    stroke: grey;
-}
-
-.marker_correct .marker_circle {
-    stroke: green;
-}
-.marker_wrong .marker_circle {
-    stroke: red;
-}
-
-.marker_comment_mark {
+.marker_comment_mark:not(.marker_has_comment) {
     stroke: none;
     fill: none;
-}
-.marker_correct .marker_has_comment {
-    stroke: green;
-    fill: green;
-}
-.marker_wrong .marker_has_comment {
-    stroke: red;
-    fill: red;
 }
 
 

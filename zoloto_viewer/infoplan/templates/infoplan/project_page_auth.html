@@ -22,11 +22,14 @@
     <style type="text/css">
         {% for layer, _ in markers_by_layer.items %}
             .layer-{{ layer.title }} .variables_container {
-                background: {{ layer.color }};
-                color: white;
+                background: white;
+                color: black;
             }
             .layer_markers.layer-{{ layer.title }} {
-                fill: {{ layer.color }};
+                fill: {{ layer.color.hex_code }};
+            }
+            .layer-{{ layer.title }} .message_shown .marker_circle {
+                stroke: {{ layer.color.hex_code }};
             }
         {% endfor %}
     </style>
