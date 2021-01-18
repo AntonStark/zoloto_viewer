@@ -4,6 +4,8 @@ function ControllerEnabledLayers() {
     const ENABLED_LAYER_CLASS = 'enabled_layer';
     const PAGE_LINK_CLASS = 'project-page-link';
 
+    let activeLayerTitle = '';
+
     function _toggleLayerUrlParam(title, actualUrl) {
         let enabledLayers = actualUrl.searchParams.getAll(LAYER_PARAM)
             .reduce((hash, l, _) => {
@@ -36,7 +38,16 @@ function ControllerEnabledLayers() {
         }
     }
 
+    function setActiveLayer(layerTitle) {
+        activeLayerTitle = layerTitle;
+    }
+    function getActiveLayer() {
+        return activeLayerTitle;
+    }
+
     return {
-        toggle: toggleLayer,
+        toggle   : toggleLayer,
+        setActive: setActiveLayer,
+        getActive: getActiveLayer,
     }
 }

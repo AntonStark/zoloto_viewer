@@ -124,3 +124,10 @@ function deleteMarker(marker_uid) {
         }
     });
 }
+
+function createMarker(args) {
+    doApiCall('POST', API_MARKER_CREATE, args,
+        function (rep) {
+        console.log(rep);
+    })
+}

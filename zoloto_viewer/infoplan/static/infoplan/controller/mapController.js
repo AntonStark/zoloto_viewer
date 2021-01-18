@@ -10,6 +10,9 @@ function ControllerMapInteractions() {
     function isSelectMode() {
         return document.getElementById('menu_actions_option2').checked;
     }
+    function activeLayer() {
+        return enabledLayersController.getActive();
+    }
 
     // marker selection
     function isInSelection(markerUid) {
@@ -35,7 +38,7 @@ function ControllerMapInteractions() {
         dropSelection();
 
         const [svgX, svgY] = [e.offsetX, e.offsetY];
-        console.log(svgX, svgY);
+        console.log(svgX, svgY, activeLayer());
         markerCirclesManager.render(mapInteractionsController.isInSelection);
     }
     function handleClickMarkerCircle(circleElement) {
@@ -60,14 +63,15 @@ function ControllerMapInteractions() {
     return {
         isInsertMode: isInsertMode,
         isSelectMode: isSelectMode,
+        activeLayer : activeLayer,
 
-        isInSelection: isInSelection,
-        addToSelection: addToSelection,
-        dropSelection: dropSelection,
+        isInSelection   : isInSelection,
+        addToSelection  : addToSelection,
+        dropSelection   : dropSelection,
 
-        handleKeyUp: handleKeyUp,
-        handleClickMap: handleClickMap,
-        handleClickMarkerCircle: handleClickMarkerCircle,
+        handleKeyUp             : handleKeyUp,
+        handleClickMap          : handleClickMap,
+        handleClickMarkerCircle : handleClickMarkerCircle,
     }
 }
 

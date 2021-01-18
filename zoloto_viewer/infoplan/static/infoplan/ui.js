@@ -128,7 +128,18 @@ function setActiveLayer(layer_li_tag) {
     for (const sibling of getSiblings(layer_li_tag)) {
         sibling.classList.remove('active');
     }
+
+    const layerTitle = layer_li_tag.getElementsByClassName('layer-title-span')[0].textContent;
+    enabledLayersController.setActive(layerTitle);
 }
+
+window.addEventListener('load', function () {
+    const layersMenu = document.getElementById('project-page-layers-box');
+    const layerLiTag = layersMenu.getElementsByTagName('li')[0];
+    if (layerLiTag) {
+        setActiveLayer(layerLiTag);
+    }
+});
 
 function toggleLayerHandler(title) {
     enabledLayersController.toggle(title);
