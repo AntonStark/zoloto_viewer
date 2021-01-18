@@ -102,7 +102,17 @@ class Marker(models.Model):
         return int(self.number.split('/')[-1])
 
     def to_json(self):
-        return {'marker': self.uid, 'number': self.number, 'correct': self.correct, 'has_comment': self.has_comment()}
+        return {
+            'marker': self.uid,
+            'number': self.number,
+            'correct': self.correct,
+            'has_comment': self.has_comment(),
+            'position': {
+                'center_x': self.pos_x,
+                'center_y': self.pos_y,
+                'rotation': self.rotation,
+            }
+        }
 
     def has_comment(self):
         return bool(self.comment)

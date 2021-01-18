@@ -4,7 +4,11 @@
     <meta charset="UTF-8">
     <title>{{ project.title }}</title>
     {% load static %}
-    <script>var BASE_URL = '{{ base_url }}'</script>
+    <script>
+        var BASE_URL = '{{ base_url }}';
+        var pageCode = '{{ page.code }}';
+        var projectUid = '{{ project.uid }}';
+    </script>
 
     <script src="{% static 'infoplan/controller/layersEnabled.js' %}"></script>
     <script src="{% static 'infoplan/controller/markerCircles.js' %}"></script>

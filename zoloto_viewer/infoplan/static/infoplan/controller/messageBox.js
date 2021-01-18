@@ -266,6 +266,7 @@ function ControllerMessageBox(render) {
 
         _renderedMessagesIndex[markerUid].messContainer.remove();
         delete _renderedMessagesIndex[markerUid];
+        delete visibleMessagesIndex[markerUid];
     }
 
     function hideAllMessages() {

@@ -4,15 +4,14 @@ function ControllerMapInteractions() {
     let markerSelection = [];
 
     // map interaction mode
-    function isInsertMode() {
-        return document.getElementById('menu_actions_option1').checked;
-    }
-    function isSelectMode() {
-        return document.getElementById('menu_actions_option2').checked;
-    }
-    function activeLayer() {
-        return enabledLayersController.getActive();
-    }
+    function isInsertMode()
+    { return document.getElementById('menu_actions_option1').checked; }
+    function isSelectMode()
+    { return document.getElementById('menu_actions_option2').checked; }
+    function activeLayer()
+    { return enabledLayersController.getActive(); }
+    function getPageCode()
+    { return pageCode; }
 
     // marker selection
     function isInSelection(markerUid) {
@@ -38,7 +37,11 @@ function ControllerMapInteractions() {
         dropSelection();
 
         const [svgX, svgY] = [e.offsetX, e.offsetY];
-        console.log(svgX, svgY, activeLayer());
+        console.debug(svgX, svgY, activeLayer(), getPageCode());
+        if (isInsertMode()) {
+            createHelper(svgX, svgY);
+        }
+
         markerCirclesManager.render(mapInteractionsController.isInSelection);
     }
     function handleClickMarkerCircle(circleElement) {
@@ -64,6 +67,7 @@ function ControllerMapInteractions() {
         isInsertMode: isInsertMode,
         isSelectMode: isSelectMode,
         activeLayer : activeLayer,
+        pageCode    : getPageCode,
 
         isInSelection   : isInSelection,
         addToSelection  : addToSelection,
@@ -78,6 +82,26 @@ function ControllerMapInteractions() {
 function deleteRoutine(markerUidArray) {
     console.debug('deleteRoutine', markerUidArray);
     for (const markerUid of markerUidArray) {
-        deleteMarker(markerUid);
+        deleteMarker(markerUid, function (rep) {
+            if (rep['status'] === 'ok') {
+                markerCirclesManager.delete(marker_uid);
+                messageBoxManager.del(marker_uid);
+            }
+        });
     }
+}
+
+function createHelper(posX, posY) {
+    createMarker({
+        project: projectUid,
+        page: mapInteractionsController.pageCode(),
+        layer: mapInteractionsController.activeLayer(),
+        position: {
+            center_x: posX,
+            center_y: posY,
+            rotation: 0,
+        }
+    }, function (rep) {
+        buildMarkerElement(rep);
+    });
 }

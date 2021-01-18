@@ -144,3 +144,7 @@ window.addEventListener('load', function () {
 function toggleLayerHandler(title) {
     enabledLayersController.toggle(title);
 }
+
+function buildMarkerElement(data) {
+    console.debug(data);
+}

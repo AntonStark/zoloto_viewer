@@ -35,7 +35,7 @@ def create_marker(request):
     except KeyError:
         return JsonResponse({'error': 'json object must contain fields: ' + ', '.join(fields_)}, status=400)
 
-    project = get_object_or_404(Project, pk=project)
+    project = get_object_or_404(Project, uid=uuid.UUID(project))
     page = get_object_or_404(Page, project=project, code=page)
     layer = get_object_or_404(Layer, project=project, title=layer)
 
@@ -46,7 +46,13 @@ def create_marker(request):
                     pos_x=center_x, pos_y=center_y, rotation=rotation)
 
     marker.save()
-    return JsonResponse(marker.to_json())
+    rep = marker.to_json()
+    rep.update({
+        'project': project.uid,
+        'layer': layer.title,
+        'page': page.code,
+    })
+    return JsonResponse(rep)
 
 
 @method_decorator(csrf.csrf_exempt, name='dispatch')

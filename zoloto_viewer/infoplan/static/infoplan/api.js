@@ -115,19 +115,10 @@ function handleToggleWrong(marker_uid, variable_key) {
     });
 }
 
-function deleteMarker(marker_uid) {
-    doApiCall('DELETE', API_MARKER_DELETE(marker_uid), null,
-        function (rep) {
-        if (rep['status'] === 'ok') {
-            markerCirclesManager.delete(marker_uid);
-            messageBoxManager.del(marker_uid);
-        }
-    });
+function deleteMarker(marker_uid, onSuccess) {
+    doApiCall('DELETE', API_MARKER_DELETE(marker_uid), null, onSuccess);
 }
 
-function createMarker(args) {
-    doApiCall('POST', API_MARKER_CREATE, args,
-        function (rep) {
-        console.log(rep);
-    })
+function createMarker(args, onSuccess) {
+    doApiCall('POST', API_MARKER_CREATE, args, onSuccess);
 }
