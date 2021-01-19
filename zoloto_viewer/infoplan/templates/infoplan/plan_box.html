@@ -13,12 +13,12 @@
                 {% for layer, markers in markers_by_layer.items %}
                     <g class="layer_markers layer-{{ layer.title }}">
                         <defs>
-                            <g id="marker_kind-{{ layer.kind.name }}">
+                            <g id="marker_layer-{{ layer.title }}">
                                 {{ layer.kind.svg_figures|safe }}
                             </g>
                         </defs>
                         {% for marker in markers %}
-                            <use href="#marker_kind-{{ layer.kind.name }}"
+                            <use href="#marker_layer-{{ layer.title }}"
                                  x="{{ marker.pos_x }}" y="{{ marker.pos_y }}"
                                  transform="rotate({{ marker.rotation }} {{ marker.pos_x }} {{ marker.pos_y }})"
                                  class="plan_marker"

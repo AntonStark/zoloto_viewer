@@ -102,6 +102,6 @@ function createHelper(posX, posY) {
             rotation: 0,
         }
     }, function (rep) {
-        buildMarkerElement(rep);
+        renderMarkerElement(rep);
     });
 }

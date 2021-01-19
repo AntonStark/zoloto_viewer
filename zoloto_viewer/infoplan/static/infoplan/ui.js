@@ -145,6 +145,94 @@ function toggleLayerHandler(title) {
     enabledLayersController.toggle(title);
 }
 
-function buildMarkerElement(data) {
+function renderMarkerElement(data) {
     console.debug(data);
+    function buildMark(data) {
+        const markerUid = data.marker;
+        const layerTitle = data.layer;
+        const pos = data.position;
+
+        let use = document.createElementNS('http://www.w3.org/2000/svg', 'use');
+        use.setAttributeNS(null, 'href', `#marker_layer-${layerTitle}`);
+
+        use.setAttributeNS(null, 'x', pos.center_x);
+        use.setAttributeNS(null, 'y', pos.center_y);
+        use.setAttributeNS(null, 'transform',
+            `rotate(${pos.rotation} ${pos.center_x} ${pos.center_y})`);
+
+        use.setAttributeNS(null, 'class', 'plan_marker');
+        use.setAttributeNS(null, 'data-marker-uid', markerUid);
+        use.setAttributeNS(null, 'data-layer-title', layerTitle);
+
+        return use;
+    }
+    function buildAdditionalGroup(data) {
+        function buildLinkLine(data) {
+            const posX = data.position.center_x;
+            const posY = data.position.center_y;
+
+            let line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            line.setAttributeNS(null, 'class', 'marker_link');
+
+            line.setAttributeNS(null, 'data-mr', MARKER_CIRCLE_RADIUS);
+            line.setAttributeNS(null, 'data-cx', posX);
+            line.setAttributeNS(null, 'data-cy', posY);
+
+            line.setAttributeNS(null, 'x1', posX);
+            line.setAttributeNS(null, 'y1', posY);
+            line.setAttributeNS(null, 'x2', posX);
+            line.setAttributeNS(null, 'y2', posY);
+            return line;
+        }
+        function buildMarkerCircle(data) {
+            const markerUid = data.marker;
+            const layerTitle = data.layer;
+            const pos = data.position;
+
+            let circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+
+            circle.setAttributeNS(null, 'cx', pos.center_x);
+            circle.setAttributeNS(null, 'cy', pos.center_y);
+            circle.setAttributeNS(null, 'r', MARKER_CIRCLE_RADIUS);
+
+            circle.setAttributeNS(null, 'class', 'marker_circle');
+
+            circle.setAttributeNS(null, 'data-marker-uid', markerUid);
+            circle.setAttributeNS(null, 'data-layer-title', layerTitle);
+
+            circle.setAttributeNS(null, 'onclick',
+                'mapInteractionsController.handleClickMarkerCircle(this)');
+
+            return circle;
+        }
+        function buildCommentMark(data) {
+            const posX = data.position.center_x;
+            const posY = data.position.center_y;
+            const hasComment = (data.has_comment ? 'marker_has_comment': '');
+
+            let circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+
+            circle.setAttributeNS(null, 'cx', posX);
+            circle.setAttributeNS(null, 'cy', posY);
+            circle.setAttributeNS(null, 'r', 1);
+
+            circle.setAttributeNS(null, 'transform',
+                `translate(${COMMENT_MARK_PADDING}, -${COMMENT_MARK_PADDING})`);
+            circle.setAttributeNS(null, 'class',
+                `marker_comment_mark ${hasComment}`);
+
+            return circle;
+        }
+
+        let g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        g.setAttributeNS(null, 'class', `marker_group`);
+        g.append(buildLinkLine(data), buildMarkerCircle(data), buildCommentMark(data));
+        return g;
+    }
+
+    const mapRoot = document.getElementById('project-page-plan-svg');
+    const layerGroup = mapRoot.getElementsByClassName(`layer_markers layer-${data.layer}`)[0];
+    if (layerGroup) {
+        layerGroup.append(buildMark(data), buildAdditionalGroup(data));
+    }
 }
