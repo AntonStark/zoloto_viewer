@@ -58,7 +58,8 @@ function ControllerMapInteractions() {
         messLinksManager.register(markerUid, messLink);
 
         // messageBoxManager.hideAll();
-        messageBoxManager.show(markerUid);
+        // todo Shift and Cmd+I behaviour
+        // messageBoxManager.show(markerUid);
         markerCirclesManager.render(mapInteractionsController.isInSelection);
     }
 
