@@ -24,42 +24,80 @@ function ControllerMapInteractions() {
         markerSelection.splice(0, markerSelection.length);
     }
 
+    // inner methods
+    function _deleteRoutine(markerUidArray) {
+        console.debug('deleteRoutine', markerUidArray);
+        for (const markerUid of markerUidArray) {
+            deleteMarker(markerUid, function (rep) {
+                if (rep['status'] === 'ok') {
+                    markerCirclesManager.delete(markerUid);
+                    messageBoxManager.del(markerUid);
+                }
+            });
+        }
+    }
+    function _createHelper(posX, posY) {
+        createMarker({
+            project: projectUid,
+            page: mapInteractionsController.pageCode(),
+            layer: mapInteractionsController.activeLayer(),
+            position: {
+                center_x: posX,
+                center_y: posY,
+                rotation: 0,
+            }
+        }, function (rep) {
+            renderMarkerElement(rep);
+            addToSelection(rep.marker);
+            markerCirclesManager.render(mapInteractionsController.isInSelection);
+        });
+    }
+
     // map interaction handlers
     function handleKeyUp(e) {
         console.log(e);
         if (e.key === 'Backspace') {
-            deleteRoutine(markerSelection);
+            _deleteRoutine(markerSelection);
+        } else if (
+            (e.key === 'i' || e.key === 'ш')
+            && (e.ctrlKey || e.metaKey)
+        ) {
+            messageBoxManager.showSelected(mapInteractionsController.isInSelection);
         }
 
     }
     function handleClickMap(e) {
+        const [svgX, svgY] = [e.offsetX, e.offsetY];
+        console.debug(svgX, svgY, activeLayer(), getPageCode());
+
         messageBoxManager.hideAll();
         dropSelection();
 
-        const [svgX, svgY] = [e.offsetX, e.offsetY];
-        console.debug(svgX, svgY, activeLayer(), getPageCode());
         if (isInsertMode()) {
-            createHelper(svgX, svgY);
+            _createHelper(svgX, svgY);
         }
 
         markerCirclesManager.render(mapInteractionsController.isInSelection);
     }
-    function handleClickMarkerCircle(circleElement) {
+    function handleClickMarkerCircle(e) {
+        const circleElement = e.target;
         const markerUid = circleElement.dataset.markerUid;
 
-        addToSelection(markerUid);
+        messageBoxManager.hideAll();
+        if (isSelectMode()) {
+            if (e.shiftKey) {
+                addToSelection(markerUid);
+            } else {
+                dropSelection();
+                addToSelection(markerUid);
+            }
+        }
 
         const markerElement = circleElement.parentNode.previousElementSibling;
         messageBoxManager.reg(markerElement);
-
-        markerCirclesManager.register(circleElement);
-
         const messLink = circleElement.parentNode.getElementsByClassName('marker_link')[0];
         messLinksManager.register(markerUid, messLink);
 
-        // messageBoxManager.hideAll();
-        // todo Shift and Cmd+I behaviour
-        // messageBoxManager.show(markerUid);
         markerCirclesManager.render(mapInteractionsController.isInSelection);
     }
 
@@ -78,31 +116,4 @@ function ControllerMapInteractions() {
         handleClickMap          : handleClickMap,
         handleClickMarkerCircle : handleClickMarkerCircle,
     }
-}
-
-function deleteRoutine(markerUidArray) {
-    console.debug('deleteRoutine', markerUidArray);
-    for (const markerUid of markerUidArray) {
-        deleteMarker(markerUid, function (rep) {
-            if (rep['status'] === 'ok') {
-                markerCirclesManager.delete(marker_uid);
-                messageBoxManager.del(marker_uid);
-            }
-        });
-    }
-}
-
-function createHelper(posX, posY) {
-    createMarker({
-        project: projectUid,
-        page: mapInteractionsController.pageCode(),
-        layer: mapInteractionsController.activeLayer(),
-        position: {
-            center_x: posX,
-            center_y: posY,
-            rotation: 0,
-        }
-    }, function (rep) {
-        renderMarkerElement(rep);
-    });
 }

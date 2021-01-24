@@ -184,7 +184,7 @@ function ControllerMessageBox(render) {
 
     function placeDefault(container, markerUid, messContainer) {
         _setPosition(messContainer);
-        _setDisplay(messContainer, false);
+        _setVisibility(messContainer, false);
 
         container.append(messContainer);
         _registerMessageItem(markerUid, {messContainer: messContainer});
@@ -193,7 +193,7 @@ function ControllerMessageBox(render) {
     function hideMessage(markerUid) {
         const maybeMessItem = getContainerOrNull(markerUid);
         if (maybeMessItem !== null) {
-            _setDisplay(maybeMessItem, false);
+            _setVisibility(maybeMessItem, false);
             visibleMessagesIndex[markerUid] = false;
             return true;
         }
@@ -205,7 +205,7 @@ function ControllerMessageBox(render) {
         // console.log('showMessage', markerPosition);
         const maybeMessItem = getContainerOrNull(markerUid);
         if (maybeMessItem !== null) {
-            _setDisplay(maybeMessItem);
+            _setVisibility(maybeMessItem);
             maybeMessItem.focus();
             visibleMessagesIndex[markerUid] = true;
             return;
@@ -230,7 +230,7 @@ function ControllerMessageBox(render) {
                 // а теперь выставляем положение и показываем
                 if (position) {
                     _setPosition(messContainer, position)
-                    _setDisplay(messContainer)
+                    _setVisibility(messContainer)
                     visibleMessagesIndex[markerUid] = true;
                 }
                 else {
@@ -264,7 +264,9 @@ function ControllerMessageBox(render) {
         markerElementIndex[markerUid].remove();
         delete markerElementIndex[markerUid];
 
-        _renderedMessagesIndex[markerUid].messContainer.remove();
+        let c = getContainerOrNull(markerUid);
+        if (c)
+            c.remove()
         delete _renderedMessagesIndex[markerUid];
         delete visibleMessagesIndex[markerUid];
     }
@@ -273,6 +275,13 @@ function ControllerMessageBox(render) {
         for (const markerUid in visibleMessagesIndex)
             if (visibleMessagesIndex[markerUid])
                 handlerMessBlur(markerUid);
+    }
+    function showAllSelected(isSelected) {
+        for (const markerUid of Object.keys(markerElementIndex)) {
+            if (isSelected(markerUid)) {
+                showMessage(markerUid);
+            }
+        }
     }
 
     return {
@@ -283,6 +292,7 @@ function ControllerMessageBox(render) {
         reg : registerMarkerElement,
         del : deleteMarkerAndMessage,
         hideAll: hideAllMessages,
+        showSelected: showAllSelected,
         onMapScaleChange: onMapScaleChange,
     }
 }
@@ -306,13 +316,11 @@ function _setPosition(wrapper, position) {
     }
 }
 
-function _setDisplay(wrapper, block=true) {
+function _setVisibility(wrapper, block=true) {
     if (block) {
-        // wrapper.style.display = 'block';
-        wrapper.style.opacity = '1';
+        wrapper.style.visibility = 'visible';
     }
     else {
-        // wrapper.style.display = 'none';
-        wrapper.style.opacity = '0';
+        wrapper.style.visibility = 'hidden';
     }
 }

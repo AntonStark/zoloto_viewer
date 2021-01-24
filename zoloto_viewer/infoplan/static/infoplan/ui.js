@@ -139,6 +139,10 @@ window.addEventListener('load', function () {
     if (layerLiTag) {
         setActiveLayer(layerLiTag);
     }
+
+    for (const markerCircle of document.getElementsByClassName('marker_circle')) {
+        markerCircle.addEventListener('click', mapInteractionsController.handleClickMarkerCircle);
+    }
 });
 
 function toggleLayerHandler(title) {
@@ -195,13 +199,14 @@ function renderMarkerElement(data) {
             circle.setAttributeNS(null, 'cy', pos.center_y);
             circle.setAttributeNS(null, 'r', MARKER_CIRCLE_RADIUS);
 
+            circle.setAttributeNS(null, 'id', `marker_circle-${markerUid}`);
             circle.setAttributeNS(null, 'class', 'marker_circle');
 
             circle.setAttributeNS(null, 'data-marker-uid', markerUid);
             circle.setAttributeNS(null, 'data-layer-title', layerTitle);
 
-            circle.setAttributeNS(null, 'onclick',
-                'mapInteractionsController.handleClickMarkerCircle(this)');
+            // circle.setAttributeNS(null, 'onclick',
+            //     'mapInteractionsController.handleClickMarkerCircle(this)');
 
             return circle;
         }
@@ -234,5 +239,10 @@ function renderMarkerElement(data) {
     const layerGroup = mapRoot.getElementsByClassName(`layer_markers layer-${data.layer}`)[0];
     if (layerGroup) {
         layerGroup.append(buildMark(data), buildAdditionalGroup(data));
+
+        const circleElement = document.getElementById(`marker_circle-${data.marker}`);
+        markerCirclesManager.register(circleElement);
+
+        circleElement.addEventListener('click', mapInteractionsController.handleClickMarkerCircle);
     }
 }
