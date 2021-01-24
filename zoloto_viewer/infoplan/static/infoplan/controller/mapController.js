@@ -60,7 +60,7 @@ function ControllerMapInteractions() {
             _deleteRoutine(markerSelection);
         } else if (
             (e.key === 'i' || e.key === 'ш')
-            && (e.ctrlKey || e.metaKey)
+            // && (e.ctrlKey || e.metaKey)
         ) {
             messageBoxManager.showSelected(mapInteractionsController.isInSelection);
         }
