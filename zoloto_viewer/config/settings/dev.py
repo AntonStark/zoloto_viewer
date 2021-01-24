@@ -16,7 +16,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': os.getenv('POSTGRES_DB', 'zoloto_viewer'),
         'USER': os.getenv('POSTGRES_USER', 'zoloto_viewer'),
-        'PASSWORD': os.getenv('POSTGRES_PASSWORD', 'sd13rb2o'),
+        'PASSWORD': os.getenv('POSTGRES_PASSWORD', 'kebfa2b'),
         'HOST': os.getenv('DB_HOST', 'localhost'),
         'PORT': os.getenv('DB_PORT', 5432)
     }
@@ -27,16 +27,4 @@ MEDIA_URL = '/media/'
 
 STATIC_URL = '/static/'
 
-
-# for api calls
-def discover_ip(target_ip):
-    import socket
-    try:
-        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
-            s.connect((target_ip, 80))
-            return s.getsockname()[0]
-    except OSError:
-        return 'localhost'
-
-
-BASE_URL = f'http://{discover_ip("192.168.0.1")}:8000'
+BASE_URL = f'http://localhost:8000'
