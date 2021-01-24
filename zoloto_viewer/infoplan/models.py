@@ -60,16 +60,28 @@ class Marker(models.Model):
         unique_together = [('floor', 'layer', 'ordinal')]
 
     @property
-    def comments_resolved(self):
+    def all_comments_resolved(self):
         return all(self.markercomment_set.values_list('resolved', flat=True))
+
+    @property
+    def comments_json(self):
+        return [c.to_json() for c in self.markercomment_set.all()]
 
     @property
     def has_comments(self):
         return bool(self.markercomment_set.count())
 
     @property
+    def has_errors(self):
+        return self.markervariable_set.filter(wrong=True).exists()
+
+    @property
     def number(self):
         return '/'.join([self.layer.title, self.floor.floor_caption, str(self.ordinal)])
+
+    @property
+    def variables_json(self):
+        return [v.to_json() for v in MarkerVariable.objects.vars_of_marker(self)]
 
     @staticmethod
     def multipoint_mid(mp):
@@ -115,16 +127,13 @@ class Marker(models.Model):
             'number': self.number,
             'correct': self.correct,
             'has_comment': self.has_comments,
-            'comments_resolved': self.comments_resolved,
+            'comments_resolved': self.all_comments_resolved,
             'position': {
                 'center_x': self.pos_x,
                 'center_y': self.pos_y,
                 'rotation': self.rotation,
             }
         }
-
-    def has_errors(self):
-        return self.markervariable_set.filter(wrong=True).exists()
 
     def deduce_correctness(self, force_true_false=False, save=False):
         """
@@ -133,7 +142,7 @@ class Marker(models.Model):
         """
         return  # disable marker correctness for now
 
-        if self.has_errors():
+        if self.has_errors:
             self.correct = False
         else:
             if force_true_false or self.has_comments or self.correct is not None:
@@ -167,6 +176,7 @@ class VariablesManager(models.Manager):
         self.bulk_update(vars_by_key.values(), ['wrong'])
 
     def vars_of_marker(self, marker):
+        # todo it's just variable_set with proper ordering in Variable.Meta !!1
         return sorted(MarkerVariable.objects.filter(marker=marker).all(), key=lambda v: int(v.key))
 
 
@@ -201,3 +211,10 @@ class MarkerComment(models.Model):
 
     class Meta:
         ordering = ['date_created']
+
+    def to_json(self):
+        return {'content': self.content, 'date_created': self.date_created, 'resolved': self.resolved}
+
+    def resolve(self):
+        self.resolved = True
+        self.save()

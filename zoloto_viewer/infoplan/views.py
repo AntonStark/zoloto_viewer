@@ -63,12 +63,11 @@ class MarkerView(View):
             marker = Marker.objects.get(uid=marker_uid)
         except Marker.DoesNotExist:
             raise Http404
-        variables = MarkerVariable.objects.vars_of_marker(marker)
 
         rep = marker.to_json()
         rep.update({
-            'comment': marker.comment,
-            'variables': tuple(map(MarkerVariable.to_json, variables)),
+            'comments': marker.comments_json,
+            'variables': marker.variables_json,
         })
         rep.update({
             'layer': {'title': marker.layer.title, 'color': marker.layer.color.hex_code}
@@ -155,6 +154,21 @@ def load_marker_review(request, marker_uid: uuid.UUID):
     marker.deduce_correctness(explicit_end_review)  # fixme this is dead code, remove?
     marker.save()
 
+    return JsonResponse(marker.to_json())
+
+
+@login_required
+@http.require_POST
+@csrf.csrf_exempt
+@marker_api
+def resolve_marker_comments(request, marker_uid: uuid.UUID):
+    try:
+        marker = Marker.objects.get(uid=marker_uid)
+    except Marker.DoesNotExist:
+        raise Http404
+
+    for c in marker.markercomment_set.all():
+        c.resolve()
     return JsonResponse(marker.to_json())
 
 
