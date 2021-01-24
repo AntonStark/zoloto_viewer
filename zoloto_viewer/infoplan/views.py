@@ -149,8 +149,10 @@ def load_marker_review(request, marker_uid: uuid.UUID):
         marker = Marker.objects.get(uid=marker_uid)
     except Marker.DoesNotExist:
         raise Http404
-    marker.comment = comment
-    marker.deduce_correctness(explicit_end_review)
+    # always create new comment, previous comments not visible
+    if comment:
+        marker.markercomment_set.create(content=comment)
+    marker.deduce_correctness(explicit_end_review)  # fixme this is dead code, remove?
     marker.save()
 
     return JsonResponse(marker.to_json())

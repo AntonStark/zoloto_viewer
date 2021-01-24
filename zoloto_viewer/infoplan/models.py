@@ -40,17 +40,17 @@ class Marker(models.Model):
     После загрузки нового csv данные об ошибках стираются
     """
     uid = models.UUIDField(default=uuid.uuid4, primary_key=True)
+
     layer = models.ForeignKey('viewer.Layer', on_delete=models.SET_NULL, null=True)
     floor = models.ForeignKey('viewer.Page', on_delete=models.CASCADE)
-
     ordinal = models.IntegerField(null=True, default=None)
+
     points = fields.JSONField(default=list)     # [ [P], ..., [P] ] | [ [P1, P2, P3], ... ], P = [x: float, y: float]
     pos_x = models.IntegerField()
     pos_y = models.IntegerField()
     rotation = models.IntegerField(default=0)
 
     correct = models.BooleanField(null=True, default=None)
-    comment = models.TextField(blank=True)
 
     objects = MarkersManager()
     CIRCLE_RADIUS = 5
@@ -58,6 +58,14 @@ class Marker(models.Model):
 
     class Meta:
         unique_together = [('floor', 'layer', 'ordinal')]
+
+    @property
+    def comments_resolved(self):
+        return all(self.markercomment_set.values_list('resolved', flat=True))
+
+    @property
+    def has_comments(self):
+        return bool(self.markercomment_set.count())
 
     @property
     def number(self):
@@ -106,16 +114,14 @@ class Marker(models.Model):
             'marker': self.uid,
             'number': self.number,
             'correct': self.correct,
-            'has_comment': self.has_comment(),
+            'has_comment': self.has_comments,
+            'comments_resolved': self.comments_resolved,
             'position': {
                 'center_x': self.pos_x,
                 'center_y': self.pos_y,
                 'rotation': self.rotation,
             }
         }
-
-    def has_comment(self):
-        return bool(self.comment)
 
     def has_errors(self):
         return self.markervariable_set.filter(wrong=True).exists()
@@ -130,7 +136,7 @@ class Marker(models.Model):
         if self.has_errors():
             self.correct = False
         else:
-            if force_true_false or self.has_comment() or self.correct is not None:
+            if force_true_false or self.has_comments or self.correct is not None:
                 self.correct = True
         if save:
             self.save()
@@ -182,3 +188,16 @@ class MarkerVariable(models.Model):
 
     def to_json(self):
         return {'key': self.key, 'value': self.value, 'wrong': self.wrong}
+
+
+class MarkerComment(models.Model):
+    """
+    Позволяет вести список комментариев маркера
+    """
+    marker = models.ForeignKey(Marker, on_delete=models.CASCADE)
+    content = models.TextField()
+    date_created = models.DateTimeField(auto_now=True)
+    resolved = models.BooleanField(null=False, default=False)
+
+    class Meta:
+        ordering = ['date_created']
