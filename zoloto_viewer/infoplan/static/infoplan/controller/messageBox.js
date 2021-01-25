@@ -261,7 +261,9 @@ function ControllerMessageBox(render) {
         markerElementIndex[markerElement.dataset.markerUid] = markerElement;
     }
     function deleteMarkerAndMessage(markerUid) {
-        markerElementIndex[markerUid].remove();
+        let m = getMarkerOrNull(markerUid)
+        if (m)
+            m.remove();
         delete markerElementIndex[markerUid];
 
         let c = getContainerOrNull(markerUid);
@@ -291,6 +293,7 @@ function ControllerMessageBox(render) {
         get : getContainerOrNull,
         reg : registerMarkerElement,
         del : deleteMarkerAndMessage,
+
         hideAll: hideAllMessages,
         showSelected: showAllSelected,
         onMapScaleChange: onMapScaleChange,

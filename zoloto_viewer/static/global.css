@@ -352,6 +352,14 @@ form#actions_menu_scale label {
     list-style-position: inside;
 }
 
+.variables_container textarea {
+    resize: none;
+}
+
+.variables-container-side-block {
+    display: inline-block;
+}
+
 .variables_container ul li {
     white-space: nowrap;
     font-size: 12px;

@@ -70,7 +70,11 @@ class MarkerView(View):
             'variables': marker.variables_json,
         })
         rep.update({
-            'layer': {'title': marker.layer.title, 'color': marker.layer.color.hex_code}
+            'layer': {
+                'title': marker.layer.title,
+                'color': marker.layer.color.hex_code,
+                'kind': {'name': marker.layer.kind.name, 'sides': marker.layer.kind.sides}
+            }
         })
         return JsonResponse(rep)
 

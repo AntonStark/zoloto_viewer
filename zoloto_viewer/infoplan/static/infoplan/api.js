@@ -98,6 +98,10 @@ function handlerConfirmBtmClick(marker_uid) {
     messageBoxManager.hide(marker_uid);
 }
 
+function handlerInfoplanMessSaveBtn(marker_uid) {
+
+}
+
 function handlerMessageDivFocus(e) {
     const wrapper = e.target;
     const commentField = wrapper.getElementsByTagName('textarea');

@@ -188,6 +188,9 @@ function renderMarkerElement(data) {
         const circleElement = document.getElementById(`marker_circle-${data.marker}`);
         markerCirclesManager.register(circleElement);
 
+        const markerElement = circleElement.parentNode.previousElementSibling;
+        messageBoxManager.reg(markerElement);
+
         circleElement.addEventListener('click', mapInteractionsController.handleClickMarkerCircle);
     }
 }
