@@ -188,6 +188,7 @@ class MarkerVariable(models.Model):
     marker = models.ForeignKey(Marker, on_delete=models.CASCADE)
 
     key = models.CharField(max_length=32, blank=False, editable=False)
+    side = models.IntegerField(default=0)
     value = models.TextField()
     wrong = models.BooleanField(null=False, default=False)
 
@@ -197,7 +198,7 @@ class MarkerVariable(models.Model):
         unique_together = ['marker', 'key']
 
     def to_json(self):
-        return {'key': self.key, 'value': self.value, 'wrong': self.wrong}
+        return {'key': self.key, 'side': self.side, 'value': self.value, 'wrong': self.wrong}
 
 
 class MarkerComment(models.Model):

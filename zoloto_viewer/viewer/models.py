@@ -131,6 +131,7 @@ def csv_upload_prev_path(obj: 'Layer', filename):
 class MarkerKind(models.Model):
     id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=16, blank=False)
+    sides = models.IntegerField(default=1)
     svg_figures = models.TextField()
 
 

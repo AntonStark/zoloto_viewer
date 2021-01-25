@@ -36,6 +36,6 @@ class Migration(migrations.Migration):
                 ('name', models.CharField(max_length=16)),
             ],
         ),
-        migrations.RunPython(create_marker_kinds),
+        migrations.RunPython(create_marker_kinds, migrations.RunPython.noop),
         migrations.RunSQL(sync_sequence()),
     ]

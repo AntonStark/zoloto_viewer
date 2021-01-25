@@ -76,6 +76,12 @@ class MarkerView(View):
 
     @method_decorator(login_required)
     @method_decorator(marker_api)
+    def put(self, _, marker_uid: uuid.UUID):
+        """Set variables of marker"""
+        pass    # validate on var that side < layer.kind.sides
+
+    @method_decorator(login_required)
+    @method_decorator(marker_api)
     def delete(self, _, marker_uid: uuid.UUID):
         try:
             marker = Marker.objects.get(uid=marker_uid)
@@ -151,7 +157,7 @@ def load_marker_review(request, marker_uid: uuid.UUID):
     # always create new comment, previous comments not visible
     if comment:
         marker.markercomment_set.create(content=comment)
-    marker.deduce_correctness(explicit_end_review)  # fixme this is dead code, remove?
+    marker.deduce_correctness(explicit_end_review)  # fixme this is а dead code, remove?
     marker.save()
 
     return JsonResponse(marker.to_json())
