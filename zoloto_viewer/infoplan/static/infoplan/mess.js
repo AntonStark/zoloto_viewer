@@ -1,5 +1,6 @@
 "use strict";
 
+// RENDER
 function buildMessBox(data) {
     function buildVariablesBlock(data) {
         let variablesList = document.createElement('ul');
@@ -54,4 +55,56 @@ function buildMessBox(data) {
     boxDiv.setAttribute('class', 'message_box');
     boxDiv.append(buildVariablesBlock(data), buildCommentBlock(data), buildConfirmBtn(data));
     return boxDiv;
+}
+
+// HANDLERS
+function handlerMessBlur(marker_uid) {
+    const box = messageBoxManager.get(marker_uid);
+    if (box !== undefined) {
+        if (box.dataset.btnClicked) {
+            delete box.dataset.btnClicked;
+            return;
+        }
+    }
+
+    const variables = varWrongnessManager.data(marker_uid);
+    let comment = messageBoxManager.read(marker_uid);
+    if (comment === undefined) {
+        console.error('method for comment returned undefined', marker_uid);
+        comment = '';
+    }
+
+    const data = {
+        variables: variables,
+        comment: comment,
+        exit_type: 'blur',
+    };
+    doApiCall('POST', API_MARKER_LOAD_REVIEW(marker_uid), data,
+        (rep) => markerCirclesManager.sync(rep));
+
+    messageBoxManager.hide(marker_uid);
+}
+
+function handlerConfirmBtmClick(marker_uid) {
+    const box = messageBoxManager.get(marker_uid);
+    if (box !== undefined) {    // to distinguish click form blur in blur handler
+        box.dataset.btnClicked = 'true';
+    }
+
+    const variables = varWrongnessManager.data(marker_uid);
+    let comment = messageBoxManager.read(marker_uid);
+    if (comment === undefined) {
+        console.error('method for comment returned undefined', marker_uid);
+        comment = '';
+    }
+
+    const data = {
+        variables: variables,
+        comment: comment,
+        exit_type: 'button',
+    };
+    doApiCall('POST', API_MARKER_LOAD_REVIEW(marker_uid), data,
+        (rep) => markerCirclesManager.sync(rep));
+
+    messageBoxManager.hide(marker_uid);
 }

@@ -1,13 +1,14 @@
 "use strict";
 
 const API_MARKER_CREATE      = `${BASE_URL}/viewer/api/marker/`;
-const API_MARKER_DELETE      = (markerUid) => `${BASE_URL}/viewer/api/marker/${markerUid}`;
 const API_MARKER_GET_DATA    = (markerUid) => `${BASE_URL}/viewer/api/marker/${markerUid}`;
+const API_MARKER_PUT_VARS    = (markerUid) => `${BASE_URL}/viewer/api/marker/${markerUid}`;
+const API_MARKER_DELETE      = (markerUid) => `${BASE_URL}/viewer/api/marker/${markerUid}`;
 const API_VAR_ALTER_WRONG    = (markerUid) => `${BASE_URL}/viewer/api/marker/${markerUid}/variable/`;
 const API_MARKER_LOAD_REVIEW = (markerUid) => `${BASE_URL}/viewer/api/marker/${markerUid}/review/`;
 const API_PROJECT_PDF_GENERATION = (title) => `${BASE_URL}/viewer/project/${title}/pdf/generate/`
 
-function doApiCall(method, url, data, onResponse) {
+function doApiCall(method, url, data, onResponse, onError=undefined) {
     let req = new XMLHttpRequest();
     req.open(method, url);
 
@@ -17,6 +18,8 @@ function doApiCall(method, url, data, onResponse) {
                 const rep = JSON.parse(req.responseText);
                 // console.debug(rep);
                 onResponse(rep);
+            } else if (onError) {
+                onError(rep);
             }
             else {
                 console.error(url, 'returned status = ', req.status, req);
@@ -45,61 +48,6 @@ function pdfRequest(title) {
         }
     };
     req.send();
-}
-
-function handlerMessBlur(marker_uid) {
-    const box = messageBoxManager.get(marker_uid);
-    if (box !== undefined) {
-        if (box.dataset.btnClicked) {
-            delete box.dataset.btnClicked;
-            return;
-        }
-    }
-
-    const variables = varWrongnessManager.data(marker_uid);
-    let comment = messageBoxManager.read(marker_uid);
-    if (comment === undefined) {
-        console.error('method for comment returned undefined', marker_uid);
-        comment = '';
-    }
-
-    const data = {
-        variables: variables,
-        comment: comment,
-        exit_type: 'blur',
-    };
-    doApiCall('POST', API_MARKER_LOAD_REVIEW(marker_uid), data,
-         (rep) => markerCirclesManager.sync(rep));
-
-    messageBoxManager.hide(marker_uid);
-}
-
-function handlerConfirmBtmClick(marker_uid) {
-    const box = messageBoxManager.get(marker_uid);
-    if (box !== undefined) {    // to distinguish click form blur in blur handler
-        box.dataset.btnClicked = 'true';
-    }
-
-    const variables = varWrongnessManager.data(marker_uid);
-    let comment = messageBoxManager.read(marker_uid);
-    if (comment === undefined) {
-        console.error('method for comment returned undefined', marker_uid);
-        comment = '';
-    }
-
-    const data = {
-        variables: variables,
-        comment: comment,
-        exit_type: 'button',
-    };
-    doApiCall('POST', API_MARKER_LOAD_REVIEW(marker_uid), data,
-        (rep) => markerCirclesManager.sync(rep));
-
-    messageBoxManager.hide(marker_uid);
-}
-
-function handlerInfoplanMessSaveBtn(marker_uid) {
-
 }
 
 function handlerMessageDivFocus(e) {

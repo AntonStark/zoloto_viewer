@@ -1,6 +1,7 @@
+import collections
 import uuid
 from django.contrib.postgres import fields
-from django.db import models
+from django.db import models, transaction
 from django.utils.safestring import mark_safe
 
 
@@ -21,18 +22,6 @@ class MarkersManager(models.Manager):
                 floor = page_by_caption[indd_floor]
 
             self.create(layer=layer, floor=floor, number=number, points=m_path)
-
-    def update_variables(self, layer, marker_info):
-        """
-        :param marker_info: { number -> (path, vars, indd_floor, n) }
-        """
-        for number, params in marker_info.items():
-            try:
-                marker = self.get(layer=layer, number=number)
-            except self.model.DoesNotExist:
-                continue    # some of numbers may not have markers due to skip missing pages
-            else:
-                MarkerVariable.objects.reset_values(marker, params[1])
 
 
 class Marker(models.Model):
@@ -152,21 +141,16 @@ class Marker(models.Model):
 
 
 class VariablesManager(models.Manager):
-    def reset_values(self, marker, new_variables):
-        def _reset_from_dict(m, vars_dict):
-            self.filter(marker=m).delete()
-            self.bulk_create(
-                self.model(marker=m, key=k, value=v)
-                for k, v in vars_dict.items()
-                if v != ''
-            )
-
-        if isinstance(new_variables, dict):
-            _reset_from_dict(marker, new_variables)
-        elif isinstance(new_variables, (list, tuple)):
-            _reset_from_dict(marker, dict(enumerate(new_variables, 1)))
-        else:
-            raise TypeError('new_variables must be dict, list or tuple')
+    def reset_values(self, marker, vars_by_side):
+        with transaction.atomic():
+            marker.markervariable_set.all().delete()
+            variables = []
+            for side, side_vars in vars_by_side.items():
+                variables += [
+                    MarkerVariable(marker=marker, side=side, key=k, value=v)
+                    for k, v in enumerate(side_vars, start=1)
+                ]
+            self.bulk_create(variables)
 
     def reset_wrong_statuses(self, marker, dict_of_wrongness: dict):
         vars_by_key = dict(map(lambda v: (v.key, v), self.filter(marker=marker).all()))
@@ -179,6 +163,22 @@ class VariablesManager(models.Manager):
         # todo it's just variable_set with proper ordering in Variable.Meta !!1
         return sorted(MarkerVariable.objects.filter(marker=marker).all(), key=lambda v: int(v.key))
 
+    def vars_by_side(self, marker: Marker):
+        # [
+        #   {side: 1, variables: ['a', 'b']},
+        #   {side: 2, variables: []}
+        # ]
+        index = collections.defaultdict(list)
+        vars = marker.markervariable_set.values_list('side', 'key', 'value')
+        for s, k, v in vars:
+            index[s].append(v)
+
+        res = [
+            {'side': side, 'variables': var_list}
+            for side, var_list in index.items()
+        ]
+        return res
+
 
 class MarkerVariable(models.Model):
     """
@@ -187,15 +187,16 @@ class MarkerVariable(models.Model):
     """
     marker = models.ForeignKey(Marker, on_delete=models.CASCADE)
 
-    key = models.CharField(max_length=32, blank=False, editable=False)
     side = models.IntegerField(default=0)
+    key = models.IntegerField(null=False, editable=False)
     value = models.TextField()
     wrong = models.BooleanField(null=False, default=False)
 
     objects = VariablesManager()
 
     class Meta:
-        unique_together = ['marker', 'key']
+        unique_together = ['marker', 'side', 'key']
+        ordering = ['side', 'key']
 
     def to_json(self):
         return {'key': self.key, 'side': self.side, 'value': self.value, 'wrong': self.wrong}

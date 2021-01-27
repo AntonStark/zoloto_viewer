@@ -10,6 +10,11 @@ function buildMessBox(data) {
                 4: 'Сторона D',
             }
             function buildSideBlock(data) {
+                const infoplanBySide = Object.fromEntries(
+                    data.infoplan.map(sideObj => [sideObj.side, sideObj.variables])
+                )
+                const sideVars = infoplanBySide[nSide];
+
                 let sideBlock = document.createElement('div');
                 sideBlock.setAttribute('class', 'variables-container-side-block')
 
@@ -18,6 +23,11 @@ function buildMessBox(data) {
                 sideLabel.textContent = sideLabels[nSide];
 
                 let sideInput = document.createElement('textarea');
+                sideInput.setAttribute('class', 'variables-container-side-input')
+                sideInput.setAttribute('data-number', nSide);
+
+                const inputValue = ( sideVars ? sideVars.join(';\n') + ';' : '');
+                sideInput.value = inputValue;
                 sideInput.addEventListener('blur', variablesContainerBlur);
 
                 sideBlock.append(sideLabel, sideInput);
@@ -27,7 +37,6 @@ function buildMessBox(data) {
         }
 
         const sides = data.layer.kind.sides;
-        console.log(data);
 
         let variablesLabel = document.createElement('span');
         variablesLabel.setAttribute('style', 'font-size: 10px;');
@@ -69,13 +78,13 @@ function buildMessBox(data) {
         let btnLink = document.createElement('a');
         btnLink.setAttribute('class', 'message_confirm_btn');
         btnLink.textContent = 'Сохранить';
-        btnLink.addEventListener('click', () => handlerInfoplanMessSaveBtn(markerUid));
+        btnLink.addEventListener('click', () => handlerConfirmBtmClick(markerUid));
         return btnLink;
     }
 
     const boxDiv = document.createElement('div');
     boxDiv.setAttribute('class', 'message_box');
-    boxDiv.addEventListener('onkeyup', function (e) {e.stopPropagation();})
+    boxDiv.addEventListener('keyup', function (e) {e.stopPropagation();})
     boxDiv.append(buildInfoplanBlock(data), buildCommentBlock(data), buildSaveBtn(data));
     return boxDiv;
 }
@@ -88,4 +97,67 @@ function variablesContainerBlur(e) {
         v = v + ';\n';
         e.target.value = v;
     }
+}
+
+
+function handlerMessBlur(marker_uid) {
+    const box = messageBoxManager.get(marker_uid);
+    if (box !== undefined) {
+        if (box.dataset.btnClicked) {
+            delete box.dataset.btnClicked;
+            return;
+        }
+    }
+
+    const variables = varWrongnessManager.data(marker_uid);
+    let comment = messageBoxManager.read(marker_uid);
+    if (comment === undefined) {
+        console.error('method for comment returned undefined', marker_uid);
+        comment = '';
+    }
+
+    const data = {
+        variables: variables,
+        comment: comment,
+        exit_type: 'blur',
+    };
+    // doApiCall('POST', API_MARKER_LOAD_REVIEW(marker_uid), data,
+    //     (rep) => markerCirclesManager.sync(rep));
+
+    // todo refactor these handlers with onSuccess and onError, .hide call below inappropriate
+    messageBoxManager.hide(marker_uid);
+}
+
+function handlerConfirmBtmClick(marker_uid) {
+    function parseSideVariables(sideInputValue) {
+        if (sideInputValue.endsWith(';\n')) {
+            sideInputValue = sideInputValue.slice(0, -2);
+        } else if (sideInputValue.endsWith(';')) {
+            sideInputValue = sideInputValue.slice(0, -1);
+        }
+
+        const sideVars = sideInputValue.split(';\n');
+        return sideVars;
+    }
+
+    const box = messageBoxManager.get(marker_uid);
+    if (!box) return;
+    console.debug('btnSave box', box);
+
+    const sides = box.getElementsByClassName('variables-container-side-input');
+    let sideObjects = [];
+    for (const s of sides) {
+        sideObjects.push({side: Number(s.dataset.number), variables: parseSideVariables(s.value)})
+    }
+
+    const req = {
+        infoplan: sideObjects
+    }
+    doApiCall('PUT', API_MARKER_PUT_VARS(marker_uid), req,
+        function (rep) {
+        messageBoxManager.hide(marker_uid);
+    }, function (rep) {
+        console.log(rep);
+    });
+
 }

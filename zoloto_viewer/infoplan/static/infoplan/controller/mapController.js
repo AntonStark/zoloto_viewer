@@ -26,7 +26,7 @@ function ControllerMapInteractions() {
 
     // inner methods
     function _deleteRoutine(markerUidArray) {
-        console.debug('deleteRoutine', markerUidArray);
+        // console.debug('deleteRoutine', markerUidArray);
         for (const markerUid of markerUidArray) {
             deleteMarker(markerUid, function (rep) {
                 if (rep['status'] === 'ok') {
@@ -35,6 +35,7 @@ function ControllerMapInteractions() {
                 }
             });
         }
+    //    todo syns selection after delete
     }
     function _createHelper(posX, posY) {
         createMarker({

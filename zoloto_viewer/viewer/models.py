@@ -250,28 +250,6 @@ def delete_layer_files(sender, instance: Layer, *args, **kwargs):
         _delete_file(instance.csv_data.path)
 
 
-# noinspection PyUnusedLocal
-@receiver(models.signals.post_save, sender=Layer)
-def process_layer_csv(sender, instance: Layer, *args, **kwargs):
-    from zoloto_viewer.infoplan.models import Marker
-
-    if not (instance.csv_data and instance.sync_needed):
-        return
-
-    raw_data = data_files.marker.parse_markers_file(instance.csv_data.file)
-    info = data_files.marker.extend_markers_data(raw_data)
-    #    у этого процесса есть несколько этапов:
-    # 1) найти какие маркеры исчезли в новом файле, записи для них удалить
-    # 2) создать записи в базе для совсем новых маркеров
-    # 3) у всех обновить переменные если надо
-    # todo проверять наличие изменений в переменных маркера и сбрасывать статус проверки только если изменился
-    Marker.objects.remove_excess(instance, info.keys())
-    Marker.objects.create_missing(instance, instance.project.pages_by_caption(), info)
-    Marker.objects.update_variables(instance, info)
-
-    instance.set_synced()
-
-
 def plan_upload_path(obj: 'Page', filename):
     return path.join(obj.project.project_files_dir(), f'pages/{filename}')
 
