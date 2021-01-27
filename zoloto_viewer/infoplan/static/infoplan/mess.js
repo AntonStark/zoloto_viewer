@@ -70,20 +70,31 @@ function buildMessBox(data) {
             const comment = cObj.content;
             let commentBlock = document.createElement('div');
             commentBlock.textContent = comment;
+            if (cObj.resolved) commentBlock.setAttribute('style', 'color: lightgrey;');
             return commentBlock;
         }
         const [hasComment, comments] = [data.has_comment, data.comments];
+        const label = ( hasComment ? 'Комментарии' : 'Комментариев нет');
+        const placeholder = ( hasComment ? 'Добавить комментарий' : 'Можно не заполнять');
 
         let commentLabel = document.createElement('span');
         commentLabel.setAttribute('style', 'font-size: 10px;');
-        commentLabel.textContent = ( hasComment ? 'Комментарий' : 'Комментариев нет');
+        commentLabel.textContent = label;
 
         let commentsBlock = document.createElement('div');
-        commentsBlock.setAttribute('class', 'comment_field');
         commentsBlock.append(...comments.map(c => buildCommentBlock(c)))
 
+        let commentInput = document.createElement('textarea');
+        commentInput.setAttribute('class', 'comment_field');
+        commentInput.setAttribute('placeholder', placeholder);
+        commentInput.setAttribute('onkeyup', 'event.stopPropagation()');
+
         let commentDiv = document.createElement('div');
-        commentDiv.append(commentLabel, commentsBlock);
+        commentDiv.append(
+            commentLabel,
+            commentsBlock,
+            commentInput
+        );
         return commentDiv;
     }
     function buildConfirmBtn(data) {
@@ -97,7 +108,12 @@ function buildMessBox(data) {
 
     const boxDiv = document.createElement('div');
     boxDiv.setAttribute('class', 'message_box');
-    boxDiv.append(buildHeader(data), buildInfoplanBlock(data), buildCommentBlock(data), buildConfirmBtn(data));
+    boxDiv.append(
+        buildHeader(data),
+        buildInfoplanBlock(data),
+        buildCommentBlock(data),
+        buildConfirmBtn(data)
+    );
     return boxDiv;
 }
 

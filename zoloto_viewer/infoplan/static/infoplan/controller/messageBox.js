@@ -251,7 +251,8 @@ function ControllerMessageBox(render) {
         if (!box)
             return undefined;
 
-        const commentField = box.getElementsByTagName('textarea');
+        const commentField = box.getElementsByClassName('comment_field');
+        console.log(commentField, commentField.length);
         if (commentField.length > 0)
             return commentField[0].value;
         else

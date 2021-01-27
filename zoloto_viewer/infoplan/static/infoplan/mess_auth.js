@@ -59,13 +59,14 @@ function buildMessBox(data) {
             const comment = cObj.content;
             let commentBlock = document.createElement('div');
             commentBlock.textContent = comment;
+            if (cObj.resolved) commentBlock.setAttribute('style', 'color: lightgrey;');
             return commentBlock;
         }
         const [hasComment, comments] = [data.has_comment, data.comments];
 
         let commentLabel = document.createElement('span');
         commentLabel.setAttribute('style', 'font-size: 10px;');
-        commentLabel.textContent = ( hasComment ? 'Комментарий' : 'Комментариев нет');
+        commentLabel.textContent = ( hasComment ? 'Комментарии' : 'Комментариев нет');
 
         let commentsBlock = document.createElement('div');
         commentsBlock.setAttribute('class', 'comment_field');
@@ -87,7 +88,11 @@ function buildMessBox(data) {
     const boxDiv = document.createElement('div');
     boxDiv.setAttribute('class', 'message_box');
     boxDiv.addEventListener('keyup', function (e) {e.stopPropagation();})
-    boxDiv.append(buildInfoplanBlock(data), buildCommentBlock(data), buildSaveBtn(data));
+    boxDiv.append(
+        buildInfoplanBlock(data),
+        buildCommentBlock(data),
+        buildSaveBtn(data)
+    );
     return boxDiv;
 }
 
