@@ -26,6 +26,7 @@ function buildMessBox(data) {
                 sideInput.setAttribute('class', 'variables-container-side-input')
                 sideInput.setAttribute('data-number', nSide);
 
+                // noinspection UnnecessaryLocalVariableJS
                 const inputValue = ( sideVars ? sideVars.join(';\n') + ';' : '');
                 sideInput.value = inputValue;
                 sideInput.addEventListener('blur', variablesContainerBlur);
@@ -54,12 +55,13 @@ function buildMessBox(data) {
         return infoplanDiv;
     }
     function buildCommentBlock(data) {
-        function buildCommentBlock(comment) {
+        function buildCommentBlock(cObj) {
+            const comment = cObj.content;
             let commentBlock = document.createElement('div');
             commentBlock.textContent = comment;
             return commentBlock;
         }
-        const [hasComment, comments] = [data.has_comment, data.comments.map(cObj => cObj.content)];
+        const [hasComment, comments] = [data.has_comment, data.comments];
 
         let commentLabel = document.createElement('span');
         commentLabel.setAttribute('style', 'font-size: 10px;');

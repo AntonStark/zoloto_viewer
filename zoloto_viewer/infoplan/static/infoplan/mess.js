@@ -2,44 +2,88 @@
 
 // RENDER
 function buildMessBox(data) {
-    function buildVariablesBlock(data) {
-        let variablesList = document.createElement('ul');
+    function buildHeader(data) {
+        const markerNumber = data.number;
+        let header = document.createElement('div');
+        header.textContent = markerNumber;
+        return header;
+    }
+    function buildInfoplanBlock(data) {
+        function buildSideNBlock(nSide) {
+            const sideLabels = {
+                1: 'Сторона A',
+                2: 'Сторона B',
+                3: 'Сторона C',
+                4: 'Сторона D',
+            }
+            function buildSideBlock(data) {
+                const infoplanBySide = Object.fromEntries(
+                    data.infoplan.map(sideObj => [sideObj.side, sideObj.variables])
+                )
+                const sideVars = infoplanBySide[nSide];
 
-        let [numberLine, emptyLine] = [document.createElement('li'), document.createElement('li')];
-        numberLine.style.cursor = emptyLine.style.cursor = 'unset';
-        numberLine.textContent = data.number;
-        emptyLine.innerHTML = '&nbsp;';
-        variablesList.append(numberLine, emptyLine);
+                let sideBlock = document.createElement('div');
+                sideBlock.setAttribute('class', 'variables-container-side-block')
 
-        variablesList.append(...data.variables.map(varData => {
-            let variableItem = document.createElement('li');
-            variableItem.setAttribute('data-variable-key', varData.key);
-            variableItem.textContent = varData.value;
-            variableItem.addEventListener('click', () => handleToggleWrong(data.marker, varData.key));
-            varWrongnessManager.register(data.marker, varData.key, variableItem, varData.wrong);
-            return variableItem;
-        }));
+                let sideLabel = document.createElement('div');
+                sideLabel.setAttribute('style', 'font-size: 10px;');
+                sideLabel.textContent = sideLabels[nSide];
+
+                let sideList = document.createElement('ul');
+                sideList.setAttribute('data-number', nSide);
+
+                sideList.append(...sideVars.map(varData => {
+                    let variableItem = document.createElement('li');
+                    // variableItem.setAttribute('data-variable-key', varData.key);
+                    // variableItem.textContent = varData.value;
+                    variableItem.textContent = varData;
+                    // variableItem.addEventListener('click', () => handleToggleWrong(data.marker, varData.key));
+                    // varWrongnessManager.register(data.marker, varData.key, variableItem, varData.wrong);
+                    return variableItem;
+                }));
+
+                sideBlock.append(sideLabel, sideList);
+                return sideBlock;
+            }
+            return buildSideBlock;
+        }
+
+        const sides = data.layer.kind.sides;
+
+        let variablesLabel = document.createElement('span');
+        variablesLabel.setAttribute('style', 'font-size: 10px;');
+        variablesLabel.textContent = 'Инфоплан';
 
         let variablesDiv  = document.createElement('div');
         variablesDiv.setAttribute('class', `variables_container`);
-        variablesDiv.append(variablesList);
-        return variablesDiv;
+
+        const sideNumbers = Array.from(Array(sides));
+        variablesDiv.append(...sideNumbers.map((e, i) => buildSideNBlock(i + 1)(data)));
+
+        let infoplanDiv  = document.createElement('div');
+        infoplanDiv.append(variablesLabel, variablesDiv);
+
+        return infoplanDiv;
     }
     function buildCommentBlock(data) {
+        function buildCommentBlock(cObj) {
+            const comment = cObj.content;
+            let commentBlock = document.createElement('div');
+            commentBlock.textContent = comment;
+            return commentBlock;
+        }
+        const [hasComment, comments] = [data.has_comment, data.comments];
+
         let commentLabel = document.createElement('span');
         commentLabel.setAttribute('style', 'font-size: 10px;');
-        commentLabel.textContent = 'Комментарий';
+        commentLabel.textContent = ( hasComment ? 'Комментарий' : 'Комментариев нет');
 
-        let commentInput = document.createElement('textarea');
-        commentInput.setAttribute('class', 'comment_field');
-        commentInput.setAttribute('placeholder', 'Можно не заполнять');
-        commentInput.setAttribute('onkeyup', 'event.stopPropagation()');
-        if (data.has_comment) {
-            commentInput.value = data.comment;
-        }
+        let commentsBlock = document.createElement('div');
+        commentsBlock.setAttribute('class', 'comment_field');
+        commentsBlock.append(...comments.map(c => buildCommentBlock(c)))
 
         let commentDiv = document.createElement('div');
-        commentDiv.append(commentLabel, commentInput);
+        commentDiv.append(commentLabel, commentsBlock);
         return commentDiv;
     }
     function buildConfirmBtn(data) {
@@ -53,7 +97,7 @@ function buildMessBox(data) {
 
     const boxDiv = document.createElement('div');
     boxDiv.setAttribute('class', 'message_box');
-    boxDiv.append(buildVariablesBlock(data), buildCommentBlock(data), buildConfirmBtn(data));
+    boxDiv.append(buildHeader(data), buildInfoplanBlock(data), buildCommentBlock(data), buildConfirmBtn(data));
     return boxDiv;
 }
 
