@@ -1,3 +1,6 @@
+{% load static %}
+<script src="{% static 'fontawesome_free/js/all.min.js' %}"></script>
+<script src="{% static 'viewer/areas_drag_n_drop.js' %}"></script>
 <form method="POST" enctype="multipart/form-data" id="load_project_form"
         {% if project %} data-mode="edit" {% endif %}>{% csrf_token %}
     <p>
@@ -11,8 +14,9 @@
     <table>
         <tbody id="plan_table">
         {% for caption, filename in pages_list %}
-            <tr class="loaded_plan">
+            <tr class="loaded_plan" id='{{ forloop.counter0 }}' draggable="true">
             {% load byte_filter %}
+                <td><i class="fas fa-bars"></i></td>
                 <td><input type="text" name="floor_caption_{{ filename|as_base64 }}" value="{{ caption }}"></td>
                 <td>{{ filename }}</td>
                 <td><a class="mark-delete" onclick="deleteFileHandler('{{ filename }}', this.parentNode.parentNode)">&#x2A09</a></td>

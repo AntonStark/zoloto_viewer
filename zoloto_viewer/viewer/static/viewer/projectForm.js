@@ -43,7 +43,14 @@ function addMoreFileInput(labelTag, options = {}) {
 }
 
 const cellInit = {
-    0: function(fileDesc) {
+    0: function (fileDesc) {
+        let td = document.createElement('td');
+        let icon = document.createElement('i');
+        icon.classList.add('fas', 'fa-bars');     // <i class="fas fa-bars"></i>
+        td.append(icon);
+        return td;
+    },
+    1: function(fileDesc) {
         let td = document.createElement('td');
         let input = document.createElement('input');
         input.type = 'text';
@@ -52,17 +59,17 @@ const cellInit = {
         td.append(input);
         return td;
     },
-    1: function(fileDesc) {
+    2: function(fileDesc) {
         let td = document.createElement('td');
         td.append(fileDesc.name);
         return td;
     },
-    2: function(fileDesc) {
+    3: function(fileDesc) {
         let td = document.createElement('td');
         td.append(fileDesc.lastModifiedDate);
         return td;
     },
-    3: function(fileDesc) {
+    4: function(fileDesc) {
         let td = document.createElement('td');
         let a = document.createElement('a');
         a.innerHTML = '&#x2A09';
@@ -78,7 +85,9 @@ const cellInit = {
 };
 function buildRow(fileDesc, short= false) {
     let tr = document.createElement('tr');
-    const cols = (short ? [1, 2, 3] : [0, 1, 3]);
+    tr.draggable = true;
+
+    const cols = (short ? [0, 2, 3, 4] : [0, 1, 2, 4]);
     const cells = cols.map((i) => cellInit[i](fileDesc));
     tr.append(...cells);
     return tr;
@@ -102,6 +111,7 @@ function onPlanFilesChange() {
         }
         else {
             const tr = buildRow(file);
+            tr.id = planTableElement.childElementCount;
             rows.push(tr);
         }
     }
@@ -114,45 +124,12 @@ document.getElementById('plan_input_1')
     .addEventListener('change', onPlanFilesChange);
 
 
-function collectCsvFileNames(csvTable) {
-    return [].map.call(csvTable.children, row => row.children[0].textContent);
-}
-function onCsvFilesChange() {
-    const files = this.files;
-    console.log('csv', files);
-
-    const csvTableElement = document.getElementById('csv_table');
-    const existingCsvNames = collectCsvFileNames(csvTableElement);
-    let rows = [];
-    for (let i = 0; i < files.length; ++i) {
-        const file = files[i];
-        if (existingCsvNames.includes(file.name)) {
-            // alert('Файл с именем ' + file.name + ' уже используется.\n' +
-            //     'При сохранении данные будут обновлены.')
-        } else {
-            const tr = buildRow(file, true);
-            rows.push(tr);
-        }
-    }
-    csvTableElement.append(...rows);
-
-    const csvInputLabel = document.getElementById('csv_input_label');
-    addMoreFileInput(csvInputLabel, {
-        kind: 'csv',
-        accept: 'text/csv',
-        handler: onCsvFilesChange
-    });
-}
-document.getElementById('csv_input_1')
-    .addEventListener('change', onCsvFilesChange);
-
 function loadProjectFormValidator(e) {
     const planSelected = document.getElementById('plan_table').childElementCount;
-    const csvSelected = document.getElementById('csv_table').childElementCount;
-    if (planSelected === 0 || csvSelected === 0) {
+    if (planSelected === 0) {
         alert('Добавление проекта невозможно\n' +
-            'без указания названия проекта,\n' +
-            'добавления пространств и таблиц');
+            'без указания названия проекта и\n' +
+            'добавления пространств');
         e.preventDefault();
     }
 }
