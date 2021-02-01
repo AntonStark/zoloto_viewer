@@ -12,11 +12,9 @@
                 {% load layers_visibility %}
                 {% for layer, markers in markers_by_layer.items %}
                     <g class="layer_markers layer-{{ layer.title }}">
-                        <defs>
-                            <g id="marker_layer-{{ layer.title }}">
-                                {{ layer.kind.svg_figures|safe }}
-                            </g>
-                        </defs>
+                        <symbol id="marker_layer-{{ layer.title }}" overflow="visible">
+                            {{ layer.kind.svg_figures|safe }}
+                        </symbol>
                         {% for marker in markers %}
                             <use href="#marker_layer-{{ layer.title }}"
                                  x="{{ marker.pos_x }}" y="{{ marker.pos_y }}"
