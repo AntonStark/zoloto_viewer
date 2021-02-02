@@ -73,8 +73,7 @@ class Project(models.Model):
         for name in pages_data:
             plan, floor_caption = pages_data[name]
             Page.create_or_replace(project=self, plan=plan,
-                                   indd_floor=name, floor_caption=floor_caption,
-                                   maps_info=self.maps_info_data)
+                                   indd_floor=name, floor_caption=floor_caption)
 
     def create_layers(self, csv_data):
         for title, data in csv_data.items():
@@ -83,9 +82,16 @@ class Project(models.Model):
 
     def alter_floor_captions(self, captions_dict):
         for p in Page.objects.filter(project=self):
-            filename = path.basename(p.plan.name)
+            filename = p.orig_file_name
             if filename in captions_dict.keys():
                 p.floor_caption = captions_dict[filename]
+                p.save()
+
+    def alter_floor_offsets(self, floor_offsets):
+        for p in Page.objects.filter(project=self):
+            filename = p.orig_file_name
+            if filename in floor_offsets.keys():
+                p.floor_caption = floor_offsets[filename]
                 p.save()
 
     def generate_pdf_files(self):
@@ -164,6 +170,7 @@ class Layer(models.Model):
     class Meta:
         unique_together = [['project', 'title'], ['project', 'number']]
 
+    @property
     def orig_file_name(self):
         return path.basename(self.csv_data.name)
 
@@ -195,7 +202,7 @@ class Layer(models.Model):
             desc, color_str = layer_info[title]
         color = data_files.layer.color_as_hex(color_str)
         for layer in Layer.objects.filter(project=project):
-            if layer.orig_file_name() == csv_data.name:
+            if layer.orig_file_name == csv_data.name:
                 layer.load_next_data(csv_data)
                 layer.title = title
                 layer.desc = desc
@@ -269,11 +276,9 @@ class Page(models.Model):
         unique_together = ['project', 'floor_caption']
         ordering = [models.F('document_offset').asc(nulls_last=True)]
 
+    @property
     def orig_file_name(self):
         return path.basename(self.plan.name)
-
-    def serialize(self):
-        return self.floor_caption, self.orig_file_name()
 
     @property
     def geometric_bounds(self):
@@ -286,27 +291,21 @@ class Page(models.Model):
     @staticmethod
     def remove_from_project(project, filename):
         for p in Page.objects.filter(project=project):
-            if p.orig_file_name() == filename:
+            if p.orig_file_name == filename:
                 p.delete()
 
     @staticmethod
-    def create_or_replace(project, plan, indd_floor, floor_caption, maps_info=None):
-        offset = None
-        if maps_info and indd_floor in maps_info:
-            offset, _ = maps_info[indd_floor]
+    def create_or_replace(project, plan, indd_floor, floor_caption):
         # if plan with equal filename already exists just update them
         for p in Page.objects.filter(project=project):
-            if p.orig_file_name() == plan.name:
+            if p.orig_file_name == plan.name:
                 p.plan.delete(save=False)
                 p.plan = plan
                 p.indd_floor = indd_floor
                 p.floor_caption = floor_caption
-                if offset:
-                    p.document_offset = offset
                 p.save()
                 return
-        Page(project=project, plan=plan, indd_floor=indd_floor, floor_caption=floor_caption,
-             document_offset=offset).save()
+        Page(project=project, plan=plan, indd_floor=indd_floor, floor_caption=floor_caption).save()
 
     @staticmethod
     def validate_code(page_code):
@@ -335,6 +334,10 @@ class Page(models.Model):
                 self.uid = uuid.uuid4()
                 maybe_code = base64.b32encode(self.uid.bytes)[:10].decode('utf-8')
             self.code = maybe_code
+        if self.document_offset is None and self.project:
+            pages_same_project = Page.objects.filter(project=self.project)
+            max_offset = pages_same_project.aggregate(value=models.Max('document_offset'))['value']
+            self.document_offset = max_offset + 1 if max_offset else 1
         super(Page, self).save(*args, **kwargs)
 
 

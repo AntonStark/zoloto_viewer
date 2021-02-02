@@ -13,14 +13,19 @@
     Монтажные области
     <table>
         <tbody id="plan_table">
-        {% for caption, filename in pages_list %}
-            <tr class="loaded_plan" id='{{ forloop.counter0 }}' draggable="true">
-            {% load byte_filter %}
-                <td><i class="fas fa-bars"></i></td>
-                <td><input type="text" name="floor_caption_{{ filename|as_base64 }}" value="{{ caption }}"></td>
-                <td>{{ filename }}</td>
-                <td><a class="mark-delete" onclick="deleteFileHandler('{{ filename }}', this.parentNode.parentNode)">&#x2A09</a></td>
-            </tr>
+        {% for p in pages %}
+            {% with filename=p.orig_file_name %}
+                <tr class="loaded_plan" id='{{ forloop.counter0 }}' draggable="true">
+                {% load byte_filter %}
+                    <td><i class="fas fa-bars"></i></td>
+                    <td><input type="text" name="floor_caption_{{ filename|as_base64 }}" value="{{ p.floor_caption }}"></td>
+                    <td>{{ filename }}</td>
+                    <td><a class="mark-delete"
+                           onclick="deleteFileHandler('{{ filename }}', this.parentNode.parentNode)">&#x2A09</a></td>
+                    <td><input type="text" name="floor_offset_{{ filename|as_base64 }}" disabled
+                               value="{{ p.document_offset|default_if_none:forloop.counter }}"></td>
+                </tr>
+            {% endwith %}
         {% endfor %}
         </tbody>
     </table>

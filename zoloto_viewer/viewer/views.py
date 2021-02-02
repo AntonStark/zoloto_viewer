@@ -30,7 +30,7 @@ def load_project(request):
     except (KeyError, ValueError):
         return redirect('load_project')
 
-    pages_data, _ = project_form.parse_pages(request.POST, request.FILES)
+    pages_data, _, floor_offsets = project_form.parse_pages(request.POST, request.FILES)
     if not pages_data or not pages_data:
         return redirect('load_project')
 
@@ -38,6 +38,7 @@ def load_project(request):
     project_obj.save()
 
     project_obj.store_pages(pages_data)
+    project_obj.alter_floor_offsets(floor_offsets)
     return redirect('projects')
 
 
@@ -51,7 +52,7 @@ def edit_project(request, title):
         pages = Page.objects.filter(project=project_obj)
         context = {
             'project': project_obj,
-            'pages_list': map(Page.serialize, pages),
+            'pages': pages,
         }
         return render(request, 'viewer/edit_project.html', context=context)
 
@@ -62,7 +63,7 @@ def edit_project(request, title):
     for page_name in pages_to_delete:
         Page.remove_from_project(project_obj, page_name)
 
-    pages_data, floor_captions = project_form.parse_pages(request.POST, request.FILES)
+    pages_data, floor_captions, floor_offsets = project_form.parse_pages(request.POST, request.FILES)
 
     errors = []
     project_obj.store_pages(pages_data)
@@ -70,6 +71,7 @@ def edit_project(request, title):
         project_obj.alter_floor_captions(floor_captions)
     except IntegrityError:
         errors.append('captions not unique')
+    project_obj.alter_floor_offsets(floor_offsets)
 
     if errors:
         return redirect(to='edit_project', title=title)

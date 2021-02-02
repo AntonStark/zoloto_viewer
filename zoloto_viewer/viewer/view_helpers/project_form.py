@@ -8,13 +8,21 @@ def parse_ignore_files(req_post):
 
 
 def parse_pages(req_post, req_files):
+    CAPTION_LABEL = 'floor_caption_'
+    OFFSET_LABEL = 'floor_offset_'
+
     ignore_files = parse_ignore_files(req_post)
     floor_captions = {}
+    floor_offsets = {}
     for k, v in req_post.items():
-        if k.startswith('floor_caption_'):
-            encoded = k[14:]
+        if k.startswith(CAPTION_LABEL):
+            encoded = k[len(CAPTION_LABEL):]
             filename = base64.decodebytes(encoded.encode('utf-8')).decode('utf-8')
             floor_captions[filename] = v
+        elif k.startswith(OFFSET_LABEL):
+            encoded = k[len(OFFSET_LABEL):]
+            filename = base64.decodebytes(encoded.encode('utf-8')).decode('utf-8')
+            floor_offsets[filename] = v
 
     new_pages_dict = {}
     for key in req_files.keys():
@@ -27,7 +35,7 @@ def parse_pages(req_post, req_files):
             if mime_type == 'image':
                 # if that name was before, it will overridden in accordance with form "replace" behaviour
                 new_pages_dict[name] = (f, floor_captions.get(f.name, None))
-    return new_pages_dict, floor_captions
+    return new_pages_dict, floor_captions, floor_offsets
 
 
 def files_to_delete(req_post):
