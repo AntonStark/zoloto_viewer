@@ -82,13 +82,24 @@ const cellInit = {
         td.append(a);
         return td;
     },
+    5: function (fileDesc, extra) {
+        let td = document.createElement('td');
+        let input = document.createElement('input');
+        input.type = 'text';
+        input.name = 'floor_offset_' + btoa(fileDesc.name);
+        input.classList.add('plan-row-offset-input', 'disabled');
+        input.setAttribute('style', 'visibility: hidden;');
+        input.value = String(extra.totalRows + 1 || 1);
+        td.append(input);
+        return td;
+    }
 };
-function buildRow(fileDesc, short= false) {
+function buildRow(fileDesc, cols, extra={}) {
     let tr = document.createElement('tr');
     tr.draggable = true;
+    tr.id = String(extra.totalRows || 1);
 
-    const cols = (short ? [0, 2, 3, 4] : [0, 1, 2, 4]);
-    const cells = cols.map((i) => cellInit[i](fileDesc));
+    const cells = cols.map((i) => cellInit[i](fileDesc, extra));
     tr.append(...cells);
     return tr;
 }
@@ -110,7 +121,9 @@ function onPlanFilesChange() {
                 'При сохранении он будет заменён выбранным.')
         }
         else {
-            const tr = buildRow(file);
+            const tr = buildRow(file, [0, 1, 2, 4, 5], {
+                totalRows: planTableElement.childElementCount
+            });
             tr.id = planTableElement.childElementCount;
             rows.push(tr);
         }

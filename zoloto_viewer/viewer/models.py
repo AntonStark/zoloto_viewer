@@ -91,7 +91,7 @@ class Project(models.Model):
         for p in Page.objects.filter(project=self):
             filename = p.orig_file_name
             if filename in floor_offsets.keys():
-                p.floor_caption = floor_offsets[filename]
+                p.document_offset = floor_offsets[filename]
                 p.save()
 
     def generate_pdf_files(self):
@@ -262,15 +262,14 @@ def plan_upload_path(obj: 'Page', filename):
 
 
 class Page(models.Model):
+    project = models.ForeignKey(Project, on_delete=models.CASCADE)
     uid = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     code = models.CharField(max_length=10, blank=False, unique=True)
-    project = models.ForeignKey(Project, on_delete=models.CASCADE)
     plan = models.ImageField(upload_to=plan_upload_path, null=True, default=None)
+
     indd_floor = models.TextField(blank=False, null=False, editable=False)      # текст, лежащий на слое floor
     floor_caption = models.TextField(null=True)                                 # текст, отображаемый на странице
-
-    # fixme floor_caption not null when taken from filename
-    document_offset = models.PositiveSmallIntegerField(null=True, default=None)
+    document_offset = models.PositiveSmallIntegerField(null=True, default=None) # настройка порядка страниц
 
     class Meta:
         unique_together = ['project', 'floor_caption']
@@ -310,15 +309,6 @@ class Page(models.Model):
     @staticmethod
     def validate_code(page_code):
         return page_code.upper() if isinstance(page_code, str) and len(page_code) == 10 else None
-
-    @staticmethod
-    def update_maps_info(project, maps_info):   # maps_info is { indd_floor -> (offset, bounds) }
-        for P in Page.objects.filter(project=project):
-            if P.indd_floor in maps_info:
-                offset, bounds = maps_info[P.indd_floor]
-                P.document_offset = offset
-                P.geometric_bounds = bounds
-                P.save()
 
     @staticmethod
     def by_code(page_code):

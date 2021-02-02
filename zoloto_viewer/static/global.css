@@ -81,6 +81,11 @@ span#layer_color_view {
     white-space: nowrap;
 }
 
+input.disabled {
+    pointer-events: none;
+    background: lightgrey;
+}
+
 
 :root {
     --left-column-width: 230px;

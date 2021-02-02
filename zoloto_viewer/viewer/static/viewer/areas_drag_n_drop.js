@@ -13,6 +13,12 @@ window.addEventListener('load', function () {
         console.log('indexDrop', indexDrop);
         console.log('list', list);
     }
+    function actualizeRowOffset(tr, offset) {
+        let input = tr.getElementsByClassName('plan-row-offset-input')[0];
+        if (input) {
+            input.value = offset;
+        }
+    }
 
     const planTable = document.getElementById('plan_table');
 
@@ -45,11 +51,16 @@ window.addEventListener('load', function () {
                     indexDrop = i;
                 }
             }
+
             console.log(index, indexDrop);
             if (index > indexDrop) {
                 target.before(dragged);
             } else {
                 target.after(dragged);
+            }
+
+            for (let i = 0; i < list.length; i += 1) {
+                actualizeRowOffset(list[i], i+1);
             }
         }
         // debug();

@@ -22,7 +22,8 @@
                     <td>{{ filename }}</td>
                     <td><a class="mark-delete"
                            onclick="deleteFileHandler('{{ filename }}', this.parentNode.parentNode)">&#x2A09</a></td>
-                    <td><input type="text" name="floor_offset_{{ filename|as_base64 }}" disabled
+                    <td><input type="text" name="floor_offset_{{ filename|as_base64 }}"
+                               class="plan-row-offset-input disabled" style="visibility: hidden;"
                                value="{{ p.document_offset|default_if_none:forloop.counter }}"></td>
                 </tr>
             {% endwith %}
