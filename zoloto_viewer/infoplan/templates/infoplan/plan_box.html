@@ -3,7 +3,7 @@
         <svg width="{{ page.plan.width }}" height="{{ page.plan.height }}" id="project-page-plan-svg">
             <g id="project-page-svg-origin">
                 <image href="{{ page.plan.url }}"
-                        {#                   transform="scale(0.977, 0.988)"#}
+                        {#                   transform="scale(0.977, 0.988)" #}
                        width="{{ page.plan.width }}" height="{{ page.plan.height }}">
                 </image>
                 <rect id="project-page-svg-background"
@@ -70,4 +70,22 @@
             </g>
         </svg>
     </div>
+</div>
+<div class="map_legend">
+    {% for layer in markers_by_layer.keys %}
+        <div style="background-color: lightgrey;">
+            <svg width="30" height="30">
+                <symbol id="marker_layer-{{ layer.title }}" overflow="visible">
+                    {{ layer.kind.svg_figures|safe }}
+                </symbol>
+                <use href="#marker_layer-{{ layer.title }}"
+                     x="15" y="15"
+                     class="plan_marker"></use>
+            </svg>
+            <div style="display: inline-block;">
+                {{ layer.title }}<br>
+                <small>{{ layer.desc }}</small>
+            </div>
+        </div>
+    {% endfor %}
 </div>

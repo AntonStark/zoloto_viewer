@@ -226,6 +226,13 @@ input.disabled {
     fill: white;
 }
 
+.map_legend {
+    /*border: 1px solid black;*/
+    position: absolute;
+    left: 300px;
+    top: 100px;
+}
+
 
 
 .plan_marker {
