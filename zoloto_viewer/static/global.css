@@ -242,6 +242,9 @@ input.disabled {
     stroke: none;
     fill: none;
 }
+.marker_comment_mark.marker_comments_resolved {
+    fill: white;
+}
 
 
 .icon {
