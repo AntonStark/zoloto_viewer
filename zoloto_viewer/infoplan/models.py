@@ -168,14 +168,14 @@ class VariablesManager(models.Manager):
         #   {side: 1, variables: ['a', 'b']},
         #   {side: 2, variables: []}
         # ]
-        index = collections.defaultdict(list)
+        side_to_vars = collections.defaultdict(list)
         vars = marker.markervariable_set.values_list('side', 'key', 'value')
         for s, k, v in vars:
-            index[s].append(v)
+            side_to_vars[s].append(v)
 
         res = [
-            {'side': side, 'variables': var_list}
-            for side, var_list in index.items()
+            {'side': side_key, 'variables': side_to_vars.get(side_key, [])}
+            for side_key in marker.layer.kind.side_keys()
         ]
         return res
 

@@ -49,16 +49,22 @@ function buildMessBox(data) {
         }
 
         const sides = data.layer.kind.sides;
+        const isInfoplanSet = (data.infoplan
+            .map(sideObj => sideObj.variables.length)
+            .reduce((a, b) => a + b, 0)
+            > 0);
 
         let variablesLabel = document.createElement('span');
         variablesLabel.setAttribute('style', 'font-size: 10px;');
-        variablesLabel.textContent = 'Инфоплан';
+        variablesLabel.textContent = (isInfoplanSet ? 'Инфоплан' : 'У объекта не заполнен инфоплан');
 
         let variablesDiv  = document.createElement('div');
         variablesDiv.setAttribute('class', `variables_container`);
 
-        const sideNumbers = Array.from(Array(sides));
-        variablesDiv.append(...sideNumbers.map((e, i) => buildSideNBlock(i + 1)(data)));
+        if (isInfoplanSet) {
+            const sideNumbers = Array.from(Array(sides));
+            variablesDiv.append(...sideNumbers.map((e, i) => buildSideNBlock(i + 1)(data)));
+        }
 
         let infoplanDiv  = document.createElement('div');
         infoplanDiv.append(variablesLabel, variablesDiv);
@@ -102,7 +108,7 @@ function buildMessBox(data) {
         btnLink.setAttribute('class', 'message_confirm_btn');
         btnLink.textContent = 'Проверено';
         btnLink.addEventListener('click',
-            () => handlerConfirmBtmClick(data.marker));
+            () => handlerConfirmBtnClick(data.marker));
         return btnLink;
     }
 
@@ -118,6 +124,12 @@ function buildMessBox(data) {
 }
 
 // HANDLERS
+function onSuccessLoadReview(markerData) {
+    const markerUid = markerData.marker;
+    markerCirclesManager.sync(markerData);
+    messageBoxManager.deleteMessage(markerUid);
+}
+
 function handlerMessBlur(marker_uid) {
     const box = messageBoxManager.get(marker_uid);
     if (box !== undefined) {
@@ -140,12 +152,12 @@ function handlerMessBlur(marker_uid) {
         exit_type: 'blur',
     };
     doApiCall('POST', API_MARKER_LOAD_REVIEW(marker_uid), data,
-        (rep) => markerCirclesManager.sync(rep));
+        onSuccessLoadReview);
 
     messageBoxManager.hide(marker_uid);
 }
 
-function handlerConfirmBtmClick(marker_uid) {
+function handlerConfirmBtnClick(marker_uid) {
     const box = messageBoxManager.get(marker_uid);
     if (box !== undefined) {    // to distinguish click form blur in blur handler
         box.dataset.btnClicked = 'true';
@@ -164,7 +176,7 @@ function handlerConfirmBtmClick(marker_uid) {
         exit_type: 'button',
     };
     doApiCall('POST', API_MARKER_LOAD_REVIEW(marker_uid), data,
-        (rep) => markerCirclesManager.sync(rep));
+        onSuccessLoadReview);
 
     messageBoxManager.hide(marker_uid);
 }

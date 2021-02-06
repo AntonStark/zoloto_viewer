@@ -31,7 +31,7 @@ function ControllerMapInteractions() {
             deleteMarker(markerUid, function (rep) {
                 if (rep['status'] === 'ok') {
                     markerCirclesManager.delete(markerUid);
-                    messageBoxManager.del(markerUid);
+                    messageBoxManager.delMarkerAndMessage(markerUid);
                 }
             });
         }

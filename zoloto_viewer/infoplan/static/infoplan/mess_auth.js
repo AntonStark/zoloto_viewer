@@ -25,6 +25,7 @@ function buildMessBox(data) {
                 let sideInput = document.createElement('textarea');
                 sideInput.setAttribute('class', 'variables-container-side-input')
                 sideInput.setAttribute('data-number', nSide);
+                sideInput.setAttribute('rows', 6);
 
                 // noinspection UnnecessaryLocalVariableJS
                 const inputValue = ( sideVars ? sideVars.join(';\n') + ';' : '');
@@ -76,12 +77,21 @@ function buildMessBox(data) {
         commentDiv.append(commentLabel, commentsBlock);
         return commentDiv;
     }
+    function buildResolveBtn(data) {
+        const markerUid = data.marker;
+        let btnLink = document.createElement('a');
+        btnLink.classList.add('fill-button', 'noselect')
+        btnLink.setAttribute('style', 'width: fit-content; margin-bottom: 6px;')
+        btnLink.textContent = 'Все учтены';
+        btnLink.addEventListener('click', () => handlerResolveCommentsBtnClick(markerUid));
+        return btnLink;
+    }
     function buildSaveBtn(data) {
         const markerUid = data.marker;
         let btnLink = document.createElement('a');
         btnLink.setAttribute('class', 'message_confirm_btn');
         btnLink.textContent = 'Сохранить';
-        btnLink.addEventListener('click', () => handlerConfirmBtmClick(markerUid));
+        btnLink.addEventListener('click', () => handlerConfirmBtnClick(markerUid));
         return btnLink;
     }
 
@@ -91,10 +101,13 @@ function buildMessBox(data) {
     boxDiv.append(
         buildInfoplanBlock(data),
         buildCommentBlock(data),
+        buildResolveBtn(data),
         buildSaveBtn(data)
     );
     return boxDiv;
 }
+
+// HANDLERS
 
 function variablesContainerBlur(e) {
     let v = e.target.value;
@@ -106,36 +119,44 @@ function variablesContainerBlur(e) {
     }
 }
 
+function onSuccessLoadReview(markerData) {
+    const markerUid = markerData.marker;
+    messageBoxManager.hide(markerUid);
+}
+
+function onErrorLoadReview(rep) {
+    console.log(rep);
+    alert('Возникла ошибка при сохранении.\nПопробуйте чуть позже или обратитесь к администратору.');
+}
 
 function handlerMessBlur(marker_uid) {
     const box = messageBoxManager.get(marker_uid);
     if (box !== undefined) {
         if (box.dataset.btnClicked) {
+            // todo why this dataset used? still needed?
             delete box.dataset.btnClicked;
             return;
         }
     }
 
-    const variables = varWrongnessManager.data(marker_uid);
-    let comment = messageBoxManager.read(marker_uid);
-    if (comment === undefined) {
-        console.error('method for comment returned undefined', marker_uid);
-        comment = '';
-    }
-
-    const data = {
-        variables: variables,
-        comment: comment,
-        exit_type: 'blur',
-    };
-    // doApiCall('POST', API_MARKER_LOAD_REVIEW(marker_uid), data,
-    //     (rep) => markerCirclesManager.sync(rep));
-
-    // todo refactor these handlers with onSuccess and onError, .hide call below inappropriate
     messageBoxManager.hide(marker_uid);
 }
 
-function handlerConfirmBtmClick(marker_uid) {
+function handlerResolveCommentsBtnClick(marker_uid) {
+    doApiCall(
+        'POST',
+        API_MARKER_RESOLVE_CMS(marker_uid),
+        null,
+        (markerData) => {
+            const markerUid = markerData.marker;
+            markerCirclesManager.sync(markerData);
+            messageBoxManager.deleteMessage(markerUid);
+        },
+        (rep) => {console.log(rep);},
+        );
+}
+
+function handlerConfirmBtnClick(marker_uid) {
     function parseSideVariables(sideInputValue) {
         if (sideInputValue.endsWith(';\n')) {
             sideInputValue = sideInputValue.slice(0, -2);
@@ -143,6 +164,7 @@ function handlerConfirmBtmClick(marker_uid) {
             sideInputValue = sideInputValue.slice(0, -1);
         }
 
+        // noinspection UnnecessaryLocalVariableJS
         const sideVars = sideInputValue.split(';\n');
         return sideVars;
     }
@@ -157,14 +179,7 @@ function handlerConfirmBtmClick(marker_uid) {
         sideObjects.push({side: Number(s.dataset.number), variables: parseSideVariables(s.value)})
     }
 
-    const req = {
+    doApiCall('PUT', API_MARKER_PUT_VARS(marker_uid), {
         infoplan: sideObjects
-    }
-    doApiCall('PUT', API_MARKER_PUT_VARS(marker_uid), req,
-        function (rep) {
-        messageBoxManager.hide(marker_uid);
-    }, function (rep) {
-        console.log(rep);
-    });
-
+    }, onSuccessLoadReview, onErrorLoadReview);
 }

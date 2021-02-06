@@ -32,9 +32,9 @@
                                         class="marker_circle" id="marker_circle-{{ marker.uid }}"
                                         data-marker-uid="{{ marker.uid }}" data-layer-title="{{ layer.title }}"></circle>
                                 <circle cx="{{ marker.pos_x }}" cy="{{ marker.pos_y }}"
-                                        r="1"
+                                        r="3"
                                         transform="translate({{ marker.COMMENT_MARK_PADDING }}, -{{ marker.COMMENT_MARK_PADDING }})"
-                                        class="marker_comment_mark {{ marker.has_comment|yesno:'marker_has_comment,' }}"></circle>
+                                        class="marker_comment_mark {{ marker.has_comments|yesno:'marker_has_comment,' }}"></circle>
                             </g>
                         {% endfor %}
                     </g>

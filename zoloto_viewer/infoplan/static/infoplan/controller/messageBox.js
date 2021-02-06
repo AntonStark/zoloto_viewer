@@ -234,7 +234,6 @@ function ControllerMessageBox(render) {
                     visibleMessagesIndex[markerUid] = true;
                 }
                 else {
-                    // todo нужны разные коды ошибок для разных ситуаций (какие ситуации описаны в тз?)
                     console.log('position=', position);
 
                     container.removeChild(messContainer);
@@ -261,17 +260,20 @@ function ControllerMessageBox(render) {
     function registerMarkerElement(markerElement) {
         markerElementIndex[markerElement.dataset.markerUid] = markerElement;
     }
+    function deleteMessage(markerUid) {
+        let c = getContainerOrNull(markerUid);
+        if (c)
+            c.remove();
+        delete _renderedMessagesIndex[markerUid];
+        delete visibleMessagesIndex[markerUid];
+    }
     function deleteMarkerAndMessage(markerUid) {
         let m = getMarkerOrNull(markerUid)
         if (m)
             m.remove();
         delete markerElementIndex[markerUid];
 
-        let c = getContainerOrNull(markerUid);
-        if (c)
-            c.remove()
-        delete _renderedMessagesIndex[markerUid];
-        delete visibleMessagesIndex[markerUid];
+        deleteMessage(markerUid);
     }
 
     function hideAllMessages() {
@@ -293,7 +295,9 @@ function ControllerMessageBox(render) {
         read: getComment,
         get : getContainerOrNull,
         reg : registerMarkerElement,
-        del : deleteMarkerAndMessage,
+
+        deleteMessage: deleteMessage,
+        delMarkerAndMessage : deleteMarkerAndMessage,
 
         hideAll: hideAllMessages,
         showSelected: showAllSelected,

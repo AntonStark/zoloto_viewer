@@ -235,8 +235,7 @@ input.disabled {
 
 .marker_circle {
     fill-opacity: 0;    /* invisible yet clickable */
-    stroke-width: 0.5px;
-    /* stroke: none; */
+    stroke-width: 1px;
 }
 
 .marker_comment_mark:not(.marker_has_comment) {
@@ -278,6 +277,15 @@ ul.side_box_list li.active{
 
 #projects-table td {
     padding: 4px;
+}
+
+.noselect {
+    -webkit-touch-callout: none;    /* iOS Safari */
+    -webkit-user-select: none;      /* Safari */
+    -khtml-user-select: none;       /* Konqueror HTML */
+    -moz-user-select: none;         /* Firefox */
+    -ms-user-select: none;          /* Internet Explorer/Edge */
+    user-select: none;              /* Non-prefixed version, currently supported by Chrome and Opera */
 }
 
 
