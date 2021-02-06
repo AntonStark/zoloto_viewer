@@ -42,7 +42,7 @@ class Marker(models.Model):
     correct = models.BooleanField(null=True, default=None)
 
     objects = MarkersManager()
-    CIRCLE_RADIUS = 5
+    CIRCLE_RADIUS = 15
     COMMENT_MARK_PADDING = 0.7 * CIRCLE_RADIUS
 
     class Meta:
