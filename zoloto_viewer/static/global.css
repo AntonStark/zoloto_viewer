@@ -249,7 +249,7 @@ input.disabled {
     stroke: none;
     fill: none;
 }
-.marker_comment_mark.marker_comments_resolved {
+.marker_comment_mark.marker_comments_resolved.marker_has_comment {
     fill: white;
 }
 

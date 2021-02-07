@@ -75,14 +75,14 @@
 </div>
 <div class="map_legend">
     {% for layer in markers_by_layer.keys %}
-        <div style="background-color: lightgrey;">
+        <div>
             <svg width="30" height="30">
                 <symbol id="marker_layer-{{ layer.title }}" overflow="visible">
                     {{ layer.kind.svg_figures|safe }}
                 </symbol>
                 <use href="#marker_layer-{{ layer.title }}"
                      x="15" y="15"
-                     class="plan_marker"></use>
+                     class="plan_marker layer_markers layer-{{ layer.title }}"></use>
             </svg>
             <div style="display: inline-block;">
                 {{ layer.title }}<br>

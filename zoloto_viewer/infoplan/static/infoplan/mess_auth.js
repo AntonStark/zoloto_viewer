@@ -78,8 +78,11 @@ function buildMessBox(data) {
         return commentDiv;
     }
     function buildResolveBtn(data) {
-        const markerUid = data.marker;
+        const [markerUid, hasComment] = [data.marker, data.has_comment];
+
         let btnLink = document.createElement('a');
+        if (!hasComment) return btnLink;
+
         btnLink.classList.add('fill-button', 'noselect')
         btnLink.setAttribute('style', 'width: fit-content; margin-bottom: 6px;')
         btnLink.textContent = 'Все учтены';

@@ -152,9 +152,6 @@ function renderMarkerElement(data) {
             circle.setAttributeNS(null, 'data-marker-uid', markerUid);
             circle.setAttributeNS(null, 'data-layer-title', layerTitle);
 
-            // circle.setAttributeNS(null, 'onclick',
-            //     'mapInteractionsController.handleClickMarkerCircle(this)');
-
             return circle;
         }
         function buildCommentMark(data) {
