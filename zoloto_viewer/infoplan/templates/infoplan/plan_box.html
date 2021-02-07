@@ -31,12 +31,14 @@
                                         r="{{ marker.CIRCLE_RADIUS }}"
                                         class="marker_circle" id="marker_circle-{{ marker.uid }}"
                                         data-marker-uid="{{ marker.uid }}" data-layer-title="{{ layer.title }}"></circle>
+                                {% with cmp=marker_display_config.comment_mark_padding cmr=marker_display_config.comment_mark_radius %}
                                 <circle cx="{{ marker.pos_x }}" cy="{{ marker.pos_y }}"
-                                        r="2"
-                                        transform="translate({{ marker.COMMENT_MARK_PADDING }}, -{{ marker.COMMENT_MARK_PADDING }})"
+                                        r="{{ cmr }}"
+                                        transform="translate({{ cmp }}, -{{ cmp }})"
                                         class="marker_comment_mark
                                         {{ marker.has_comments|yesno:'marker_has_comment,' }}
                                         {{ marker.all_comments_resolved|yesno:'marker_comments_resolved,' }}"></circle>
+                                {% endwith %}
                             </g>
                         {% endfor %}
                     </g>

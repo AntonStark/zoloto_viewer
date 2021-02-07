@@ -123,7 +123,8 @@ function renderMarkerElement(data) {
             let line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
             line.setAttributeNS(null, 'class', 'marker_link');
 
-            line.setAttributeNS(null, 'data-mr', MARKER_CIRCLE_RADIUS);
+            const radius = MARKER_DISPLAY_CONFIG.circle_radius;
+            line.setAttributeNS(null, 'data-mr', radius);
             line.setAttributeNS(null, 'data-cx', posX);
             line.setAttributeNS(null, 'data-cy', posY);
 
@@ -140,9 +141,10 @@ function renderMarkerElement(data) {
 
             let circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
 
+            const radius = MARKER_DISPLAY_CONFIG.circle_radius;
             circle.setAttributeNS(null, 'cx', pos.center_x);
             circle.setAttributeNS(null, 'cy', pos.center_y);
-            circle.setAttributeNS(null, 'r', MARKER_CIRCLE_RADIUS);
+            circle.setAttributeNS(null, 'r', radius);
 
             circle.setAttributeNS(null, 'id', `marker_circle-${markerUid}`);
             circle.setAttributeNS(null, 'class', 'marker_circle');
@@ -164,10 +166,12 @@ function renderMarkerElement(data) {
 
             circle.setAttributeNS(null, 'cx', posX);
             circle.setAttributeNS(null, 'cy', posY);
-            circle.setAttributeNS(null, 'r', 1);
+            const radius = MARKER_DISPLAY_CONFIG.comment_mark_radius;
+            circle.setAttributeNS(null, 'r', radius);
 
+            const padding = MARKER_DISPLAY_CONFIG.comment_mark_padding;
             circle.setAttributeNS(null, 'transform',
-                `translate(${COMMENT_MARK_PADDING}, -${COMMENT_MARK_PADDING})`);
+                `translate(${padding}, -${padding})`);
             circle.setAttributeNS(null, 'class',
                 `marker_comment_mark ${hasComment}`);
 

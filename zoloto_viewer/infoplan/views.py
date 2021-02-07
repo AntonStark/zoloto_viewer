@@ -23,6 +23,7 @@ def marker_api(method):
     return _decorated_method
 
 
+@login_required
 @http.require_POST
 @csrf.csrf_exempt
 def create_marker(request):
@@ -276,8 +277,11 @@ def project_page(request, **more_context):
         'markers_by_layer': markers_by_layer,
 
         'base_url': settings.BASE_URL,
-        'marker_circle_radius': Marker.CIRCLE_RADIUS,
-        'marker_comment_mark_padding': Marker.COMMENT_MARK_PADDING,
+        'marker_display_config': {
+            'circle_radius': Marker.CIRCLE_RADIUS,
+            'comment_mark_radius': Marker.COMMENT_MARK_RADIUS,
+            'comment_mark_padding': Marker.COMMENT_MARK_PADDING,
+        },
 
         'pdf_original': pdf_original,
         'pdf_reviewed': pdf_reviewed,

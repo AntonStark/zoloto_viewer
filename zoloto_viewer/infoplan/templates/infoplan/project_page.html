@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <title>{{ project.title }}</title>
     {% load static %}
+    {% load js_object %}
     <script>
         var BASE_URL = '{{ base_url }}';
         var pageCode = '{{ page.code }}';
         var projectUid = '{{ project.uid }}';
-        var MARKER_CIRCLE_RADIUS = {{ marker_circle_radius }};
-        var COMMENT_MARK_PADDING = {{ marker_comment_mark_padding }};
+        var MARKER_DISPLAY_CONFIG = {{ marker_display_config|js_object }};
     </script>
 
     <script src="{% static 'infoplan/mess.js' %}"></script>
