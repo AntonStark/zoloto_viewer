@@ -6,7 +6,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse, Http404
 from django.shortcuts import get_object_or_404, render
 from django.views import View
-from django.views.decorators import http, csrf
+from django.views.decorators import csrf, http
 from django.utils.decorators import method_decorator
 
 from zoloto_viewer.infoplan.models import Marker, MarkerVariable
@@ -220,7 +220,7 @@ def load_marker_review(request, marker_uid: uuid.UUID):
         req = json.loads(request.body)
         comment, exit_type = operator.itemgetter(*fields_)(req)
     except json.JSONDecodeError:
-        return JsonResponse({'error': 'post body must be json'}, status=400)
+        return JsonResponse({'error': 'request body must be json'}, status=400)
     except KeyError:
         return JsonResponse({'error': 'json object must contain fields: ' + ', '.join(fields_)}, status=400)
     explicit_end_review = exit_type == 'button'

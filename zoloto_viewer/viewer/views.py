@@ -1,9 +1,11 @@
+import json
+import operator
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db import IntegrityError
-from django.http import Http404, JsonResponse
+from django.http import Http404, HttpResponse, JsonResponse
 from django.shortcuts import render, redirect
-from django.views.decorators import csrf
+from django.views.decorators import csrf, http
 
 from zoloto_viewer.infoplan import views as infoplan_views
 from zoloto_viewer.viewer.models import Color, Project, Layer, MarkerKind, Page, PdfGenerated
@@ -148,6 +150,40 @@ def project_page(request, page_code):
 
     return infoplan_views.project_page(request, page_obj=page_obj, pdf_original=pdf_original, pdf_reviewed=pdf_reviewed,
                                        pdf_created_time=pdf_created_time, pdf_refresh_timeout=pdf_refresh_timeout)
+
+
+@login_required
+@csrf.csrf_exempt
+@http.require_http_methods(['PUT'])
+def edit_project_page(request, page_code):
+    """
+    :param request: request.body is json object
+                    {marker_size_factor}
+    :param page_code: str
+    """
+    fields_ = ('marker_size_factor',)
+    try:
+        req = json.loads(request.body)
+        marker_size_factor = operator.itemgetter(*fields_)(req)
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'request body must be json'}, status=400)
+    except KeyError:
+        return JsonResponse({'error': 'json object must contain fields: ' + ', '.join(fields_)}, status=400)
+
+    valid = Page.validate_code(page_code)
+    if not valid:
+        raise Http404
+    page_obj = Page.by_code(valid)
+    if not page_obj:
+        raise Http404
+
+    if not Page.validate_size_factor(marker_size_factor):
+        return JsonResponse({'error': 'marker_size_factor bad value. '
+                                      'Possible values are: 50, 75, 100, 125, 150, 200.'}, status=400)
+
+    page_obj.marker_size_factor = marker_size_factor
+    page_obj.save()
+    return HttpResponse(status=200)
 
 
 @login_required
