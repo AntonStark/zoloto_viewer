@@ -340,7 +340,7 @@ form.actions_menu{
 #actions_menu_modes input[type="radio"]:checked + label {
     color: black;
 }
-form#actions_menu_scale label {
+form.actions_scale_menu label {
     font-size: smaller;
     width: 54px;
     vertical-align: middle;
