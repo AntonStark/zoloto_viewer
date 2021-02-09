@@ -348,6 +348,13 @@ form.actions_scale_menu label {
     white-space: pre-wrap;
 }
 
+select#actions_menu_scale_markers + a {
+    visibility: hidden;
+}
+select#actions_menu_scale_markers[data-changed="true"] + a {
+    visibility: visible;
+}
+
 
 .message_box {
     width: 100%;

@@ -101,7 +101,15 @@ function ControllerMapScale() {
 }
 
 
-function markersScaleSubmit(form) {
-    console.log(form);
+function markersScaleChange(input) {
+    input.dataset.changed = input.value !== input.dataset.initial;
+}
+function markersScaleSubmit() {
+    const factor = Number.parseInt(document.getElementById('actions_menu_scale_markers').value)
+    doApiCall('PUT', API_PUT_PAGE_DATA(PAGE_CONFIG.code), {
+        marker_size_factor: factor
+    },
+        (rep) => {document.location.reload();},
+        (rep) => {console.log(rep); alert('Возникла ошибка.')});
     return false;
 }

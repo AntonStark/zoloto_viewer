@@ -20,14 +20,15 @@
     <br>
     <form id="actions_menu_scale_markers_form" class="actions_menu actions_scale_menu">
         <label for="actions_menu_scale_markers">Размер объектов</label>
-        <select id="actions_menu_scale_markers" name="markers_scale">
+        <select id="actions_menu_scale_markers" name="markers_scale"
+                onchange="markersScaleChange(this)" data-initial="{{ page.marker_size_factor }}%">
             {% for factor in page_config.marker_size_factors %}
                 <option {% if factor == page.marker_size_factor %} selected {% endif %}>
                     {{ factor }}%
                 </option>
             {% endfor %}
         </select>
-        <a onclick="markersScaleSubmit(this.parentNode);">ok</a>
+        <a onclick="markersScaleSubmit()" class="fill-button">применить</a>
     </form>
     <form id="actions_menu_scale_map_form" class="actions_menu actions_scale_menu">
         <label for="actions_menu_scale_map">Масштаб карты</label>

@@ -142,6 +142,7 @@ def project_page(request, page_code):
         raise Http404
 
     page_config = {
+        'code': page_obj.code,
         'marker_size_factors': Page.SIZE_FACTOR_ALLOWED,
         'map_scale_factors': Page.MAP_SCALE_ALLOWED,
     }
@@ -190,7 +191,7 @@ def edit_project_page(request, page_code):
 
     page_obj.marker_size_factor = marker_size_factor
     page_obj.save()
-    return HttpResponse(status=200)
+    return JsonResponse({'status': 'success'}, status=200)
 
 
 @login_required

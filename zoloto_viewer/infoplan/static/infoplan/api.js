@@ -7,6 +7,7 @@ const API_MARKER_DELETE      = (markerUid) => `${BASE_URL}/viewer/api/marker/${m
 const API_VAR_ALTER_WRONG    = (markerUid) => `${BASE_URL}/viewer/api/marker/${markerUid}/variable/`;
 const API_MARKER_LOAD_REVIEW = (markerUid) => `${BASE_URL}/viewer/api/marker/${markerUid}/review/`;
 const API_MARKER_RESOLVE_CMS = (markerUid) => `${BASE_URL}/viewer/api/marker/${markerUid}/resolve_all_comments/`;
+const API_PUT_PAGE_DATA      = (code)      => `${BASE_URL}/viewer/page/${code}/edit/`
 const API_PROJECT_PDF_GENERATION = (title) => `${BASE_URL}/viewer/project/${title}/pdf/generate/`
 
 function doApiCall(method, url, data, onResponse, onError=undefined) {
