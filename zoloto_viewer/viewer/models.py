@@ -275,7 +275,10 @@ class Page(models.Model):
     floor_caption = models.TextField(null=True)                                 # текст, отображаемый на странице
     document_offset = models.PositiveSmallIntegerField(null=True, default=None) # настройка порядка страниц
 
-    marker_size_factor = models.IntegerField(default=100)       # possible values are: [50, 75, 100, 125, 150, 200]
+    marker_size_factor = models.IntegerField(default=100)       # possible values are: {SIZE_FACTOR_ALLOWED}
+
+    SIZE_FACTOR_ALLOWED = [50, 75, 100, 125, 150, 200]
+    MAP_SCALE_ALLOWED = [100, 125, 150, 200]
 
     class Meta:
         unique_together = ['project', 'floor_caption']
@@ -318,7 +321,7 @@ class Page(models.Model):
 
     @staticmethod
     def validate_size_factor(value):
-        return value in [50, 75, 100, 125, 150, 200]
+        return value in Page.SIZE_FACTOR_ALLOWED
 
     @staticmethod
     def by_code(page_code):

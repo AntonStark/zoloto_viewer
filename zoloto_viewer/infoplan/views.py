@@ -255,6 +255,7 @@ def resolve_marker_comments(request, marker_uid: uuid.UUID):
 
 def project_page(request, **more_context):
     page_obj = more_context['page_obj']
+    page_config = more_context['page_config']
 
     pdf_original = more_context['pdf_original']
     pdf_reviewed = more_context['pdf_reviewed']
@@ -271,6 +272,7 @@ def project_page(request, **more_context):
     context = {
         'project': project,
         'page': page_obj,
+        'page_config': page_config,
         'page_code_list': page_code_list,
         'layers': layers,
         'layers_visible': layers_visible,

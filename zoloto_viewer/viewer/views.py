@@ -141,6 +141,10 @@ def project_page(request, page_code):
     if not page_obj:
         raise Http404
 
+    page_config = {
+        'marker_size_factors': Page.SIZE_FACTOR_ALLOWED,
+        'map_scale_factors': Page.MAP_SCALE_ALLOWED,
+    }
     pdf_orig_set = page_obj.project.pdfgenerated_set.filter(mode=PdfGenerated.ORIGINAL)
     pdf_rev_set = page_obj.project.pdfgenerated_set.filter(mode=PdfGenerated.REVIEWED)
     pdf_original = pdf_orig_set.latest('created') if pdf_orig_set.exists() else None
@@ -148,7 +152,8 @@ def project_page(request, page_code):
     pdf_created_time = PdfGenerated.get_latest_time([pdf_original, pdf_reviewed])
     pdf_refresh_timeout = page_obj.project.pdf_refresh_timeout()
 
-    return infoplan_views.project_page(request, page_obj=page_obj, pdf_original=pdf_original, pdf_reviewed=pdf_reviewed,
+    return infoplan_views.project_page(request, page_obj=page_obj, page_config=page_config,
+                                       pdf_original=pdf_original, pdf_reviewed=pdf_reviewed,
                                        pdf_created_time=pdf_created_time, pdf_refresh_timeout=pdf_refresh_timeout)
 
 
@@ -178,8 +183,10 @@ def edit_project_page(request, page_code):
         raise Http404
 
     if not Page.validate_size_factor(marker_size_factor):
-        return JsonResponse({'error': 'marker_size_factor bad value. '
-                                      'Possible values are: 50, 75, 100, 125, 150, 200.'}, status=400)
+        return JsonResponse({
+            'error': 'marker_size_factor bad value. '
+                     'Possible values are: {allowed}.'.format(allowed=', '.join(Page.SIZE_FACTOR_ALLOWED))},
+            status=400)
 
     page_obj.marker_size_factor = marker_size_factor
     page_obj.save()
