@@ -13,7 +13,9 @@
                 {% for layer, markers in markers_by_layer.items %}
                     <g class="layer_markers layer-{{ layer.title }}">
                         <symbol id="marker_layer-{{ layer.title }}" overflow="visible">
-                            {{ layer.kind.svg_figures|safe }}
+                            <g transform="scale({{ marker_display_config.marker_scale }})">
+                                {{ layer.kind.svg_figures|safe }}
+                            </g>
                         </symbol>
                         {% for marker in markers %}
                             <use href="#marker_layer-{{ layer.title }}"
@@ -27,10 +29,12 @@
                                       data-cx="{{ marker.pos_x }}" data-cy="{{ marker.pos_y }}"
                                       x1="{{ marker.pos_x }}" y1="{{ marker.pos_y }}"
                                       x2="{{ marker.pos_x }}" y2="{{ marker.pos_y }}"></line>
+                                {% with mcr=marker_display_config.circle_radius %}
                                 <circle cx="{{ marker.pos_x }}" cy="{{ marker.pos_y }}"
-                                        r="{{ marker.CIRCLE_RADIUS }}"
+                                        r="{{ mcr }}"
                                         class="marker_circle" id="marker_circle-{{ marker.uid }}"
                                         data-marker-uid="{{ marker.uid }}" data-layer-title="{{ layer.title }}"></circle>
+                                {% endwith %}
                                 {% with cmp=marker_display_config.comment_mark_padding cmr=marker_display_config.comment_mark_radius %}
                                 <circle cx="{{ marker.pos_x }}" cy="{{ marker.pos_y }}"
                                         r="{{ cmr }}"
@@ -77,10 +81,10 @@
     {% for layer in markers_by_layer.keys %}
         <div>
             <svg width="30" height="30">
-                <symbol id="marker_layer-{{ layer.title }}" overflow="visible">
+                <symbol id="legend_marker_layer-{{ layer.title }}" overflow="visible">
                     {{ layer.kind.svg_figures|safe }}
                 </symbol>
-                <use href="#marker_layer-{{ layer.title }}"
+                <use href="#legend_marker_layer-{{ layer.title }}"
                      x="15" y="15"
                      class="plan_marker layer_markers layer-{{ layer.title }}"></use>
             </svg>

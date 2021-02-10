@@ -280,9 +280,10 @@ def project_page(request, **more_context):
 
         'base_url': settings.BASE_URL,
         'marker_display_config': {
-            'circle_radius': Marker.CIRCLE_RADIUS,
-            'comment_mark_radius': Marker.COMMENT_MARK_RADIUS,
-            'comment_mark_padding': Marker.COMMENT_MARK_PADDING,
+            'marker_scale': page_obj.apply_size_factor(1),
+            'circle_radius': page_obj.apply_size_factor(Marker.CIRCLE_RADIUS),
+            'comment_mark_radius': page_obj.apply_size_factor(Marker.COMMENT_MARK_RADIUS),
+            'comment_mark_padding': page_obj.apply_size_factor(Marker.COMMENT_MARK_PADDING),
         },
 
         'pdf_original': pdf_original,

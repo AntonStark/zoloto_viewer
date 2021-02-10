@@ -330,6 +330,9 @@ class Page(models.Model):
         except Page.DoesNotExist:
             return None
 
+    def apply_size_factor(self, value):
+        return value * self.marker_size_factor / 100
+
     def save(self, *args, **kwargs):
         if not self.code:
             maybe_code = base64.b32encode(self.uid.bytes)[:10].decode('utf-8')
