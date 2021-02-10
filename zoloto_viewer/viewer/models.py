@@ -8,7 +8,7 @@ from datetime import timedelta
 from django.conf import settings
 from django.contrib.postgres import fields
 from django.core.files import File
-from django.db import models, transaction
+from django.db import models
 from django.dispatch import receiver
 from django.utils import timezone
 from os import path
@@ -172,7 +172,8 @@ class Layer(models.Model):
     sync_needed = models.BooleanField(default=False, null=False)
 
     class Meta:
-        unique_together = [['project', 'title'], ['project', 'number']]
+        unique_together = [['project', 'title']]
+        ordering = ['-number']
 
     @property
     def orig_file_name(self):
@@ -192,6 +193,12 @@ class Layer(models.Model):
 
     def serialize(self):
         return path.basename(self.csv_data.name), self.client_last_modified_date
+
+    def save(self, *args, **kwargs):
+        if not self.number and self.title:
+            self.number = Layer.extract_number(self.title)
+            self.save()
+        super(Layer, self).save(*args, **kwargs)
 
     @staticmethod
     def remove_from_project(project, filename):
@@ -245,6 +252,11 @@ class Layer(models.Model):
     def validate_title(title: str):
         if not re.match(r'^\d+_.+', title):
             raise ValueError('Номер типа должен быть вида ЧИСЛО_БУКВЫ')
+
+    @staticmethod
+    def extract_number(title: str):
+        match = re.match(r'^\d+', title)
+        return int(match.group(0)) if match else None
 
 
 def _delete_file(fpath):
