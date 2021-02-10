@@ -78,10 +78,12 @@ function buildMessBox(data) {
         return commentDiv;
     }
     function buildResolveBtn(data) {
-        const [markerUid, hasComment] = [data.marker, data.has_comment];
+        const markerUid = data.marker;
+        const hasComment = data.has_comment;
+        const comments_resolved = data.comments_resolved;
 
         let btnLink = document.createElement('a');
-        if (!hasComment) return btnLink;
+        if (!hasComment || comments_resolved) return btnLink;
 
         btnLink.classList.add('fill-button', 'noselect')
         btnLink.setAttribute('style', 'width: fit-content; margin-bottom: 6px;')
