@@ -4,10 +4,16 @@ function ControllerMapInteractions() {
     let markerSelection = [];
 
     // map interaction mode
-    function isInsertMode()
-    { return document.getElementById('menu_actions_option1').checked; }
-    function isSelectMode()
-    { return document.getElementById('menu_actions_option2').checked; }
+    function isInsertMode() {
+        const control = document.getElementById('menu_actions_option1');
+        if (!control) return false;
+        return control.checked;
+    }
+    function isSelectMode() {
+        const control = document.getElementById('menu_actions_option2');
+        if (!control) return true;
+        return control.checked;
+    }
     function activeLayer()
     { return enabledLayersController.getActive(); }
     function getPageCode()
