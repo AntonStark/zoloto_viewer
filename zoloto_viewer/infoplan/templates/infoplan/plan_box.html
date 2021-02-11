@@ -78,7 +78,7 @@
 <div class="map_legend">
     {% for layer in markers_by_layer.keys %}
         <div>
-            <svg width="30" height="30">
+            <svg width="30" height="30" style="vertical-align: top;">
                 <symbol id="legend_marker_layer-{{ layer.title }}" overflow="visible">
                     {{ layer.kind.svg_figures|safe }}
                 </symbol>
@@ -86,7 +86,7 @@
                      x="15" y="15"
                      class="plan_marker layer_markers layer-{{ layer.title }}"></use>
             </svg>
-            <div style="display: inline-block;">
+            <div class="map_legend_caption">
                 {{ layer.title }}<br>
                 <small>{{ layer.desc }}</small>
             </div>

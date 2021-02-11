@@ -232,6 +232,10 @@ input.disabled {
     left: 300px;
     top: 100px;
 }
+.map_legend_caption {
+    display: inline-block;
+    max-width: 100px;
+}
 
 
 
