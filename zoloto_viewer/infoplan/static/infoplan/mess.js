@@ -128,6 +128,7 @@ function onSuccessLoadReview(markerData) {
     const markerUid = markerData.marker;
     markerCirclesManager.sync(markerData);
     messageBoxManager.deleteMessage(markerUid);
+    refreshMarkerElement(markerData);
 }
 
 function handlerMessBlur(marker_uid) {

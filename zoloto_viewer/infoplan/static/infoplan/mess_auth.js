@@ -127,6 +127,7 @@ function variablesContainerBlur(e) {
 function onSuccessLoadReview(markerData) {
     const markerUid = markerData.marker;
     messageBoxManager.hide(markerUid);
+    refreshMarkerElement(markerData);
 }
 
 function onErrorLoadReview(rep) {
@@ -156,6 +157,7 @@ function handlerResolveCommentsBtnClick(marker_uid) {
             const markerUid = markerData.marker;
             markerCirclesManager.sync(markerData);
             messageBoxManager.deleteMessage(markerUid);
+            refreshMarkerElement(markerData);
         },
         (rep) => {console.log(rep);},
         );

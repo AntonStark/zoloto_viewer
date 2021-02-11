@@ -158,6 +158,7 @@ function renderMarkerElement(data) {
             const posX = data.position.center_x;
             const posY = data.position.center_y;
             const hasComment = (data.has_comment ? 'marker_has_comment': '');
+            const commentsResolved = (data.all_comments_resolved ? 'marker_comments_resolved': '');
 
             let circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
 
@@ -170,7 +171,7 @@ function renderMarkerElement(data) {
             circle.setAttributeNS(null, 'transform',
                 `translate(${padding}, -${padding})`);
             circle.setAttributeNS(null, 'class',
-                `marker_comment_mark ${hasComment}`);
+                `marker_comment_mark ${hasComment} ${commentsResolved}`);
 
             return circle;
         }
@@ -194,4 +195,19 @@ function renderMarkerElement(data) {
 
         circleElement.addEventListener('click', mapInteractionsController.handleClickMarkerCircle);
     }
+}
+
+function refreshMarkerElement(data) {
+    const markerUid = data.marker;
+
+    function refreshCommentMark(element, data) {
+        element.classList.toggle('marker_has_comment', data.has_comment);
+        element.classList.toggle('marker_comments_resolved', data.all_comments_resolved);
+    }
+
+    const circleElement = document.getElementById(`marker_circle-${markerUid}`);
+    const markerAdditionalGroup = circleElement.parentNode;
+    const commentMark = markerAdditionalGroup.getElementsByClassName('marker_comment_mark')[0];
+
+    refreshCommentMark(commentMark, data);
 }
