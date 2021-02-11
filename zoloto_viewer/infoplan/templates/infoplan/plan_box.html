@@ -76,7 +76,8 @@
     </div>
 </div>
 <div class="map_legend">
-    {% for layer in markers_by_layer.keys %}
+    {% load involved_layers %}
+    {% for layer in markers_by_layer|involved_layers %}
         <div>
             <svg width="30" height="30" style="vertical-align: top;">
                 <symbol id="legend_marker_layer-{{ layer.title }}" overflow="visible">
