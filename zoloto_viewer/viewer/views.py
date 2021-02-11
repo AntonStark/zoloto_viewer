@@ -3,7 +3,7 @@ import operator
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db import IntegrityError
-from django.http import Http404, HttpResponse, JsonResponse
+from django.http import Http404, JsonResponse
 from django.shortcuts import render, redirect
 from django.views.decorators import csrf, http
 
@@ -202,8 +202,8 @@ def add_project_layer(request, title):
     except Project.DoesNotExist:
         raise Http404
 
-    last_layer = project.last_layer()
-    color = last_layer.color.next() if last_layer else Color.objects.all().first()
+    last_color = Layer.max_color(project.layer_set)
+    color = last_color.next() if last_color else Color.objects.first()
 
     context = {
         'project': project,

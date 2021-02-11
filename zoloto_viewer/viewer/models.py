@@ -258,6 +258,11 @@ class Layer(models.Model):
         match = re.match(r'^\d+', title)
         return int(match.group(0)) if match else None
 
+    @staticmethod
+    def max_color(layers: models.QuerySet):
+        color_id = layers.aggregate(value=models.aggregates.Max('color'))['value']
+        return Color.objects.get(id=color_id) if color_id else None
+
 
 def _delete_file(fpath):
     """ Deletes file from filesystem. """
