@@ -25,19 +25,17 @@
                                  data-marker-uid="{{ marker.uid }}"
                                  data-layer-title="{{ layer.title }}"></use>
                             <g class="marker_group {{ marker.correct|yesno:'marker_correct,marker_wrong,' }}">
-                                <line class="marker_link" data-mr="{{ marker.CIRCLE_RADIUS }}"
-                                      data-cx="{{ marker.pos_x }}" data-cy="{{ marker.pos_y }}"
-                                      x1="{{ marker.pos_x }}" y1="{{ marker.pos_y }}"
-                                      x2="{{ marker.pos_x }}" y2="{{ marker.pos_y }}"></line>
                                 {% with mcr=marker_display_config.circle_radius %}
-                                <circle cx="{{ marker.pos_x }}" cy="{{ marker.pos_y }}"
-                                        r="{{ mcr }}"
+                                <line x1="{{ marker.pos_x }}" y1="{{ marker.pos_y }}"
+                                      x2="{{ marker.pos_x }}" y2="{{ marker.pos_y }}"
+                                      class="marker_link" data-mr="{{ mcr }}"
+                                      data-cx="{{ marker.pos_x }}" data-cy="{{ marker.pos_y }}"></line>
+                                <circle cx="{{ marker.pos_x }}" cy="{{ marker.pos_y }}" r="{{ mcr }}"
                                         class="marker_circle" id="marker_circle-{{ marker.uid }}"
                                         data-marker-uid="{{ marker.uid }}" data-layer-title="{{ layer.title }}"></circle>
                                 {% endwith %}
                                 {% with cmp=marker_display_config.comment_mark_padding cmr=marker_display_config.comment_mark_radius %}
-                                <circle cx="{{ marker.pos_x }}" cy="{{ marker.pos_y }}"
-                                        r="{{ cmr }}"
+                                <circle cx="{{ marker.pos_x }}" cy="{{ marker.pos_y }}" r="{{ cmr }}"
                                         transform="translate({{ cmp }}, -{{ cmp }})"
                                         class="marker_comment_mark
                                         {{ marker.has_comments|yesno:'marker_has_comment,' }}

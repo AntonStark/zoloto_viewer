@@ -14,15 +14,12 @@ function ControllerMapInteractions() {
     { return pageCode; }
 
     // marker selection
-    function isInSelection(markerUid) {
-        return markerSelection.indexOf(markerUid) !== -1;
-    }
-    function addToSelection(markerUid) {
-        markerSelection.push(markerUid);
-    }
-    function dropSelection() {
-        markerSelection.splice(0, markerSelection.length);
-    }
+    function isInSelection(markerUid)
+    { return markerSelection.indexOf(markerUid) !== -1; }
+    function addToSelection(markerUid)
+    { markerSelection.push(markerUid); }
+    function dropSelection()
+    { markerSelection.splice(0, markerSelection.length); }
 
     // inner methods
     function _deleteRoutine(markerUidArray) {
@@ -35,7 +32,7 @@ function ControllerMapInteractions() {
                 }
             });
         }
-    //    todo syns selection after delete
+    //    todo sync selection after delete
     }
     function _createHelper(posX, posY) {
         createMarker({
