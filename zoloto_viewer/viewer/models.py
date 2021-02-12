@@ -140,6 +140,9 @@ class MarkerKind(models.Model):
     sides = models.IntegerField(default=1)
     svg_figures = models.TextField()
 
+    class Meta:
+        ordering = ['id']
+
     def side_keys(self):
         def key(n): return n + 1
         return [key(s) for s in range(self.sides)]
