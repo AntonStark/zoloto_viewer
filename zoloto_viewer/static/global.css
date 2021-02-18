@@ -398,6 +398,7 @@ select#actions_menu_scale_markers[data-changed="true"] + a {
 .variables_container ul li {
     white-space: nowrap;
     font-size: 12px;
+    font-family: "Zoloto Picts v1", serif;
     /*cursor: pointer;*/
     /* to prevent selection on click */
     -webkit-touch-callout: none;

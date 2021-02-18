@@ -27,6 +27,12 @@
     <script src="{% static 'fontawesome_free/js/all.min.js' %}"></script>
     <link rel="stylesheet" type="text/css" href="{% static 'global.css' %}">
     <style type="text/css">
+        @font-face {
+            font-family: "Zoloto Picts v1";
+            src: url("{% static 'infoplan/picts_v1.ttf' %}") format("truetype");
+        }
+    </style>
+    <style type="text/css">
         {% for layer in markers_by_layer.keys %}
             .layer-{{ layer.title }} .variables_container {
                 background: white;
