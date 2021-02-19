@@ -165,18 +165,27 @@ class VariablesManager(models.Manager):
         # todo it's just variable_set with proper ordering in Variable.Meta !!1
         return sorted(MarkerVariable.objects.filter(marker=marker).all(), key=lambda v: int(v.key))
 
-    def vars_by_side(self, marker: Marker):
+    def vars_by_side(self, marker: Marker, apply_transformations=None):
         # [
         #   {side: 1, variables: ['a', 'b']},
         #   {side: 2, variables: []}
         # ]
-        side_to_vars = collections.defaultdict(list)
         vars = marker.markervariable_set.values_list('side', 'key', 'value')
+        vars_by_side = collections.defaultdict(list)
         for s, k, v in vars:
-            side_to_vars[s].append(v)
+            vars_by_side[s].append(v)
+
+        if apply_transformations:
+            transformed = {}
+            for s in vars_by_side.keys():
+                vars = vars_by_side[s]
+                for tr in apply_transformations:
+                    vars = tr.apply(vars, side=s)
+                transformed[s] = vars
+            vars_by_side = transformed
 
         res = [
-            {'side': side_key, 'variables': side_to_vars.get(side_key, [])}
+            {'side': side_key, 'variables': vars_by_side.get(side_key, [])}
             for side_key in marker.layer.kind.side_keys()
         ]
         return res

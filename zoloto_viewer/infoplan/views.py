@@ -10,6 +10,7 @@ from django.views.decorators import csrf, http
 from django.utils.decorators import method_decorator
 
 from zoloto_viewer.infoplan.models import Marker, MarkerVariable
+from zoloto_viewer.infoplan.utils.variable_transformations import HideMasterPageLine, ReplacePictCodes
 from zoloto_viewer.viewer.models import Layer, Page, Project
 
 
@@ -59,16 +60,19 @@ def create_marker(request):
 @method_decorator(csrf.csrf_exempt, name='dispatch')
 class MarkerView(View):
     @method_decorator(marker_api)
-    def get(self, _, marker_uid: uuid.UUID):
+    def get(self, request, marker_uid: uuid.UUID):
         try:
             marker = Marker.objects.get(uid=marker_uid)
         except Marker.DoesNotExist:
             raise Http404
 
+        is_pretty = request.GET.get('pretty')
+        filters = [HideMasterPageLine(), ReplacePictCodes()] if is_pretty else []
+
         rep = marker.to_json()
         rep.update({
             'comments': marker.comments_json,
-            'infoplan': MarkerVariable.objects.vars_by_side(marker),
+            'infoplan': MarkerVariable.objects.vars_by_side(marker, apply_transformations=filters),
         })
         rep.update({
             'layer': {
