@@ -1,6 +1,18 @@
 "use strict";
 
+// STARTER
+
+function makeDataRequest(markerUid, onResponse, onError=undefined) {
+    doApiCall('GET',
+        API_MARKER_GET_DATA_PRETTY(markerUid),
+        undefined,
+        onResponse,
+        onError
+    );
+}
+
 // RENDER
+
 function buildMessBox(data) {
     function buildHeader(data) {
         const markerNumber = data.number;
@@ -124,6 +136,7 @@ function buildMessBox(data) {
 }
 
 // HANDLERS
+
 function onSuccessLoadReview(markerData) {
     const markerUid = markerData.marker;
     markerCirclesManager.sync(markerData);

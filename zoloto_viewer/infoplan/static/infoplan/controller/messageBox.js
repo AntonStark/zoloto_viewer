@@ -220,8 +220,7 @@ function ControllerMessageBox(render) {
         //   1) запросить данные
         //   2) если данные пришли, построить Node сообщения, закинуть в индекс и отобразить в контейнере
         //   3) запросить и установить размещение. если места не нашлось, удалить
-        doApiCall('GET', API_MARKER_GET_DATA(markerUid), undefined,
-            function (markerData) {
+        makeDataRequest(markerUid, function (markerData) {
                 const messageElem = renderMessage(markerData);
                 let messContainer = makeWrapper(undefined, undefined, messageElem);
                 // сначала размещаем в дефолтном положении и невидимым

@@ -1,5 +1,18 @@
 "use strict";
 
+// STARTER
+
+function makeDataRequest(markerUid, onResponse, onError=undefined) {
+    doApiCall('GET',
+        API_MARKER_GET_DATA(markerUid),
+        undefined,
+        onResponse,
+        onError
+    );
+}
+
+// RENDER
+
 function buildMessBox(data) {
     function buildInfoplanBlock(data) {
         function buildSideNBlock(nSide) {
