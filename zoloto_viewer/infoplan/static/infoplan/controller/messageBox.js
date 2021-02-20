@@ -1,6 +1,6 @@
 "use strict";
 function ControllerMessageBox(render) {
-    let _renderedMessagesIndex = {};     // marker_uid -> {messContainer: MessageBoxNode}
+    let _renderedMessagesIndex = {};    // marker_uid -> {messContainer: MessageBoxNode}
     let visibleMessagesIndex  = {};     // marker_uid -> visibility (bool)
     let markerElementIndex    = {};     // marker_uid -> MarkerElement
     const renderMessage = render;
@@ -41,107 +41,6 @@ function ControllerMessageBox(render) {
             return undefined;
     }
     function acquireMessagePosition(markerUid, messContainer) {
-        /* todo
-        1) -- получить размер компонента с планом
-        2) -- создать матрицу с шагом 10px заполненную [0, 0]
-        3) -- обойти отрендеренные блоки и пометить их узлы в матрице как null (если они видимы!)
-        4) -- этот метод должен знать размер размещаемого блока
-
-        5) -- запросить координаты маркера для markerUid
-        6) пометить также узлы, размещение в которых закрывает маркер
-        7) обойти матрицу и заполнить (пропуская null) величины расстояний
-           до маркера, попутно отслеживая argmin по метрике L2
-         */
-        const [mapScrWidth, mapScrHeight] = mapScaleController.origSize();
-        const [hPoints, vPoints] = [mapScrWidth / nodesSparseFactor, mapScrHeight / nodesSparseFactor].map(Math.floor);
-        let nodeMatrix = Array(vPoints).fill().map(
-            () => Array(hPoints).fill([undefined, undefined])
-        );
-        // fixme есть проблема с массивами при выводе второго блока
-        //  Cannot set property '0' of undefined
-        //  seems to i be out of bounds
-        function viewMatrix(color) {
-            // для каждой вершины вывести черную точку если там null, иначе -- цветную
-            const svgNS = 'http://www.w3.org/2000/svg';
-            const elementId = 'view-matrix-svg-group';
-            let groupElement = document.createElementNS(svgNS,'g');
-            for (let i = 0; i < nodeMatrix.length; ++i) {
-                const y = i * nodesSparseFactor;
-                for (let j = 0; j < nodeMatrix[i].length; ++j) {
-                    const x = j * nodesSparseFactor;
-                    const point = document.createElementNS(svgNS,'circle');
-                    point.setAttributeNS(null,"cx",x);
-                    point.setAttributeNS(null,"cy",y);
-                    point.setAttributeNS(null,"r",1);
-                    point.setAttributeNS(null,'stroke','none');
-                    point.setAttributeNS(null,'fill',
-                        (nodeMatrix[i][j] === null ? 'black' : color));
-                    groupElement.append(point);
-                }
-            }
-            let oldGroupElement = document.getElementById(elementId);
-            if (oldGroupElement) {
-                oldGroupElement.parentNode.replaceChild(groupElement, oldGroupElement);
-            }
-            else {
-                const svgElem = document.getElementById('project-page-plan-svg');
-                svgElem.append(groupElement);
-            }
-            groupElement.setAttributeNS(null, 'id', elementId);
-        }
-
-        const [newBoxWidth, newBoxHeight] = [messContainer.offsetWidth, messContainer.offsetHeight];
-        function toNodesLowerBound(length) { return Math.ceil(length / nodesSparseFactor); }
-        function toNodesUpperBound(length) { return Math.floor(length / nodesSparseFactor); }
-        function coveredHorizontalNodes(box) {
-            const boxRect = box.getBoundingClientRect();
-            const mapRect = mapScaleController.mapRect();
-            const from = toNodesLowerBound(Math.max(0, boxRect.left - (newBoxWidth + boxMargins) - mapRect.left));
-            const to = toNodesUpperBound(Math.min(mapRect.right, boxRect.right - mapRect.left));
-            return Array.from(Array(to - from + 1), (e, i) => from + i);
-        }
-        function coveredVerticalNodes(box) {
-            const boxRect = box.getBoundingClientRect();
-            const mapRect = mapScaleController.mapRect();
-            const from = toNodesLowerBound(Math.max(0, boxRect.top - (newBoxHeight + boxMargins) - mapRect.top))
-            const to = toNodesUpperBound(Math.min(mapRect.bottom, boxRect.bottom - mapRect.top))
-            return Array.from(Array(to - from + 1), (e, i) => from + i);
-        }
-
-        for (const markerUid of renderedMessagesIds()) {
-            if (!visibleMessagesIndex[markerUid])
-                continue;
-
-            const box = getContainerOrNull(markerUid);
-            if (box !== null) {
-                console.debug(box.getBoundingClientRect());
-
-                const horizontalNodesInterval = coveredHorizontalNodes(box);
-                const verticalNodesInterval = coveredVerticalNodes(box);
-                console.log(markerUid, 'horizontal:', horizontalNodesInterval, 'vertical:', verticalNodesInterval);
-                for (let i of verticalNodesInterval) {
-                    for (let j of horizontalNodesInterval) {
-                        nodeMatrix[i][j] = null;
-                    }
-                }
-            }
-
-            const marker = getMarkerOrNull(markerUid);
-            if (marker !== null) {
-                console.debug(marker.getBoundingClientRect());
-
-                const horizontalNodesInterval = coveredHorizontalNodes(marker);
-                const verticalNodesInterval = coveredVerticalNodes(marker);
-                console.log(markerUid, 'horizontal:', horizontalNodesInterval, 'vertical:', verticalNodesInterval);
-                for (let i of verticalNodesInterval) {
-                    for (let j of horizontalNodesInterval) {
-                        nodeMatrix[i][j] = null;
-                    }
-                }
-            }
-        }
-        // viewMatrix('red');
-        // TODO 2) удалить старый способ
         const [rawMarX, rawMarY] = markerCirclesManager.position(markerUid);
         const planScale = mapScaleController.current();
         const [marX, marY] = [planScale * rawMarX, planScale * rawMarY];
@@ -150,9 +49,7 @@ function ControllerMessageBox(render) {
         const tmClientRect = targetMarker.getBoundingClientRect();
         const tmcX = (tmClientRect.left + tmClientRect.right) / 2;
         const tmcY = (tmClientRect.top + tmClientRect.bottom) / 2;
-        // TODO 1) debug that two ways of getting marker coordinates are equal
-        // TODO 3) вычисление расстояния (по x и y) от каждой Node до целевого маркера
-        const d = 20;
+        const d = MARKER_DISPLAY_CONFIG.circle_radius;
 
         const x = marX + d;
         const y = marY + d;

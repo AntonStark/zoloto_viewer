@@ -130,3 +130,12 @@ function getSvgCoordinates(mouseEvent) {
     const cursorPt =  probePt.matrixTransform(mapSvgElem.getScreenCTM().inverse());
     return [cursorPt.x, cursorPt.y];
 }
+
+// not used
+function toOuterCoordinates(x, y) {
+    probePt.x = x;
+    probePt.y = y;
+
+    const cursorPt =  probePt.matrixTransform(mapSvgElem.getScreenCTM());
+    return [cursorPt.x, cursorPt.y];
+}
