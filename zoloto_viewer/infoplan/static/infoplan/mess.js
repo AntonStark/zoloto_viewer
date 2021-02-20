@@ -48,7 +48,11 @@ function buildMessBox(data) {
                     let variableItem = document.createElement('li');
                     // variableItem.setAttribute('data-variable-key', varData.key);
                     // variableItem.textContent = varData.value;
-                    variableItem.textContent = varData;
+                    const lines = varData.split('\n')
+                        .reduce( (item, seq) => [item, document.createElement('br')].concat(seq) );
+                    if (lines)
+                        variableItem.append.apply(variableItem, lines);
+                    // variableItem.textContent = varData.replaceAll('\n', '<br/>');
                     // variableItem.addEventListener('click', () => handleToggleWrong(data.marker, varData.key));
                     // varWrongnessManager.register(data.marker, varData.key, variableItem, varData.wrong);
                     return variableItem;
