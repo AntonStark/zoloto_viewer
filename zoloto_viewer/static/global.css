@@ -206,7 +206,10 @@ input.disabled {
 
 
 #project-page-plan-svg {
-    position: absolute;
+    height: inherit;
+    width: -moz-available;
+    width: -webkit-fill-available;
+    width: fill-available;
 }
 
 .map_controls {

@@ -71,7 +71,7 @@ function ControllerMapInteractions() {
 
     }
     function handleClickMap(e) {
-        const [svgX, svgY] = [e.offsetX, e.offsetY];
+        const [svgX, svgY] = getSvgCoordinates(e);
         console.debug(svgX, svgY, activeLayer(), getPageCode());
 
         messageBoxManager.hideAll();
@@ -120,4 +120,13 @@ function ControllerMapInteractions() {
         handleClickMap          : handleClickMap,
         handleClickMarkerCircle : handleClickMarkerCircle,
     }
+}
+
+function getSvgCoordinates(mouseEvent) {
+    probePt.x = mouseEvent.clientX;
+    probePt.y = mouseEvent.clientY;
+
+    // The cursor point, translated into svg coordinates
+    const cursorPt =  probePt.matrixTransform(mapSvgElem.getScreenCTM().inverse());
+    return [cursorPt.x, cursorPt.y];
 }

@@ -1,9 +1,9 @@
 <div class="scrollable">
-    <div style="position: relative;" id="plan-page-map-container">
-        <svg width="{{ page.plan.width }}" height="{{ page.plan.height }}" id="project-page-plan-svg">
+    <div id="plan-page-map-container" style="position: relative; height: inherit;">
+        <svg id="project-page-plan-svg"
+             viewBox="0 0 {{ page.plan.width }} {{ page.plan.height }}">
             <g id="project-page-svg-origin">
                 <image href="{{ page.plan.url }}"
-                        {#                   transform="scale(0.977, 0.988)" #}
                        width="{{ page.plan.width }}" height="{{ page.plan.height }}">
                 </image>
                 <rect id="project-page-svg-background"

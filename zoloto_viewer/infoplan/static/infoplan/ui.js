@@ -1,5 +1,8 @@
 "use strict";
 
+let mapSvgElem;
+let probePt;
+
 const messageBoxManager = ControllerMessageBox(buildMessBox);
 const markerCirclesManager = ControllerMarkerCircles();
 const messLinksManager = ControllerMessageLinks();
@@ -88,6 +91,9 @@ window.addEventListener('load', function () {
     for (const markerCircle of document.getElementsByClassName('marker_circle')) {
         markerCircle.addEventListener('click', mapInteractionsController.handleClickMarkerCircle);
     }
+
+    mapSvgElem = document.getElementById('project-page-plan-svg');
+    probePt = mapSvgElem.createSVGPoint();
 });
 
 function toggleLayerHandler(title) {
@@ -182,8 +188,7 @@ function renderMarkerElement(data) {
         return g;
     }
 
-    const mapRoot = document.getElementById('project-page-plan-svg');
-    const layerGroup = mapRoot.getElementsByClassName(`layer_markers layer-${data.layer}`)[0];
+    const layerGroup = mapSvgElem.getElementsByClassName(`layer_markers layer-${data.layer}`)[0];
     if (layerGroup) {
         layerGroup.append(buildMark(data), buildAdditionalGroup(data));
 
