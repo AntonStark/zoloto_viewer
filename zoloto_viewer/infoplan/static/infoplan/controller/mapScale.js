@@ -35,18 +35,21 @@ function ControllerMapScale() {
 
     function _setScaled() {
         const scale = currentScale();
-        // const deltaFactor = scale - 1;    // relative size of difference of scaled plan over original
-        // const width = mapObj.width.baseVal.value;
-        // const height = mapObj.height.baseVal.value;
-        // const transform = `translate(${deltaFactor * width / 2}, ${deltaFactor * height / 2}) scale(${scale})`;
-        const transform = `scale(${scale})`;
-        svgOrigin.setAttribute('transform', transform);
+        // const transform = `scale(${scale})`;
+        // svgOrigin.setAttribute('transform', transform);
+
+        mapObj.style.height = 'initial';
+        mapObj.style.width = 'initial';
 
         mapObj.setAttribute('width', scale * originalSize[0]);
         mapObj.setAttribute('height', scale * originalSize[1]);
     }
     function _setNormal() {
-        svgOrigin.removeAttribute('transform');
+        // svgOrigin.removeAttribute('transform');
+
+        mapObj.style.height = '';
+        mapObj.style.width = '';
+
         mapObj.setAttribute('width', originalSize[0]);
         mapObj.setAttribute('height', originalSize[1]);
     }
