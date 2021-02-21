@@ -50,8 +50,10 @@ function buildMessBox(data) {
                     // variableItem.textContent = varData.value;
                     const lines = varData.split('\n')
                         .reduce( (item, seq) => [item, document.createElement('br')].concat(seq) );
-                    if (lines)
+                    if (Array.isPrototypeOf(lines))
                         variableItem.append.apply(variableItem, lines);
+                    else
+                        variableItem.textContent = varData;
                     // variableItem.textContent = varData.replaceAll('\n', '<br/>');
                     // variableItem.addEventListener('click', () => handleToggleWrong(data.marker, varData.key));
                     // varWrongnessManager.register(data.marker, varData.key, variableItem, varData.wrong);

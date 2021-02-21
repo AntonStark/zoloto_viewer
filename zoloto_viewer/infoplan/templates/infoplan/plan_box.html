@@ -11,7 +11,7 @@
                 </rect>
                 {% load layers_visibility %}
                 {% for layer, markers in markers_by_layer.items %}
-                    <g class="layer_markers layer-{{ layer.title }}">
+                    <g class="layer_markers layer-{{ layer.title }} {{ layer.title|is_enabled:layers_visible }}">
                         <symbol id="marker_layer-{{ layer.title }}" overflow="visible">
                             <g transform="scale({{ marker_display_config.marker_scale }})">
                                 {{ layer.kind.svg_figures|safe }}
@@ -24,7 +24,7 @@
                                  class="plan_marker"
                                  data-marker-uid="{{ marker.uid }}"
                                  data-layer-title="{{ layer.title }}"></use>
-                            <g class="marker_group {{ marker.correct|yesno:'marker_correct,marker_wrong,' }}">
+                            <g class="marker_group">
                                 {% with mcr=marker_display_config.circle_radius %}
                                 <line x1="{{ marker.pos_x }}" y1="{{ marker.pos_y }}"
                                       x2="{{ marker.pos_x }}" y2="{{ marker.pos_y }}"

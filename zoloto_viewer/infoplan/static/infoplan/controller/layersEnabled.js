@@ -27,14 +27,17 @@ function ControllerEnabledLayers() {
         for (const el of layerRelatedElements)
             el.classList.toggle(ENABLED_LAYER_CLASS);
 
+        const layerPrefix = 'layer-'
+        const layerOwnTitle = ( title.startsWith(layerPrefix) ? title.slice(layerPrefix.length) : title );
+
         let actualUrl = new URL(document.location.href);
-        const newUrl = _toggleLayerUrlParam(title, actualUrl);
+        const newUrl = _toggleLayerUrlParam(layerOwnTitle, actualUrl);
         window.history.pushState({}, '', newUrl.toString());
 
         const projectPageLinks = document.getElementsByClassName(PAGE_LINK_CLASS);
         for (const linkItem of projectPageLinks) {
             let targetUrl = new URL(linkItem.href);
-            linkItem.href = _toggleLayerUrlParam(title, targetUrl);
+            linkItem.href = _toggleLayerUrlParam(layerOwnTitle, targetUrl);
         }
     }
 
