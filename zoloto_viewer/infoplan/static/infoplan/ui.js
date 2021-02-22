@@ -5,7 +5,6 @@ let probePt;
 
 const messageBoxManager = ControllerMessageBox(buildMessBox);
 const markerCirclesManager = ControllerMarkerCircles();
-const messLinksManager = ControllerMessageLinks();
 const varWrongnessManager = ControllerVariableWrongness();
 const mapScaleController = ControllerMapScale();
 const enabledLayersController = ControllerEnabledLayers();

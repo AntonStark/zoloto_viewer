@@ -63,7 +63,6 @@ function ControllerMessageBox(render) {
             const newPos = acquireMessagePosition(markerUid);
             const messageContainer = getContainerOrNull(markerUid);
             _setPosition(messageContainer, newPos)
-            messLinksManager.update(markerUid, messageContainer);
         }
         // console.debug('map scale set to ', newScale);
     }
@@ -137,7 +136,6 @@ function ControllerMessageBox(render) {
                     return;
                 }
 
-                messLinksManager.update(markerUid, messContainer);
                 messContainer.focus();
             });
     }

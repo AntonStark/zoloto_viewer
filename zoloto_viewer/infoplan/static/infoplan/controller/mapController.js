@@ -111,8 +111,6 @@ function ControllerMapInteractions() {
 
         const markerElement = circleElement.parentNode.previousElementSibling;
         messageBoxManager.reg(markerElement);
-        const messLink = circleElement.parentNode.getElementsByClassName('marker_link')[0];
-        messLinksManager.register(markerUid, messLink);
 
         markerCirclesManager.render(mapInteractionsController.isInSelection);
     }
