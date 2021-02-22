@@ -6,7 +6,7 @@ from django.db import models, transaction
 
 class Marker(models.Model):
     """
-    После загрузки нового csv данные об ошибках стираются
+    Отражает положение носителя выбранного типа layer в границах монтажной области floor
     """
     uid = models.UUIDField(default=uuid.uuid4, primary_key=True)
 
@@ -14,12 +14,12 @@ class Marker(models.Model):
     floor = models.ForeignKey('viewer.Page', on_delete=models.CASCADE)
     ordinal = models.IntegerField(null=True, default=None)
 
-    points = fields.JSONField(default=list)     # [ [P], ..., [P] ] | [ [P1, P2, P3], ... ], P = [x: float, y: float]
     pos_x = models.IntegerField()
     pos_y = models.IntegerField()
     rotation = models.IntegerField(default=0)
 
-    correct = models.BooleanField(null=True, default=None)
+    correct = models.BooleanField(null=True, default=None)  # todo remove after pdf generation review (point too)
+    points = fields.JSONField(default=list)     # [ [P], ..., [P] ] | [ [P1, P2, P3], ... ], P = [x: float, y: float]
 
     CIRCLE_RADIUS = 15
     COMMENT_MARK_RADIUS = 2
@@ -65,7 +65,7 @@ class Marker(models.Model):
         super().save(*args, **kwargs)
 
     def polygon_points(self):
-        # todo review draw marker during pdf generation
+        # 9todo review draw marker during pdf generation
         return list(map(Marker.multipoint_mid, self.points))
 
     def center_position(self):
