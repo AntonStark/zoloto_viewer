@@ -2,6 +2,7 @@
 function ControllerMapInteractions() {
     // state
     let markerSelection = [];
+    let rectSelectionCorner = undefined;
 
     // map interaction mode
     function isInsertMode() {
@@ -24,6 +25,17 @@ function ControllerMapInteractions() {
     { return markerSelection.indexOf(markerUid) !== -1; }
     function addToSelection(markerUid)
     { markerSelection.push(markerUid); }
+    function toggleIsSelected(markerUid, include) {
+        if (isInSelection(markerUid) && !include) {
+            const i = markerSelection.indexOf(markerUid);
+            if (i > -1) {
+                markerSelection.splice(i, 1);
+            }
+        }
+        else if (!isInSelection(markerUid) && include) {
+            addToSelection(markerUid);
+        }
+    }
     function dropSelection()
     { markerSelection.splice(0, markerSelection.length); }
 
@@ -72,7 +84,7 @@ function ControllerMapInteractions() {
     }
     function handleClickMap(e) {
         const [svgX, svgY] = getSvgCoordinates(e);
-        console.debug(svgX, svgY, activeLayer(), getPageCode());
+        // console.debug(svgX, svgY, activeLayer(), getPageCode());
 
         messageBoxManager.hideAll();
         dropSelection();
@@ -105,6 +117,59 @@ function ControllerMapInteractions() {
         markerCirclesManager.render(mapInteractionsController.isInSelection);
     }
 
+    function _takeSelectionRect(secondCorner, reset=true) {
+        const xCoords = [rectSelectionCorner[0], secondCorner[0]];
+        const yCoords = [rectSelectionCorner[1], secondCorner[1]];
+        if (reset) {
+            rectSelectionCorner = undefined;
+        }
+        return [xCoords, yCoords];
+    }
+    function _toggleSelectionRect(visibility) {
+        const rect = document.getElementById('project-page-svg-selection-rect');
+        rect.classList.toggle('active', visibility);
+    }
+    function _boundSelectionRect(xCoords, yCoords) {
+        if (!(xCoords[0] < xCoords[1]))
+            xCoords = xCoords.reverse();
+        if (!(yCoords[0] < yCoords[1]))
+            yCoords = yCoords.reverse();
+        const rect = document.getElementById('project-page-svg-selection-rect');
+        rect.setAttributeNS(null, 'x', xCoords[0]);
+        rect.setAttributeNS(null, 'y', yCoords[0]);
+        rect.setAttributeNS(null, 'width', xCoords[1] - xCoords[0]);
+        rect.setAttributeNS(null, 'height', yCoords[1] - yCoords[0]);
+    }
+    function handleDragStart(e) {
+        // console.log('handleDragStart', e);
+
+        rectSelectionCorner = getSvgCoordinates(e);
+        const [xInit, yInit] = _takeSelectionRect(getSvgCoordinates(e), false);
+        _boundSelectionRect(xInit, yInit);
+        _toggleSelectionRect(true);
+
+        mapScaleController.mapSvg().addEventListener('mousemove', mapInteractionsController.handleDragMove);
+    }
+    function handleDragMove(e) {
+        const [xCoords, yCoords] = _takeSelectionRect(getSvgCoordinates(e), false);
+        _boundSelectionRect(xCoords, yCoords);
+    }
+    function handleDragEnd(e) {
+        // console.log('handleDragEnd', e);
+        mapScaleController.mapSvg().removeEventListener('mousemove', mapInteractionsController.handleDragMove);
+
+        const [xCoords, yCoords] = _takeSelectionRect(getSvgCoordinates(e));
+        console.log('setSelectionRect', xCoords, yCoords);
+        markerCirclesManager.setSelectionRect(xCoords, yCoords);
+        _toggleSelectionRect(false);
+
+        markerCirclesManager.render(markerCirclesManager.isInsideSelectionRect, toggleIsSelected);
+        // todo set selection from render (pass toggle-like callback .toggle(uid, isIn) )
+        // console.log(rect);
+
+        // debugger;
+    }
+
 
     return {
         isInsertMode: isInsertMode,
@@ -115,10 +180,15 @@ function ControllerMapInteractions() {
         isInSelection   : isInSelection,
         addToSelection  : addToSelection,
         dropSelection   : dropSelection,
+        toggleIsSelected: toggleIsSelected,
 
         handleKeyUp             : handleKeyUp,
         handleClickMap          : handleClickMap,
         handleClickMarkerCircle : handleClickMarkerCircle,
+
+        handleDragStart : handleDragStart,
+        handleDragMove  : handleDragMove,
+        handleDragEnd   : handleDragEnd,
     }
 }
 

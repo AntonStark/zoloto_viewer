@@ -42,6 +42,9 @@ function setHandlers() {
     window.addEventListener('keyup', mapInteractionsController.handleKeyUp);
     document.getElementById('project-page-svg-background')
         .addEventListener('click', mapInteractionsController.handleClickMap);
+
+    mapScaleController.mapSvg().addEventListener('mousedown', mapInteractionsController.handleDragStart);
+    mapScaleController.mapSvg().addEventListener('mouseup', mapInteractionsController.handleDragEnd);
 }
 window.addEventListener('load', setHandlers);
 window.addEventListener('load', markerCirclesManager.init);

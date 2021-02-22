@@ -25,6 +25,9 @@ function ControllerMapScale() {
     function mapRect() {
         return mapObj.getBoundingClientRect();
     }
+    function getMapObj() {
+        return mapObj;
+    }
 
     function couldIncrease() {
         return scaleIndex < (POSSIBLE_SCALES.length - 1);
@@ -91,6 +94,7 @@ function ControllerMapScale() {
         current: currentScale,
         origSize: getOriginalSize,
         mapRect: mapRect,
+        mapSvg: getMapObj,
 
         couldIncrease: couldIncrease,
         couldDecrease: couldDecrease,

@@ -4,8 +4,10 @@ function ControllerMarkerCircles() {
     const MARKER_INCORRECT_CLASS = 'marker_wrong';
     const MARKER_HAS_COMMENT_CLASS = 'marker_has_comment';
     const MARKER_MESSAGE_SHOWN_CLASS = 'message_shown';
+
     let markerCorrCircles = {};         // marker_uid -> SvgCircleElement
     let circleCenterIndex = {};         // marker_uid -> [x, y]
+    let selectionRect = undefined;
 
     function _setCorrectness(element, correct) {
         if (correct === null)
@@ -63,6 +65,37 @@ function ControllerMarkerCircles() {
     function getCircleCenter(markerUid) {
         return circleCenterIndex[markerUid];
     }
+    function _getCircleCenterSvgCoord(markerUid) {
+        const circleElement = markerCorrCircles[markerUid];
+        if (!circleElement) return;
+
+        return [circleElement.cx.baseVal.value, circleElement.cy.baseVal.value];
+    }
+
+    function setSelectionRect(xBounds, yBounds) {
+        if (!(xBounds[0] < xBounds[1])) {
+            xBounds = xBounds.reverse();
+        }
+        if (!(yBounds[0] < yBounds[1])) {
+            yBounds = yBounds.reverse();
+        }
+
+        selectionRect = [xBounds, yBounds];
+        // console.log(selectionRect[0], selectionRect[1]);
+    }
+    function isInsideSelectionRect(markerUid) {
+        // return true if center coord is inside specified selection
+        const res = _getCircleCenterSvgCoord(markerUid);
+        if (!res) return false;
+
+        const [x, y] = res;
+        const [xBounds, yBounds] = selectionRect;
+        console.log('isInsideSelectionRect', xBounds, yBounds);
+        return (
+            (xBounds[0] <= x && x < xBounds[1]) &&
+            (yBounds[0] <= y && y < yBounds[1])
+        )
+    }
 
     // регистрируем все circleElement при создании контроллера
     function init() {
@@ -71,9 +104,13 @@ function ControllerMarkerCircles() {
             registerMarkerCircle(circleElement);
         }
     }
-    function renderSelection(isInSelectionMethod) {
+    function renderSelection(isInSelectionMethod, toggleSelected=undefined) {
         for (const markerUid in markerCorrCircles) {
-            _setShownStatus(markerUid, isInSelectionMethod(markerUid));
+            const isIn = isInSelectionMethod(markerUid);
+            _setShownStatus(markerUid, isIn);
+            if (toggleSelected) {
+                toggleSelected(markerUid, isIn);
+            }
         }
     }
 
@@ -84,5 +121,9 @@ function ControllerMarkerCircles() {
         sync    : updateCorrectness,
         position: getCircleCenter,
         render  : renderSelection,
+
+        setSelectionRect: setSelectionRect,
+        isInsideSelectionRect: isInsideSelectionRect,
+        circleCenterIndex: circleCenterIndex,   // fixme remove
     }
 }
