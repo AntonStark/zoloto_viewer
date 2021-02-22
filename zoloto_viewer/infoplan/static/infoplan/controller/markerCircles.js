@@ -91,10 +91,9 @@ function ControllerMarkerCircles() {
         const [x, y] = res;
         const [xBounds, yBounds] = selectionRect;
         console.log('isInsideSelectionRect', xBounds, yBounds);
-        return (
-            (xBounds[0] <= x && x < xBounds[1]) &&
-            (yBounds[0] <= y && y < yBounds[1])
-        )
+        const isIn = (xBounds[0] <= x && x < xBounds[1])
+            && (yBounds[0] <= y && y < yBounds[1]);
+        return isIn
     }
 
     // регистрируем все circleElement при создании контроллера
@@ -127,6 +126,5 @@ function ControllerMarkerCircles() {
 
         setSelectionRect: setSelectionRect,
         isInsideSelectionRect: isInsideSelectionRect,
-        circleCenterIndex: circleCenterIndex,   // fixme remove
     }
 }
