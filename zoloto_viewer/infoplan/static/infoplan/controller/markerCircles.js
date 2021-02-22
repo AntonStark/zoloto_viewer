@@ -102,6 +102,9 @@ function ControllerMarkerCircles() {
         const svgElem = document.getElementById('project-page-plan-svg');
         for (const circleElement of svgElem.getElementsByClassName('marker_circle')) {
             registerMarkerCircle(circleElement);
+
+            const markerElement = circleElement.parentNode.previousElementSibling;
+            messageBoxManager.reg(markerElement);
         }
     }
     function renderSelection(isInSelectionMethod, toggleSelected=undefined) {
