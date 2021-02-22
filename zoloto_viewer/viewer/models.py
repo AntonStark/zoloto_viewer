@@ -33,13 +33,9 @@ class Project(models.Model):
     layer_info_data = fields.JSONField(null=True)   # possibly not needed anymore
     maps_info_data = fields.JSONField(null=True)
 
+    # todo create ProjectDocument in own co-app, move PdfGenerated logic there
     pdf_started = models.DateTimeField(null=True)
 
-    # todo check is it still needed
-    MAPS_INFO = '_maps_info'
-    LAYERS_INFO = '_layers_info'
-    POI_NAMES = '_poi_names'
-    PICT_CODES = '_pict_codes'
     PDF_GENERATION_TIMEOUT = 600
 
     def first_page(self):
@@ -74,11 +70,6 @@ class Project(models.Model):
             plan, floor_caption = pages_data[name]
             Page.create_or_replace(project=self, plan=plan,
                                    indd_floor=name, floor_caption=floor_caption)
-
-    def create_layers(self, csv_data):
-        for title, data in csv_data.items():
-            Layer.create_or_replace(project=self, title=title, csv_data=data,
-                                    client_last_modified_date=timezone.now())
 
     def alter_floor_captions(self, captions_dict):
         for p in Page.objects.filter(project=self):
@@ -122,18 +113,6 @@ def project_cleanup(sender, instance: Project, *args, **kwargs):
         shutil.rmtree(project_dir)
 
 
-def csv_upload_next_path(obj: 'Layer', filename):
-    return f'project_{obj.project.title}/layers/next_{filename}'
-
-
-def csv_upload_path(obj: 'Layer', filename):
-    return path.join(obj.project.project_files_dir(), f'layers/{filename}')
-
-
-def csv_upload_prev_path(obj: 'Layer', filename):
-    return f'project_{obj.project.title}/layers/prev_{filename}'
-
-
 class MarkerKind(models.Model):
     id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=16, blank=False)
@@ -170,78 +149,15 @@ class Layer(models.Model):
     raw_color = fields.JSONField(null=True)
     kind = models.ForeignKey(MarkerKind, on_delete=models.PROTECT, default=1)
 
-    client_last_modified_date = models.DateTimeField(editable=False, null=True)
-    csv_data = models.FileField(upload_to=csv_upload_path, null=False, blank=False)
-    sync_needed = models.BooleanField(default=False, null=False)
-
     class Meta:
         unique_together = [['project', 'title']]
         ordering = ['-number']
-
-    @property
-    def orig_file_name(self):
-        return path.basename(self.csv_data.name)
-
-    def load_next_data(self, csv_file):
-        if self.csv_data:
-            _delete_file(self.csv_data.path)
-            self.csv_data.delete(save=False)
-        self.csv_data = csv_file
-        self.sync_needed = True
-        self.save()
-
-    def set_synced(self):
-        self.sync_needed = False
-        self.save()
-
-    def serialize(self):
-        return path.basename(self.csv_data.name), self.client_last_modified_date
 
     def save(self, *args, **kwargs):
         if not self.number and self.title:
             self.number = Layer.extract_number(self.title)
             self.save()
         super(Layer, self).save(*args, **kwargs)
-
-    @staticmethod
-    def remove_from_project(project, filename):
-        for layer in Layer.objects.filter(project=project):
-            if path.basename(layer.csv_data.name) == filename:
-                layer.delete()
-
-    @staticmethod
-    def create_or_replace(project, title, csv_data, client_last_modified_date, layer_info=None):
-        desc, color_str = ('', '(RGB, 0, 0, 0)')
-        if layer_info and title in layer_info:
-            desc, color_str = layer_info[title]
-        color = data_files.layer.color_as_hex(color_str)
-        for layer in Layer.objects.filter(project=project):
-            if layer.orig_file_name == csv_data.name:
-                layer.load_next_data(csv_data)
-                layer.title = title
-                layer.desc = desc
-                layer.color = color
-                layer.raw_color = data_files.layer.color_as_json(color_str)
-                layer.client_last_modified_date = client_last_modified_date
-                layer.save()
-                return
-        Layer(project=project, title=title, desc=desc,
-              color=color, raw_color=data_files.layer.color_as_json(color_str),
-              csv_data=csv_data, sync_needed=True,
-              client_last_modified_date=client_last_modified_date).save()
-
-    @staticmethod
-    def update_layers_info(project, layers_info):
-        layers = Layer.objects.filter(project=project)
-        for L in layers:
-            if L.title not in layers_info:
-                continue
-            desc, color = layers_info[L.title]
-
-            L.color = data_files.layer.color_as_hex(color)
-            L.raw_color = data_files.layer.color_as_json(color)
-            L.desc = desc
-            L.save()
 
     @staticmethod
     def test_title_free(project, title, except_=None):
@@ -271,14 +187,6 @@ def _delete_file(fpath):
     """ Deletes file from filesystem. """
     if path.isfile(fpath):
         os.remove(fpath)
-
-
-# noinspection PyUnusedLocal
-@receiver(models.signals.post_delete, sender=Layer)
-def delete_layer_files(sender, instance: Layer, *args, **kwargs):
-    """ Deletes layer csv file on `post_delete` """
-    if instance.csv_data:
-        _delete_file(instance.csv_data.path)
 
 
 def plan_upload_path(obj: 'Page', filename):

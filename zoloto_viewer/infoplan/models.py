@@ -2,26 +2,6 @@ import collections
 import uuid
 from django.contrib.postgres import fields
 from django.db import models, transaction
-from django.utils.safestring import mark_safe
-
-
-class MarkersManager(models.Manager):
-    def remove_excess(self, layer, actual_numbers):
-        self.filter(layer=layer).exclude(number__in=actual_numbers).delete()
-
-    def create_missing(self, layer, page_by_caption, markers_info):
-        existing = set(self.filter(layer=layer).values_list('number', flat=True))
-        for number, params in markers_info.items():
-            if number in existing:
-                continue
-
-            m_path, m_vars, indd_floor, n = params
-            if indd_floor not in page_by_caption:
-                continue    # skip marker creation if page does not loaded yet
-            else:
-                floor = page_by_caption[indd_floor]
-
-            self.create(layer=layer, floor=floor, number=number, points=m_path)
 
 
 class Marker(models.Model):
@@ -40,8 +20,6 @@ class Marker(models.Model):
     rotation = models.IntegerField(default=0)
 
     correct = models.BooleanField(null=True, default=None)
-
-    objects = MarkersManager()
 
     CIRCLE_RADIUS = 15
     COMMENT_MARK_RADIUS = 2
@@ -70,10 +48,6 @@ class Marker(models.Model):
     def number(self):
         return '/'.join([self.layer.title, self.floor.floor_caption, str(self.ordinal)])
 
-    @property
-    def variables_json(self):
-        return [v.to_json() for v in MarkerVariable.objects.vars_of_marker(self)]
-
     @staticmethod
     def multipoint_mid(mp):
         if len(mp) == 3:        # multipoint = [P1, P2, P3]
@@ -90,19 +64,8 @@ class Marker(models.Model):
             self.ordinal = max_ordinal + 1 if max_ordinal else 1
         super().save(*args, **kwargs)
 
-    def svg_item(self):
-        def _point(p):
-            return f'{p[0]} {p[1]}'
-
-        points_attr = ', '.join(_point(p) for p in map(Marker.multipoint_mid, self.points) if p is not None)
-        return mark_safe(f'<polygon points="{points_attr}" class="plan_marker" data-marker-uid="{self.uid}"/>')
-
-    def path(self):
-        middle_points = filter(None, map(Marker.multipoint_mid, self.points))
-        return ', '.join(map(lambda p: f'{p[0]} {p[1]}', middle_points))
-
-    # todo review draw marker during pdf generation
     def polygon_points(self):
+        # todo review draw marker during pdf generation
         return list(map(Marker.multipoint_mid, self.points))
 
     def center_position(self):
@@ -126,21 +89,6 @@ class Marker(models.Model):
             }
         }
 
-    def deduce_correctness(self, force_true_false=False, save=False):
-        """
-        В случае явного (explicit) выхода отсутствие ошибок -- достаточное условие для correct = True,
-        а при неявном -- в отсутствии ошибок необходимо наличие коммента
-        """
-        return  # disable marker correctness for now
-
-        if self.has_errors:
-            self.correct = False
-        else:
-            if force_true_false or self.has_comments or self.correct is not None:
-                self.correct = True
-        if save:
-            self.save()
-
 
 class VariablesManager(models.Manager):
     def reset_values(self, marker, vars_by_side):
@@ -154,16 +102,8 @@ class VariablesManager(models.Manager):
                 ]
             self.bulk_create(variables)
 
-    def reset_wrong_statuses(self, marker, dict_of_wrongness: dict):
-        vars_by_key = dict(map(lambda v: (v.key, v), self.filter(marker=marker).all()))
-        for key, is_wrong in dict_of_wrongness.items():
-            if key in vars_by_key:
-                vars_by_key[key].wrong = bool(is_wrong)
-        self.bulk_update(vars_by_key.values(), ['wrong'])
-
     def vars_of_marker(self, marker):
-        # todo it's just variable_set with proper ordering in Variable.Meta !!1
-        return sorted(MarkerVariable.objects.filter(marker=marker).all(), key=lambda v: int(v.key))
+        return marker.markervariable_set.all()
 
     def vars_by_side(self, marker: Marker, apply_transformations=None):
         # [

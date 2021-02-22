@@ -4,6 +4,14 @@ from django.db import migrations, models
 import zoloto_viewer.viewer.models
 
 
+def csv_upload_next_path(obj, filename):
+    return f'project_{obj.project.title}/layers/next_{filename}'
+
+
+def csv_upload_prev_path(obj, filename):
+    return f'project_{obj.project.title}/layers/prev_{filename}'
+
+
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -14,11 +22,11 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='layer',
             name='next_csv_data',
-            field=models.FileField(blank=True, default='', upload_to=zoloto_viewer.viewer.models.csv_upload_next_path),
+            field=models.FileField(blank=True, default='', upload_to=csv_upload_next_path),
         ),
         migrations.AlterField(
             model_name='layer',
             name='prev_csv_data',
-            field=models.FileField(blank=True, default='', upload_to=zoloto_viewer.viewer.models.csv_upload_prev_path),
+            field=models.FileField(blank=True, default='', upload_to=csv_upload_prev_path),
         ),
     ]

@@ -201,8 +201,6 @@ def update_wrong_status(request, marker_uid: uuid.UUID):
             return JsonResponse({'error': 'empty variable could not be wrong'}, status=400)
         target.wrong = is_wrong
         target.save()
-        marker.deduce_correctness()
-        marker.save()
 
     rep = marker.to_json()
     rep.update({'variable': target.to_json()})
@@ -236,7 +234,6 @@ def load_marker_review(request, marker_uid: uuid.UUID):
     # always create new comment, previous comments not visible
     if comment:
         marker.markercomment_set.create(content=comment)
-    marker.deduce_correctness(explicit_end_review)  # fixme this is а dead code, remove?
     marker.save()
 
     return JsonResponse(marker.to_json())
