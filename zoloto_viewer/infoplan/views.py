@@ -258,10 +258,11 @@ def project_page(request, **more_context):
     page_obj = more_context['page_obj']
     page_config = more_context['page_config']
 
-    pdf_original = more_context['pdf_original']
-    pdf_reviewed = more_context['pdf_reviewed']
-    pdf_created_time = more_context['pdf_created_time']
-    pdf_refresh_timeout = more_context['pdf_refresh_timeout']
+    pdf_info = more_context['docs_info']['pdf']
+    pdf_original = pdf_info['pdf_original']
+    pdf_reviewed = pdf_info['pdf_reviewed']
+    pdf_created_time = pdf_info['pdf_created_time']
+    pdf_refresh_timeout = pdf_info['pdf_refresh_timeout']
 
     project = page_obj.project
     page_code_list = project.page_set.values_list('code', 'floor_caption')

@@ -31,7 +31,7 @@ class ProjectFile(models.Model):
     kind = models.IntegerField(choices=FileKinds.choices)
 
     date_created = models.DateTimeField(auto_now_add=True)
-    date_updated = models.DateTimeField(auto_now=True)
+    date_updated = models.DateTimeField(auto_now=True)  # todo remove as files never change, replace
 
     @property
     def file_name(self):

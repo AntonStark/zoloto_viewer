@@ -8,7 +8,7 @@ from django.shortcuts import render, redirect
 from django.views.decorators import csrf, http
 
 from zoloto_viewer.infoplan import views as infoplan_views
-from zoloto_viewer.viewer.models import Color, Project, Layer, MarkerKind, Page, PdfGenerated
+from zoloto_viewer.viewer.models import Color, Project, Layer, MarkerKind, Page
 from zoloto_viewer.viewer.view_helpers import project_form
 
 
@@ -105,34 +105,6 @@ def remove_project(request, title):
     return redirect(to='projects')
 
 
-@login_required
-@csrf.csrf_exempt
-def rebuild_pdf_files(request, title):
-    try:
-        project_obj = Project.objects.get(title=title)
-    except Project.DoesNotExist:
-        raise Http404
-
-    pdf_generated = project_obj.generate_pdf_files()
-    if not pdf_generated:
-        return JsonResponse({
-            'error': f'at least {Project.PDF_GENERATION_TIMEOUT} seconds during calls',
-            'try_after': str(project_obj.pdf_refresh_timeout()),
-        }, status=429)
-
-    if request.method == 'GET':
-        return redirect(to=request.META.get('HTTP_REFERER', '/'))   # just push reload if GET
-
-    from zoloto_viewer.viewer.templatetags.timedelta import timedelta_pretty
-    pdf_gen_orig, pdf_gen_rev = pdf_generated
-    return JsonResponse({
-        'pdf_created_time': timedelta_pretty(PdfGenerated.get_latest_time(pdf_generated)),
-        'pdf_refresh_timeout': project_obj.pdf_refresh_timeout(),
-        'pdf_original': pdf_gen_orig.file.url,
-        'pdf_reviewed': pdf_gen_rev.file.url,
-    }, status=201)
-
-
 def project_page(request, page_code):
     valid = Page.validate_code(page_code)
     if not valid:
@@ -146,16 +118,12 @@ def project_page(request, page_code):
         'marker_size_factors': Page.SIZE_FACTOR_ALLOWED,
         'map_scale_factors': Page.MAP_SCALE_ALLOWED,
     }
-    pdf_orig_set = page_obj.project.pdfgenerated_set.filter(mode=PdfGenerated.ORIGINAL)
-    pdf_rev_set = page_obj.project.pdfgenerated_set.filter(mode=PdfGenerated.REVIEWED)
-    pdf_original = pdf_orig_set.latest('created') if pdf_orig_set.exists() else None
-    pdf_reviewed = pdf_rev_set.latest('created') if pdf_rev_set.exists() else None
-    pdf_created_time = PdfGenerated.get_latest_time([pdf_original, pdf_reviewed])
-    pdf_refresh_timeout = page_obj.project.pdf_refresh_timeout()
+    docs_info = page_obj.project.docs_info
 
-    return infoplan_views.project_page(request, page_obj=page_obj, page_config=page_config,
-                                       pdf_original=pdf_original, pdf_reviewed=pdf_reviewed,
-                                       pdf_created_time=pdf_created_time, pdf_refresh_timeout=pdf_refresh_timeout)
+    return infoplan_views.project_page(request,
+                                       page_obj=page_obj,
+                                       page_config=page_config,
+                                       docs_info=docs_info)
 
 
 @login_required

@@ -21,10 +21,9 @@ urlpatterns = [
     path('project/<str:project_title>/edit_layer/<str:layer_title>', views.edit_project_layer,
          name='edit_project_layer'),
 
-    path('project/<str:title>/pdf/generate/', views.rebuild_pdf_files, name='rebuild_pdf_files'),
-
     path('page/<str:page_code>/', views.project_page, name='project_page'),
     path('page/<str:page_code>/edit/', views.edit_project_page, name='edit_project_page'),
 
     path('api/', include('zoloto_viewer.infoplan.urls')),
+    path('docs/', include('zoloto_viewer.documents.urls')),
 ]

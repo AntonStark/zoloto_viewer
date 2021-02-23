@@ -85,6 +85,23 @@ class Project(models.Model):
                 p.document_offset = floor_offsets[filename]
                 p.save()
 
+    @property
+    def docs_info(self):
+        pdf_orig_set = self.pdfgenerated_set.filter(mode=PdfGenerated.ORIGINAL)
+        pdf_rev_set = self.pdfgenerated_set.filter(mode=PdfGenerated.REVIEWED)
+        pdf_original = pdf_orig_set.latest('created') if pdf_orig_set.exists() else None
+        pdf_reviewed = pdf_rev_set.latest('created') if pdf_rev_set.exists() else None
+        pdf_created_time = PdfGenerated.get_latest_time([pdf_original, pdf_reviewed])
+        pdf_refresh_timeout = self.pdf_refresh_timeout()
+        return {
+            'pdf': {
+                'pdf_original': pdf_original,
+                'pdf_reviewed': pdf_reviewed,
+                'pdf_created_time': pdf_created_time,
+                'pdf_refresh_timeout': pdf_refresh_timeout,
+            },
+        }
+
     def generate_pdf_files(self):
         """Build new pdf files if timeout exceed"""
         if self.pdf_started and timezone.now() < self.pdf_refresh_timeout():
