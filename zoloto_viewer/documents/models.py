@@ -29,9 +29,7 @@ class ProjectFile(models.Model):
     project = models.ForeignKey('viewer.Project', on_delete=models.CASCADE)
     file = models.FileField(upload_to=additional_files_upload_path, null=False, blank=True, default='')
     kind = models.IntegerField(choices=FileKinds.choices)
-
     date_created = models.DateTimeField(auto_now_add=True)
-    date_updated = models.DateTimeField(auto_now=True)  # todo remove as files never change, replace
 
     @property
     def file_name(self):
