@@ -260,7 +260,6 @@ def project_page(request, **more_context):
 
     pdf_info = more_context['docs_info']['pdf']
     pdf_original = pdf_info['pdf_original']
-    pdf_reviewed = pdf_info['pdf_reviewed']
     pdf_created_time = pdf_info['pdf_created_time']
     pdf_refresh_timeout = pdf_info['pdf_refresh_timeout']
 
@@ -288,8 +287,7 @@ def project_page(request, **more_context):
             'comment_mark_padding': page_obj.apply_size_factor(Marker.COMMENT_MARK_PADDING),
         },
 
-        'pdf_original': pdf_original,
-        'pdf_reviewed': pdf_reviewed,
+        'pdf_original': pdf_original,   # todo review docs info format (enclose in own dict)
         'pdf_created_time': pdf_created_time,
         'pdf_refresh_timeout': str(pdf_refresh_timeout),
     }

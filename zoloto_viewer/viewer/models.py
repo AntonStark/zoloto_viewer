@@ -1,19 +1,14 @@
 import base64
-import io
 import os
 import re
 import shutil
 import uuid
-from datetime import timedelta
+
 from django.conf import settings
 from django.contrib.postgres import fields
-from django.core.files import File
 from django.db import models
 from django.dispatch import receiver
-from django.utils import timezone
 from os import path
-
-from zoloto_viewer.viewer import data_files
 
 
 def additional_files_upload_path(obj: 'Project', filename):
@@ -32,11 +27,6 @@ class Project(models.Model):
 
     layer_info_data = fields.JSONField(null=True)   # possibly not needed anymore
     maps_info_data = fields.JSONField(null=True)
-
-    # todo create ProjectDocument in own co-app, move PdfGenerated logic there
-    pdf_started = models.DateTimeField(null=True)
-
-    PDF_GENERATION_TIMEOUT = 600
 
     def first_page(self):
         pages = Page.objects.filter(project=self)
@@ -84,42 +74,6 @@ class Project(models.Model):
             if filename in floor_offsets.keys():
                 p.document_offset = floor_offsets[filename]
                 p.save()
-
-    @property
-    def docs_info(self):
-        pdf_orig_set = self.pdfgenerated_set.filter(mode=PdfGenerated.ORIGINAL)
-        pdf_rev_set = self.pdfgenerated_set.filter(mode=PdfGenerated.REVIEWED)
-        pdf_original = pdf_orig_set.latest('created') if pdf_orig_set.exists() else None
-        pdf_reviewed = pdf_rev_set.latest('created') if pdf_rev_set.exists() else None
-        pdf_created_time = PdfGenerated.get_latest_time([pdf_original, pdf_reviewed])
-        pdf_refresh_timeout = self.pdf_refresh_timeout()
-        return {
-            'pdf': {
-                'pdf_original': pdf_original,
-                'pdf_reviewed': pdf_reviewed,
-                'pdf_created_time': pdf_created_time,
-                'pdf_refresh_timeout': pdf_refresh_timeout,
-            },
-        }
-
-    def generate_pdf_files(self):
-        """Build new pdf files if timeout exceed"""
-        if self.pdf_started and timezone.now() < self.pdf_refresh_timeout():
-            return None
-
-        orig_pdf = PdfGenerated(mode=PdfGenerated.ORIGINAL, project=self)
-        reviewed_pdf = PdfGenerated(mode=PdfGenerated.REVIEWED, project=self)
-
-        orig_pdf.setup()
-        reviewed_pdf.setup()
-
-        self.pdf_started = timezone.now()
-        self.save()
-        return orig_pdf, reviewed_pdf
-
-    def pdf_refresh_timeout(self):
-        return self.pdf_started + timedelta(seconds=Project.PDF_GENERATION_TIMEOUT) if self.pdf_started \
-            else -float('Inf')
 
 
 # noinspection PyUnusedLocal
@@ -298,54 +252,3 @@ def delete_page_file(sender, instance: Page, *args, **kwargs):
     """ Deletes page image on `post_delete` """
     if instance.plan:
         _delete_file(instance.plan.path)
-
-
-def pdf_upload_path(obj: 'PdfGenerated', filename):
-    return path.join(obj.project.project_files_dir(), f'pdf/{filename}')
-
-
-class PdfGenerated(models.Model):
-    ORIGINAL = 'o'
-    REVIEWED = 'r'
-    PDF_MODE_CHOICES = [
-        (ORIGINAL, 'original'),
-        (REVIEWED, 'reviewed'),
-    ]
-
-    file = models.FileField(upload_to=pdf_upload_path)
-    mode = models.CharField(max_length=1, choices=PDF_MODE_CHOICES)
-    project = models.ForeignKey(Project, on_delete=models.CASCADE)
-    created = models.DateTimeField(auto_now_add=True)
-
-    def setup(self):
-        from zoloto_viewer.infoplan.pdf_generation import main as pdf_module
-
-        bytes_buf = io.BytesIO()
-        if self.mode == PdfGenerated.ORIGINAL:
-            proposed_filename = pdf_module.generate_pdf_original(self.project, bytes_buf)
-        elif self.mode == PdfGenerated.REVIEWED:
-            proposed_filename = pdf_module.generate_pdf_reviewed(self.project, bytes_buf)
-        else:
-            raise ValueError('unexpected mode value')
-        self.file.save(proposed_filename, File(bytes_buf))
-
-    @staticmethod
-    def get_latest_time(*pdf_files):
-        pdf_list = list(map(lambda pdf: pdf.created, filter(None, *pdf_files)))
-        return timezone.localtime(max(pdf_list)) if pdf_list else None
-
-
-# noinspection PyUnusedLocal
-@receiver(models.signals.post_delete, sender=PdfGenerated)
-def delete_pdf_docs(sender, instance: PdfGenerated, *args, **kwargs):
-    """ Deletes pdf documents on `post_delete` """
-    if instance.file:
-        _delete_file(instance.file.path)
-
-
-# noinspection PyUnusedLocal
-@receiver(models.signals.post_save, sender=PdfGenerated)
-def remove_previous_versions(sender, instance: PdfGenerated, *args, **kwargs):
-    """Remove previous entries for same project and move"""
-    PdfGenerated.objects.filter(project=instance.project, mode=instance.mode)\
-        .exclude(id=instance.id).delete()       # exclude itself

@@ -1,9 +1,11 @@
+from datetime import datetime
 from django.contrib.auth.decorators import login_required
 from django.http import Http404, JsonResponse
 from django.shortcuts import redirect
 from django.views.decorators import csrf, http
+from django.utils import timezone
 
-from zoloto_viewer.viewer.models import Project, PdfGenerated
+from zoloto_viewer.viewer.models import Project
 from zoloto_viewer.documents.models import ProjectFile
 
 
@@ -26,22 +28,21 @@ def rebuild_pdf_files(request, title):
         project = Project.objects.get(title=title)
     except Project.DoesNotExist:
         raise Http404
+    pdf_refresh_timeout = ProjectFile.objects.pdf_refresh_timeout(project)
 
-    pdf_generated = project.generate_pdf_files()
-    if not pdf_generated:
+    if datetime.now() < pdf_refresh_timeout:
         return JsonResponse({
-            'error': f'at least {Project.PDF_GENERATION_TIMEOUT} seconds during calls',
-            'try_after': str(project.pdf_refresh_timeout()),
+            'error': f'at least {ProjectFile.PDF_GENERATION_TIMEOUT} seconds during calls',
+            'try_after': str(pdf_refresh_timeout),
         }, status=429)
+    pdf_generated = ProjectFile.objects.pdf_generate_file(project)
 
     if request.method == 'GET':
         return redirect(to=request.META.get('HTTP_REFERER', '/'))   # just push reload if GET
 
     from zoloto_viewer.viewer.templatetags.timedelta import timedelta_pretty
-    pdf_gen_orig, pdf_gen_rev = pdf_generated
     return JsonResponse({
-        'pdf_created_time': timedelta_pretty(PdfGenerated.get_latest_time(pdf_generated)),
-        'pdf_refresh_timeout': project.pdf_refresh_timeout(),
-        'pdf_original': pdf_gen_orig.file.url,
-        'pdf_reviewed': pdf_gen_rev.file.url,
+        'pdf_created_time': timedelta_pretty(timezone.localtime(pdf_generated.date_created)),
+        'pdf_refresh_timeout': pdf_refresh_timeout,
+        'pdf_original': pdf_generated.file.url,
     }, status=201)

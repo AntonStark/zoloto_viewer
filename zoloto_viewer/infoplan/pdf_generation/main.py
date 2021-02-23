@@ -37,11 +37,3 @@ def generate_pdf(project: Project, buffer, with_review: bool):
     file_canvas.setTitle(filename)      # todo construct proper file title
     file_canvas.save()
     return filename
-
-
-def generate_pdf_original(project: Project, buffer=None):
-    return generate_pdf(project, buffer, with_review=False)
-
-
-def generate_pdf_reviewed(project: Project, buffer=None):
-    return generate_pdf(project, buffer, with_review=True)

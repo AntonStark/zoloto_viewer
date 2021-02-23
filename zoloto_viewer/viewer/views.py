@@ -8,6 +8,7 @@ from django.shortcuts import render, redirect
 from django.views.decorators import csrf, http
 
 from zoloto_viewer.infoplan import views as infoplan_views
+from zoloto_viewer.documents.models import ProjectFile
 from zoloto_viewer.viewer.models import Color, Project, Layer, MarkerKind, Page
 from zoloto_viewer.viewer.view_helpers import project_form
 
@@ -118,7 +119,7 @@ def project_page(request, page_code):
         'marker_size_factors': Page.SIZE_FACTOR_ALLOWED,
         'map_scale_factors': Page.MAP_SCALE_ALLOWED,
     }
-    docs_info = page_obj.project.docs_info
+    docs_info = ProjectFile.objects.docs_stats(page_obj.project)
 
     return infoplan_views.project_page(request,
                                        page_obj=page_obj,
