@@ -44,6 +44,9 @@ function setHandlers() {
 
     mapScaleController.mapSvg().addEventListener('mousedown', mapInteractionsController.handleDragStart);
     mapScaleController.mapSvg().addEventListener('mouseup', mapInteractionsController.handleDragEnd);
+
+    window.addEventListener('copy', mapInteractionsController.handleCopyEvent);
+    window.addEventListener('paste', mapInteractionsController.handlePasteEvent);
 }
 window.addEventListener('load', setHandlers);
 window.addEventListener('load', markerCirclesManager.init);

@@ -76,6 +76,8 @@ function ControllerMapInteractions() {
         // console.log(e);
         if (e.code === 'Backspace') {
             _deleteRoutine(markerSelection);
+        } else if (e.code === 'Escape') {
+            dropSelection();
         } else if (e.code === 'KeyI') {
             messageBoxManager.showSelected(mapInteractionsController.isInSelection);
         } else if (e.code === 'KeyQ') {
@@ -178,6 +180,13 @@ function ControllerMapInteractions() {
         markerCirclesManager.updateRotation(getSelection(), false, accelerated);
     }
 
+    function handleCopyEvent() {
+        console.log('Copy!');
+    }
+    function handlePasteEvent() {
+        console.log('Paste!');
+    }
+
     return {
         isInsertMode: isInsertMode,
         isSelectMode: isSelectMode,
@@ -197,6 +206,9 @@ function ControllerMapInteractions() {
         handleDragStart : handleDragStart,
         handleDragMove  : handleDragMove,
         handleDragEnd   : handleDragEnd,
+
+        handleCopyEvent: handleCopyEvent,
+        handlePasteEvent: handlePasteEvent,
     }
 }
 
