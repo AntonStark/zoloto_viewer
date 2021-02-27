@@ -38,6 +38,8 @@ function ControllerMapInteractions() {
     }
     function dropSelection()
     { markerSelection.splice(0, markerSelection.length); }
+    function getSelection()
+    { return Array.from(markerSelection); }
 
     // inner methods
     function _deleteRoutine(markerUidArray) {
@@ -71,16 +73,18 @@ function ControllerMapInteractions() {
 
     // map interaction handlers
     function handleKeyUp(e) {
-        console.log(e);
-        if (e.key === 'Backspace') {
+        // console.log(e);
+        if (e.code === 'Backspace') {
             _deleteRoutine(markerSelection);
-        } else if (
-            (e.key === 'i' || e.key === 'ш')
-            // && (e.ctrlKey || e.metaKey)
-        ) {
+        } else if (e.code === 'KeyI') {
             messageBoxManager.showSelected(mapInteractionsController.isInSelection);
+        } else if (e.code === 'KeyQ') {
+            const acceleration = e.shiftKey;
+            handleRotationNegative(acceleration);
+        } else if (e.code === 'KeyE') {
+            const acceleration = e.shiftKey;
+            handleRotationPositive(acceleration);
         }
-
     }
     function handleClickMap(e) {
         const [svgX, svgY] = getSvgCoordinates(e);
@@ -162,12 +166,17 @@ function ControllerMapInteractions() {
         _toggleSelectionRect(false);
 
         markerCirclesManager.render(markerCirclesManager.isInsideSelectionRect, toggleIsSelected);
-        // todo set selection from render (pass toggle-like callback .toggle(uid, isIn) )
         // console.log(rect);
 
         // debugger;
     }
 
+    function handleRotationPositive(accelerated) {
+        markerCirclesManager.updateRotation(getSelection(), true, accelerated);
+    }
+    function handleRotationNegative(accelerated) {
+        markerCirclesManager.updateRotation(getSelection(), false, accelerated);
+    }
 
     return {
         isInsertMode: isInsertMode,
@@ -178,6 +187,7 @@ function ControllerMapInteractions() {
         isInSelection   : isInSelection,
         addToSelection  : addToSelection,
         dropSelection   : dropSelection,
+        getSelection    : getSelection,
         toggleIsSelected: toggleIsSelected,
 
         handleKeyUp             : handleKeyUp,

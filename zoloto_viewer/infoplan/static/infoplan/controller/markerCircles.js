@@ -93,7 +93,29 @@ function ControllerMarkerCircles() {
         console.log('isInsideSelectionRect', xBounds, yBounds);
         const isIn = (xBounds[0] <= x && x < xBounds[1])
             && (yBounds[0] <= y && y < yBounds[1]);
-        return isIn
+        return isIn;
+    }
+
+    function _markerRotation(markerElement) {
+        return markerElement.transform.animVal[0].angle;
+    }
+    function _rotationHelper(markerUid, positive = true, accelerated = false) {
+        const marker = messageBoxManager.getMarker(markerUid);
+        // todo markerCircles -> markers
+        //  and this encapsulates markerElements too (rather than messageBoxManager)
+        if (!marker)
+            return;
+
+        const x = marker.getAttribute('x');
+        const y = marker.getAttribute('y');
+        const rn = _markerRotation(marker);
+        const delta = (positive ? 1 : -1) * (accelerated ? 10 : 1);
+        marker.setAttribute('transform', `rotate(${rn + delta} ${x} ${y})`);
+    }
+    function updateRotation(markerUidArray, positive = true, accelerated = false) {
+        for (const markerUid of markerUidArray) {
+            _rotationHelper(markerUid, positive, accelerated);
+        }
     }
 
     // регистрируем все circleElement при создании контроллера
@@ -125,6 +147,7 @@ function ControllerMarkerCircles() {
         render  : renderSelection,
 
         setSelectionRect: setSelectionRect,
-        isInsideSelectionRect: isInsideSelectionRect,
+        isInsideSelectionRect   : isInsideSelectionRect,
+        updateRotation  : updateRotation,
     }
 }

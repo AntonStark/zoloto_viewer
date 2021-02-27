@@ -188,6 +188,7 @@ function ControllerMessageBox(render) {
         hide: hideMessage,
         read: getComment,
         get : getContainerOrNull,
+        getMarker: getMarkerOrNull,
         reg : registerMarkerElement,
 
         deleteMessage: deleteMessage,
