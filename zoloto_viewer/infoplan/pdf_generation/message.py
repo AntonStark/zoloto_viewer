@@ -226,7 +226,7 @@ def message_pages(canvas, markers_query_set, layer_color, title, with_review=Fal
             box_offset = area_left + offset_x, area_bottom + offset_y
 
             number = marker.number
-            variables = MarkerVariable.objects.vars_of_marker(marker)
+            variables = marker.markervariable_set.all()
             var_data = list(map(
                 lambda v: (v.value, v.wrong if with_review else False),
                 variables

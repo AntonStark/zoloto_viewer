@@ -30,6 +30,8 @@ class PlanBox:
         return self._box_x, self._box_y + self._box_height
 
     def add_marker(self, m):
+        # todo rewrite according to marker kinds, then
+        # todo remove Marker methods polygon_points and center_position and underlying fields
         self._markers.append((m.polygon_points(), m.center_position(), m.number, m.correct))
 
     def _scale(self, point):

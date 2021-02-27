@@ -9,6 +9,7 @@ class Marker(models.Model):
     Отражает положение носителя выбранного типа layer в границах монтажной области floor
     """
     uid = models.UUIDField(default=uuid.uuid4, primary_key=True)
+    last_modified = models.DateTimeField(auto_now=True)
 
     layer = models.ForeignKey('viewer.Layer', on_delete=models.SET_NULL, null=True)
     floor = models.ForeignKey('viewer.Page', on_delete=models.CASCADE)
@@ -105,9 +106,7 @@ class VariablesManager(models.Manager):
                     for k, v in enumerate(side_vars, start=1)
                 ]
             self.bulk_create(variables)
-
-    def vars_of_marker(self, marker):
-        return marker.markervariable_set.all()
+            marker.save()   # to update marker.last_modified
 
     def vars_by_side(self, marker: Marker, apply_transformations=None):
         # [
