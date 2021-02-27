@@ -33,7 +33,7 @@ def create_marker(request):
         req = json.loads(request.body)
         project, page, layer, position = operator.itemgetter(*fields_)(req)
     except json.JSONDecodeError:
-        return JsonResponse({'error': 'post body must be json'}, status=400)
+        return JsonResponse({'error': 'request body must be json'}, status=400)
     except KeyError:
         return JsonResponse({'error': 'json object must contain fields: ' + ', '.join(fields_)}, status=400)
 
@@ -85,6 +85,50 @@ class MarkerView(View):
 
     @method_decorator(login_required)
     @method_decorator(marker_api)
+    def patch(self, request, marker_uid: uuid.UUID):
+        """Update marker position attributes: pos_x, pos_y, rotation"""
+        try:
+            marker = Marker.objects.get(uid=marker_uid)
+        except Marker.DoesNotExist:
+            raise Http404
+
+        try:
+            req = json.loads(request.body)
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'request body must be json'}, status=400)
+        if not isinstance(req, dict):
+            return JsonResponse({'error': 'request body must be json object'}, status=400)
+
+        possible_fields = Marker.position_attrs()
+        fields = {f: req[f] for f in possible_fields if f in req}
+
+        def validate_not_empty(data: dict):
+            return len(data)
+
+        def validate_values_integer(data: dict):
+            for v in data.values():
+                if not isinstance(v, int):
+                    return False
+            return True
+
+        if not validate_not_empty(fields):
+            return JsonResponse({'error': 'json object must contain any of: ' + ', '.join(possible_fields)}, status=400)
+        if not validate_values_integer(fields):
+            return JsonResponse({'error': 'only integer values allowed'}, status=400)
+
+        _changed = False
+        for attr, value in fields.items():
+            if getattr(marker, attr) != value:
+                setattr(marker, attr, value)
+                _changed = True
+        if _changed:
+            marker.save()
+
+        rep = marker.to_json()
+        return JsonResponse(rep)
+
+    @method_decorator(login_required)
+    @method_decorator(marker_api)
     def put(self, request, marker_uid: uuid.UUID):
         """Set variables of marker"""
         # {
@@ -102,7 +146,7 @@ class MarkerView(View):
             req = json.loads(request.body)
             infoplan = req['infoplan']
         except json.JSONDecodeError:
-            return JsonResponse({'error': 'post body must be json'}, status=400)
+            return JsonResponse({'error': 'request body must be json'}, status=400)
         except KeyError:
             return JsonResponse({'error': 'json object must contain field infoplan'}, status=400)
 
@@ -181,7 +225,7 @@ def update_wrong_status(request, marker_uid: uuid.UUID):
         req = json.loads(request.body)
         key, is_wrong = operator.itemgetter(*fields_)(req)
     except json.JSONDecodeError:
-        return JsonResponse({'error': 'post body must be json'}, status=400)
+        return JsonResponse({'error': 'request body must be json'}, status=400)
     except KeyError:
         return JsonResponse({'error': 'json object must contain fields: ' + ', '.join(fields_)}, status=400)
     if not isinstance(is_wrong, bool):

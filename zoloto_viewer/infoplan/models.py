@@ -48,6 +48,10 @@ class Marker(models.Model):
     def number(self):
         return '/'.join([self.layer.title, self.floor.floor_caption, str(self.ordinal)])
 
+    @classmethod
+    def position_attrs(cls):
+        return ['pos_x', 'pos_y', 'rotation']
+
     @staticmethod
     def multipoint_mid(mp):
         if len(mp) == 3:        # multipoint = [P1, P2, P3]
