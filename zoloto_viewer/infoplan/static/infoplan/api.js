@@ -4,6 +4,7 @@ const API_MARKER_CREATE      = `${BASE_URL}/viewer/api/marker/`;
 const API_MARKER_GET_DATA    = (markerUid) => `${BASE_URL}/viewer/api/marker/${markerUid}`;
 const API_MARKER_GET_DATA_PRETTY = (markerUid) => `${BASE_URL}/viewer/api/marker/${markerUid}?pretty=true`;
 const API_MARKER_PUT_VARS    = (markerUid) => `${BASE_URL}/viewer/api/marker/${markerUid}`;
+const API_MARKER_PATCH_GEOM  = (markerUid) => `${BASE_URL}/viewer/api/marker/${markerUid}`;
 const API_MARKER_DELETE      = (markerUid) => `${BASE_URL}/viewer/api/marker/${markerUid}`;
 const API_VAR_ALTER_WRONG    = (markerUid) => `${BASE_URL}/viewer/api/marker/${markerUid}/variable/`;
 const API_MARKER_LOAD_REVIEW = (markerUid) => `${BASE_URL}/viewer/api/marker/${markerUid}/review/`;
@@ -19,8 +20,9 @@ function doApiCall(method, url, data, onResponse, onError=undefined) {
         if (req.readyState === XMLHttpRequest.DONE) {
             if (req.status === 200) {
                 const rep = JSON.parse(req.responseText);
-                // console.debug(rep);
-                onResponse(rep);
+                if (onResponse) {
+                    onResponse(rep);
+                }
             } else if (onError) {
                 onError(req);
             }

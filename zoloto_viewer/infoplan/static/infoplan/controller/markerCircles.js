@@ -9,6 +9,9 @@ function ControllerMarkerCircles() {
     let circleCenterIndex = {};         // marker_uid -> [x, y]
     let selectionRect = undefined;
 
+    let markersTouched = new Set();     // { marker_uid, }
+    let timerApplyChanges = undefined;
+
     function _setCorrectness(element, correct) {
         if (correct === null)
             return;
@@ -99,26 +102,60 @@ function ControllerMarkerCircles() {
         return isIn;
     }
 
-    function _markerRotation(markerElement) {
-        return markerElement.transform.animVal[0].angle;
+    function _addMarkersTouched(markerUidArray) {
+        for (const markerUid of markerUidArray) {
+            markersTouched.add(markerUid);
+        }
     }
-    function _rotationHelper(markerUid, positive = true, accelerated = false) {
+    function _clearMarkersTouched()
+    { markersTouched.clear(); }
+    function _saveGeometryFromUI() {
+        for (const markerUid of markersTouched.values()) {
+            const m = markerPosition(markerUid);
+            if (!m)
+                return;
+            // 'pos_x', 'pos_y', 'rotation'
+            doApiCall('PATCH', API_MARKER_PATCH_GEOM(markerUid), {
+                pos_x: Number.parseInt(m.pos_x),
+                pos_y: Number.parseInt(m.pos_y),
+                rotation: Number.parseInt(m.rotation),
+            })
+        }
+    }
+
+    function markerPosition(markerUid) {
         const marker = messageBoxManager.getMarker(markerUid);
-        // todo markerCircles -> markers
-        //  and this encapsulates markerElements too (rather than messageBoxManager)
         if (!marker)
             return;
 
-        const x = marker.getAttribute('x');
-        const y = marker.getAttribute('y');
-        const rn = _markerRotation(marker);
-        const delta = (positive ? 1 : -1) * (accelerated ? 10 : 1);
-        marker.setAttribute('transform', `rotate(${rn + delta} ${x} ${y})`);
+        return {
+            pos_x: marker.getAttribute('x'),
+            pos_y: marker.getAttribute('y'),
+            rotation: marker.transform.animVal[0].angle,
+        };
     }
-    function updateRotation(markerUidArray, positive = true, accelerated = false) {
+    function _rotationHelper(markerUid, delta) {
+        // todo markerCircles -> markers
+        //  and this encapsulates markerElements too (rather than messageBoxManager)
+        const m = markerPosition(markerUid);
+        if (!m)
+            return;
+
+        const marker = messageBoxManager.getMarker(markerUid);
+        marker.setAttribute('transform', `rotate(${m.rotation + delta} ${m.pos_x} ${m.pos_y})`);
+        _addMarkersTouched([markerUid]);
+    }
+    function updateRotation(markerUidArray, delta) {
         for (const markerUid of markerUidArray) {
-            _rotationHelper(markerUid, positive, accelerated);
+            _rotationHelper(markerUid, delta);
         }
+
+        if (timerApplyChanges)
+            window.clearTimeout(timerApplyChanges);
+        timerApplyChanges = window.setTimeout(function () {
+            _saveGeometryFromUI();
+            _clearMarkersTouched();
+        }, 500);
     }
 
     // регистрируем все circleElement при создании контроллера

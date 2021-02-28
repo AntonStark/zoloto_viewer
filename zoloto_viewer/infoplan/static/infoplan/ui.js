@@ -33,24 +33,23 @@ function handleClickMapMinus() {
     updateControlStyle();
 }
 
-function setHandlers() {
+function init() {
     mapScaleController.setup();
+    markerCirclesManager.init();
+
     document.getElementById('map_control_plus').addEventListener('click', handleClickMapPlus);
     document.getElementById('map_control_minus').addEventListener('click', handleClickMapMinus);
 
     window.addEventListener('keyup', mapInteractionsController.handleKeyUp);
+    window.addEventListener('keypress', mapInteractionsController.handleKeyPress);
 
-    const mapSvg = mapScaleController.mapSvg();
-    mapSvg.addEventListener('mousedown', mapInteractionsController.handleMouseDown);
-    mapSvg.addEventListener('mouseup', mapInteractionsController.handleMouseUp);
+    mapScaleController.mapSvg().addEventListener('mousedown', mapInteractionsController.handleMouseDown);
+    mapScaleController.mapSvg().addEventListener('mouseup', mapInteractionsController.handleMouseUp);
 
     window.addEventListener('copy', mapInteractionsController.handleCopyEvent);
     window.addEventListener('paste', mapInteractionsController.handlePasteEvent);
 }
-window.addEventListener('load', setHandlers);
-window.addEventListener('load', markerCirclesManager.init);
-// todo maybe move inside methods
-//  setHandlers -> init ^controllers  >handlers
+window.addEventListener('load', init);
 
 function updateControlStyle() {
     const plus = document.getElementById('map_control_plus');

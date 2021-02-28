@@ -52,7 +52,7 @@ function ControllerMapInteractions() {
                 }
             });
         }
-    //    todo sync selection after delete
+        dropSelection();
     }
     function _createHelper(posX, posY) {
         createMarker({
@@ -80,7 +80,10 @@ function ControllerMapInteractions() {
             dropSelection();
         } else if (e.code === 'KeyI') {
             messageBoxManager.showSelected(mapInteractionsController.isInSelection);
-        } else if (e.code === 'KeyQ') {
+        }
+    }
+    function handleKeyPress(e) {
+        if (e.code === 'KeyQ') {
             const acceleration = e.shiftKey;
             handleRotationNegative(acceleration);
         } else if (e.code === 'KeyE') {
@@ -204,10 +207,12 @@ function ControllerMapInteractions() {
     }
 
     function handleRotationPositive(accelerated) {
-        markerCirclesManager.updateRotation(getSelection(), true, accelerated);
+        const rotationDelta = (accelerated ? 10 : 1);
+        markerCirclesManager.updateRotation(getSelection(), rotationDelta);
     }
     function handleRotationNegative(accelerated) {
-        markerCirclesManager.updateRotation(getSelection(), false, accelerated);
+        const rotationDelta = (accelerated ? -10 : -1);
+        markerCirclesManager.updateRotation(getSelection(), rotationDelta);
     }
 
     function handleCopyEvent() {
@@ -230,7 +235,7 @@ function ControllerMapInteractions() {
         toggleIsSelected: toggleIsSelected,
 
         handleKeyUp             : handleKeyUp,
-        // handleClickMap          : handleClickMap,
+        handleKeyPress          : handleKeyPress,
         handleClickMarkerCircle : handleClickMarkerCircle,
 
         handleMouseDown : handleMouseDown,
