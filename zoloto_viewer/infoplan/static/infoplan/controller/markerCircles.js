@@ -85,12 +85,15 @@ function ControllerMarkerCircles() {
     }
     function isInsideSelectionRect(markerUid) {
         // return true if center coord is inside specified selection
+        // todo respect visibility
         const res = _getCircleCenterSvgCoord(markerUid);
-        if (!res) return false;
+        if (!res)
+            throw Error('circle element not registered');
 
         const [x, y] = res;
         const [xBounds, yBounds] = selectionRect;
-        console.log('isInsideSelectionRect', xBounds, yBounds);
+        // console.log('isInsideSelectionRect', xBounds, yBounds);
+        // noinspection UnnecessaryLocalVariableJS
         const isIn = (xBounds[0] <= x && x < xBounds[1])
             && (yBounds[0] <= y && y < yBounds[1]);
         return isIn;

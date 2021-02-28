@@ -3,12 +3,9 @@
         <svg id="project-page-plan-svg"
              viewBox="0 0 {{ page.plan.width }} {{ page.plan.height }}">
             <g id="project-page-svg-origin">
-                <image href="{{ page.plan.url }}"
+                <image id="project-page-svg-plan-image" href="{{ page.plan.url }}"
                        width="{{ page.plan.width }}" height="{{ page.plan.height }}">
                 </image>
-                <rect id="project-page-svg-background"
-                      fill-opacity="0" width="{{ page.plan.width }}" height="{{ page.plan.height }}">
-                </rect>
                 <rect id="project-page-svg-selection-rect"></rect>
                 {% load layers_visibility %}
                 {% for layer, markers in markers_by_layer.items %}

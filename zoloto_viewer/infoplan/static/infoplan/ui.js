@@ -39,17 +39,18 @@ function setHandlers() {
     document.getElementById('map_control_minus').addEventListener('click', handleClickMapMinus);
 
     window.addEventListener('keyup', mapInteractionsController.handleKeyUp);
-    document.getElementById('project-page-svg-background')
-        .addEventListener('click', mapInteractionsController.handleClickMap);
 
-    mapScaleController.mapSvg().addEventListener('mousedown', mapInteractionsController.handleDragStart);
-    mapScaleController.mapSvg().addEventListener('mouseup', mapInteractionsController.handleDragEnd);
+    const mapSvg = mapScaleController.mapSvg();
+    mapSvg.addEventListener('mousedown', mapInteractionsController.handleMouseDown);
+    mapSvg.addEventListener('mouseup', mapInteractionsController.handleMouseUp);
 
     window.addEventListener('copy', mapInteractionsController.handleCopyEvent);
     window.addEventListener('paste', mapInteractionsController.handlePasteEvent);
 }
 window.addEventListener('load', setHandlers);
 window.addEventListener('load', markerCirclesManager.init);
+// todo maybe move inside methods
+//  setHandlers -> init ^controllers  >handlers
 
 function updateControlStyle() {
     const plus = document.getElementById('map_control_plus');

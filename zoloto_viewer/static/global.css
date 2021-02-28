@@ -230,6 +230,7 @@ input.disabled {
 
 .map_legend {
     /*border: 1px solid black;*/
+    pointer-events: none;
     position: absolute;
     left: 300px;
     top: 100px;
@@ -373,6 +374,7 @@ g.layer_markers.enabled_layer {
     fill: blue;
     opacity: 20%;
     visibility: hidden;
+    pointer-events: none;
 }
 #project-page-svg-selection-rect.active {
     visibility: visible;

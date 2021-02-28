@@ -89,7 +89,13 @@ function ControllerMapInteractions() {
         }
     }
     function handleClickMap(e) {
+        // console.log('handleClickMap');
         const [svgX, svgY] = getSvgCoordinates(e);
+        const inside = mapScaleController.isInsideMapRect(svgX, svgY);
+        if (!inside)
+            return;
+
+        // debugger;
         // console.debug(svgX, svgY, activeLayer(), getPageCode());
 
         messageBoxManager.hideAll();
@@ -102,6 +108,8 @@ function ControllerMapInteractions() {
         markerCirclesManager.render(mapInteractionsController.isInSelection);
     }
     function handleClickMarkerCircle(e) {
+        // console.log('handleClickMarkerCircle');
+
         const circleElement = e.target;
         const markerUid = circleElement.dataset.markerUid;
 
@@ -119,15 +127,26 @@ function ControllerMapInteractions() {
         messageBoxManager.reg(markerElement);
 
         markerCirclesManager.render(mapInteractionsController.isInSelection);
+        // e.stopPropagation();
     }
 
     function _takeSelectionRect(secondCorner, reset=true) {
+        if (!rectSelectionCorner) {
+            return [ [0, 0], [0, 0] ];
+        }
         const xCoords = [rectSelectionCorner[0], secondCorner[0]];
         const yCoords = [rectSelectionCorner[1], secondCorner[1]];
         if (reset) {
             rectSelectionCorner = undefined;
         }
         return [xCoords, yCoords];
+    }
+    function _isCollapsedSelection(xCoords, yCoords) {
+        const COLLAPSE = 10;
+        const [x1, x2] = xCoords;
+        const [y1, y2] = yCoords;
+        return Math.abs(x2 - x1) < COLLAPSE
+            && Math.abs(y2 - y1) < COLLAPSE;
     }
     function _toggleSelectionRect(visibility) {
         const rect = document.getElementById('project-page-svg-selection-rect');
@@ -144,33 +163,44 @@ function ControllerMapInteractions() {
         rect.setAttributeNS(null, 'width', xCoords[1] - xCoords[0]);
         rect.setAttributeNS(null, 'height', yCoords[1] - yCoords[0]);
     }
-    function handleDragStart(e) {
-        // console.log('handleDragStart', e);
+    function handleMouseDown(e) {
+        // console.log('handleMouseDown', e);
+        if (isInsertMode())
+            return;
 
         rectSelectionCorner = getSvgCoordinates(e);
         const [xInit, yInit] = _takeSelectionRect(getSvgCoordinates(e), false);
         _boundSelectionRect(xInit, yInit);
         _toggleSelectionRect(true);
 
-        mapScaleController.mapSvg().addEventListener('mousemove', mapInteractionsController.handleDragMove);
+        mapScaleController.mapSvg().addEventListener('mousemove', mapInteractionsController.handleMouseMove);
     }
-    function handleDragMove(e) {
+    function handleMouseMove(e) {
         const [xCoords, yCoords] = _takeSelectionRect(getSvgCoordinates(e), false);
         _boundSelectionRect(xCoords, yCoords);
     }
-    function handleDragEnd(e) {
-        // console.log('handleDragEnd', e);
-        mapScaleController.mapSvg().removeEventListener('mousemove', mapInteractionsController.handleDragMove);
-
+    function handleMouseUp(e) {
+        // console.log('handleMouseUp', e);
+        mapScaleController.mapSvg().removeEventListener('mousemove', mapInteractionsController.handleMouseMove);
+        // если режим добавления, то mouseup равносильно клику
+        // а в режиме выделения, нужно в mouseup смотреть
+        // размер прямоугольника выделения если мал, значит клик
         const [xCoords, yCoords] = _takeSelectionRect(getSvgCoordinates(e));
-        console.log('setSelectionRect', xCoords, yCoords);
+        if (isInsertMode()
+            || (isInSelection() && _isCollapsedSelection(xCoords, yCoords)))
+            return handleClickMap(e);
+
+        // console.log('setSelectionRect', xCoords, yCoords);
         markerCirclesManager.setSelectionRect(xCoords, yCoords);
         _toggleSelectionRect(false);
 
-        markerCirclesManager.render(markerCirclesManager.isInsideSelectionRect, toggleIsSelected);
-        // console.log(rect);
+        const selectionPredicate = ( e.shiftKey
+            ? function (markerUid)
+                { return isInSelection(markerUid) || markerCirclesManager.isInsideSelectionRect(markerUid); }
+            : markerCirclesManager.isInsideSelectionRect
+        );
 
-        // debugger;
+        markerCirclesManager.render(selectionPredicate, toggleIsSelected);
     }
 
     function handleRotationPositive(accelerated) {
@@ -200,12 +230,12 @@ function ControllerMapInteractions() {
         toggleIsSelected: toggleIsSelected,
 
         handleKeyUp             : handleKeyUp,
-        handleClickMap          : handleClickMap,
+        // handleClickMap          : handleClickMap,
         handleClickMarkerCircle : handleClickMarkerCircle,
 
-        handleDragStart : handleDragStart,
-        handleDragMove  : handleDragMove,
-        handleDragEnd   : handleDragEnd,
+        handleMouseDown : handleMouseDown,
+        handleMouseMove : handleMouseMove,
+        handleMouseUp   : handleMouseUp,
 
         handleCopyEvent: handleCopyEvent,
         handlePasteEvent: handlePasteEvent,

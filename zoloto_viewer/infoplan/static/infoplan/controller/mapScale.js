@@ -3,7 +3,8 @@ function ControllerMapScale() {
     const POSSIBLE_SCALES = PAGE_CONFIG.map_scale_factors;
     let scaleIndex = 0;
     let mapObj = undefined;
-    let svgOrigin = undefined;
+    let mapBackground = undefined;
+    let mapImage = undefined;
     let scrollDiv = undefined;
     let originalSize = undefined;
 
@@ -12,7 +13,7 @@ function ControllerMapScale() {
         mapObj = document.getElementById('project-page-plan-svg');
         originalSize = [mapObj.width.baseVal.value, mapObj.height.baseVal.value];
 
-        svgOrigin = document.getElementById('project-page-svg-origin');
+        mapImage = document.getElementById('project-page-svg-plan-image');
         scrollDiv = document.getElementById('project-page-plan-box')
             .getElementsByClassName('scrollable')[0];
     }
@@ -22,11 +23,15 @@ function ControllerMapScale() {
     function getOriginalSize() {
         return originalSize;
     }
-    function mapRect() {
-        return mapObj.getBoundingClientRect();
-    }
     function getMapObj() {
         return mapObj;
+    }
+    function isInsideMapRect(x, y) {
+        const box = mapImage.getBBox();
+        return (
+            box.x <= x && x < box.x + box.width
+            && box.y <= y && y < box.y + box.height
+        );
     }
 
     function couldIncrease() {
@@ -53,8 +58,8 @@ function ControllerMapScale() {
         mapObj.style.height = '';
         mapObj.style.width = '';
 
-        mapObj.setAttribute('width', originalSize[0]);
-        mapObj.setAttribute('height', originalSize[1]);
+        mapObj.removeAttribute('width');
+        mapObj.removeAttribute('height');
     }
     function displayScale() {
         if (scaleIndex > 0)
@@ -93,8 +98,8 @@ function ControllerMapScale() {
         setup: setMapObj,
         current: currentScale,
         origSize: getOriginalSize,
-        mapRect: mapRect,
         mapSvg: getMapObj,
+        isInsideMapRect: isInsideMapRect,
 
         couldIncrease: couldIncrease,
         couldDecrease: couldDecrease,
