@@ -50,7 +50,7 @@ function buildMessBox(data) {
                     // variableItem.textContent = varData.value;
                     const lines = varData.split('\n')
                         .reduce( (item, seq) => [item, document.createElement('br')].concat(seq) );
-                    if (Array.isPrototypeOf(lines))
+                    if (lines instanceof Array)
                         variableItem.append.apply(variableItem, lines);
                     else
                         variableItem.textContent = varData;

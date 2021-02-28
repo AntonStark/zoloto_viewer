@@ -169,7 +169,7 @@ function renderMarkerElement(data) {
             const posX = data.position.center_x;
             const posY = data.position.center_y;
             const hasComment = (data.has_comment ? 'marker_has_comment': '');
-            const commentsResolved = (data.all_comments_resolved ? 'marker_comments_resolved': '');
+            const commentsResolved = (data.comments_resolved ? 'marker_comments_resolved': '');
 
             let circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
 
@@ -212,7 +212,7 @@ function refreshMarkerElement(data) {
 
     function refreshCommentMark(element, data) {
         element.classList.toggle('marker_has_comment', data.has_comment);
-        element.classList.toggle('marker_comments_resolved', data.all_comments_resolved);
+        element.classList.toggle('marker_comments_resolved', data.comments_resolved);
     }
 
     const circleElement = document.getElementById(`marker_circle-${markerUid}`);
