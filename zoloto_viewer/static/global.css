@@ -232,8 +232,8 @@ input.disabled {
     /*border: 1px solid black;*/
     pointer-events: none;
     position: absolute;
-    left: 300px;
-    top: 100px;
+    left: 330px;
+    top: 130px;
 }
 .map_legend_caption {
     display: inline-block;
