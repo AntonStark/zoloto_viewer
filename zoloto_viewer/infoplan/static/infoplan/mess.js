@@ -49,10 +49,11 @@ function buildMessBox(data) {
                     // variableItem.setAttribute('data-variable-key', varData.key);
                     // variableItem.textContent = varData.value;
                     const lines = varData.split('\n')
-                        .reduce( (item, seq) => [item, document.createElement('br')].concat(seq) );
-                    if (lines instanceof Array)
+                        .reduce( (seq, item) => seq.concat([item, document.createElement('br')]), [] );
+                    if (lines instanceof Array) {
+                        lines.pop();    // remove last br
                         variableItem.append.apply(variableItem, lines);
-                    else
+                    } else
                         variableItem.textContent = varData;
                     // variableItem.textContent = varData.replaceAll('\n', '<br/>');
                     // variableItem.addEventListener('click', () => handleToggleWrong(data.marker, varData.key));
