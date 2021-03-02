@@ -1,4 +1,5 @@
 import abc
+import html
 
 
 class Transformation(abc.ABC):
@@ -73,3 +74,11 @@ class ReplacePictCodes(Transformation):
 
     def apply(self, variables_list, **kwargs):
         return [self.substitute_pict_codes(var) for var in variables_list]
+
+
+def html_escape_incoming(vars_by_side):
+    def _escape(vars_list):
+        return [html.escape(v) for v in vars_list]
+
+    return {side: _escape(variables_list)
+            for side, variables_list in vars_by_side.items()}

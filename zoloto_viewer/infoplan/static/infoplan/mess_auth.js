@@ -40,9 +40,14 @@ function buildMessBox(data) {
                 sideInput.setAttribute('data-number', nSide);
                 sideInput.setAttribute('rows', 6);
 
+                function htmlDecode(input) {
+                    var doc = new DOMParser().parseFromString(input, "text/html");
+                    return doc.documentElement.textContent;
+                }
+
                 // noinspection UnnecessaryLocalVariableJS
                 const inputValue = ( sideVars ? sideVars.join(';\n') + ';' : '');
-                sideInput.value = inputValue;
+                sideInput.value = htmlDecode(inputValue);
                 sideInput.addEventListener('blur', variablesContainerBlur);
 
                 sideBlock.append(sideLabel, sideInput);

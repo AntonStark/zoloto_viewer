@@ -10,7 +10,7 @@ from django.views.decorators import csrf, http
 from django.utils.decorators import method_decorator
 
 from zoloto_viewer.infoplan.models import Marker, MarkerVariable
-from zoloto_viewer.infoplan.utils.variable_transformations import HideMasterPageLine, ReplacePictCodes
+from zoloto_viewer.infoplan.utils import variable_transformations as transformations
 from zoloto_viewer.viewer.models import Layer, Page, Project
 
 
@@ -67,7 +67,10 @@ class MarkerView(View):
             raise Http404
 
         is_pretty = request.GET.get('pretty')
-        filters = [HideMasterPageLine(), ReplacePictCodes()] if is_pretty else []
+        filters = [
+            transformations.HideMasterPageLine(),
+            transformations.ReplacePictCodes()
+        ] if is_pretty else []
 
         rep = marker.to_json()
         rep.update({
@@ -186,6 +189,8 @@ class MarkerView(View):
             return JsonResponse({'error': 'wrong sides count for that marker kind'}, status=400)
         if not validate_all_sides_present(vars_by_side):
             return JsonResponse({'error': 'some side objects missing'}, status=400)
+
+        vars_by_side = transformations.html_escape_incoming(vars_by_side)
 
         MarkerVariable.objects.reset_values(marker, vars_by_side)
 
