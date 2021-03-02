@@ -13,6 +13,11 @@ class HideMasterPageLine(Transformation):
         return [var for var in variables_list if not var.startswith('mp:')]
 
 
+class NewlinesToBr(Transformation):
+    def apply(self, variables_list, **kwargs):
+        return [var.replace('\n', '<br>') for var in variables_list]
+
+
 class ReplacePictCodes(Transformation):
     REPLACE_TABLE = [
         ('@WC@', '\ue900'),
@@ -67,9 +72,12 @@ class ReplacePictCodes(Transformation):
     REPLACE_DICT = dict(REPLACE_TABLE)
 
     def substitute_pict_codes(self, var):
+        def tag_wrap(icon):
+            return f'<span class="infoplan_icon">{icon}</span>'
+
         for code, pict in self.REPLACE_DICT.items():
             if code in var:
-                var = var.replace(code, pict)
+                var = var.replace(code, tag_wrap(pict))
         return var
 
     def apply(self, variables_list, **kwargs):

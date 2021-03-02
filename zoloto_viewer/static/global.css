@@ -415,6 +415,10 @@ g.layer_markers.enabled_layer {
     display: inline-block;
 }
 
+.variables-container-side-block span.infoplan_icon {
+    font-size: 150%;
+}
+
 .variables_container ul li {
     white-space: nowrap;
     font-size: 12px;
