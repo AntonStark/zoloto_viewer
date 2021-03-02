@@ -9,7 +9,7 @@ from django.views import View
 from django.views.decorators import csrf, http
 from django.utils.decorators import method_decorator
 
-from zoloto_viewer.infoplan.models import Marker, MarkerVariable
+from zoloto_viewer.infoplan.models import Marker, MarkerVariable, MarkerComment
 from zoloto_viewer.infoplan.utils import variable_transformations as transformations
 from zoloto_viewer.viewer.models import Layer, Page, Project
 
@@ -316,6 +316,7 @@ def project_page(request, **more_context):
     project = page_obj.project
     page_code_list = project.page_set.values_list('code', 'floor_caption')
     layers = project.layer_set.values_list('title', 'color__hex_code')
+    layers_with_comments_by_page = MarkerComment.layer_colors_with_comments_by_page(project=project)
     layers_visible = set(request.GET.getlist('layer'))
     markers_by_layer = {L: page_obj.marker_set.filter(layer=L)
                         for L in project.layer_set.all()}
@@ -326,6 +327,7 @@ def project_page(request, **more_context):
         'page_config': page_config,
         'page_code_list': page_code_list,
         'layers': layers,
+        'layers_with_comments_by_page': layers_with_comments_by_page,
         'layers_visible': layers_visible,
         'markers_by_layer': markers_by_layer,
 

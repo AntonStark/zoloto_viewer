@@ -1,11 +1,21 @@
-<div class="menu_header">монтажные области</div>
 {% load layers_visibility %}
+{% load dict_get %}
+<div class="menu_header">монтажные области</div>
 <ul class="side_box_list">
     {% for code, floor_caption in page_code_list %}
     <li {% if code == page.code %}class="active"{% endif %} >
         <a href="{% url 'project_page' code %}{{ layers_visible|layer_params }}"
            class="pages-box-button">
-        {{ floor_caption }}
-    </a></li>
+            {{ floor_caption }}
+            <span class="areas-box-layers-comments">
+                {% with comment_colors=layers_with_comments_by_page|get_item:code %}
+                    {% for color in comment_colors.limit_3 %}
+                        <i class="fas fa-circle" style="color: {{ color }};"></i>
+                    {% endfor %}
+                    {% if comment_colors.count > 3 %}<span style="font-size: small;">{{ comment_colors.count }}</span>{% endif %}
+                {% endwith %}
+            </span>
+        </a>
+    </li>
     {% endfor %}
 </ul>

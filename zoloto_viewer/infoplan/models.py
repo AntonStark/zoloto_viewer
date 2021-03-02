@@ -168,6 +168,21 @@ class MarkerComment(models.Model):
     class Meta:
         ordering = ['date_created']
 
+    @classmethod
+    def layer_colors_with_comments_by_page(cls, project):
+        """
+        :return: {layers, count} dict with up to 3 layers which
+         has markers with comments and total count of such layers
+        """
+        from django.contrib.postgres.aggregates import ArrayAgg
+        markers_with_comments_unresolved = Marker.objects.filter(floor__project=project, markercomment__resolved=False)
+        data = markers_with_comments_unresolved\
+            .values_list('floor__code')\
+            .annotate(colors=ArrayAgg('layer__color__hex_code', distinct=True))
+        truncated = {code: dict(limit_3=colors[:3], count=len(colors))
+                     for code, colors in data}
+        return truncated
+
     def to_json(self):
         return {'content': self.content, 'date_created': self.date_created, 'resolved': self.resolved}
 

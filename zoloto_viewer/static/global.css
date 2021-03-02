@@ -284,6 +284,11 @@ ul.side_box_list li.active{
     background-color: lightgray;
 }
 
+.areas-box-layers-comments {
+    float: right;
+    font-size: 40%;
+}
+
 #projects-table {
     border-collapse: collapse;
 }
