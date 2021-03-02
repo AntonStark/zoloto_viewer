@@ -78,6 +78,7 @@ function ControllerMapInteractions() {
             _deleteRoutine(markerSelection);
         } else if (e.code === 'Escape') {
             dropSelection();
+            markerCirclesManager.render(mapInteractionsController.isInSelection);
         } else if (e.code === 'KeyI') {
             messageBoxManager.showSelected(mapInteractionsController.isInSelection);
         }
