@@ -7,12 +7,12 @@
 <form>
 <ul class="layers-box side_box_list">
 {% load layers_visibility %}
-{% for layer_title, color in layers %}
-    <li class="layer-{{ layer_title }} {{ layer_title|is_not_disabled:state_data.hidden_layers }}"
-        onclick="setActiveLayer(this); toggleLayerHandler('layer-{{ layer_title }}')">
-        <span style="color: black;" class="layer-title-span">{{ layer_title }}</span>
+{% for l in layers %}
+    <li class="layer-{{ l.title }} {{ l.title|is_not_disabled:state_data.hidden_layers }}"
+        onclick="setActiveLayer(this); toggleLayerHandler('layer-{{ l.title }}')">
+        <span style="color: black;" class="layer-title-span">{{ l.title }}</span>
         <span style="float: right">
-            <a href="{% url 'edit_project_layer' project_title=project.title layer_title=layer_title %}"
+            <a href="{% url 'edit_project_layer' project_title=project.title layer_title=l.title %}"
                class="hidden icon">&#x270E</a>
             <a class="hidden icon">&#x2A09</a>
         </span>

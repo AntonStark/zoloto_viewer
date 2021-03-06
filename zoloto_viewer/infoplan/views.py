@@ -315,7 +315,7 @@ def project_page(request, **more_context):
 
     project = page_obj.project
     page_code_list = project.page_set.values_list('code', 'floor_caption')
-    layers = project.layer_set.values_list('title', 'color__hex_code')
+    layers = project.layer_set.all()
     layers_with_comments_by_page = MarkerComment.layer_colors_with_comments_by_page(project=project)
     markers_by_layer = {L: page_obj.marker_set.filter(layer=L)
                         for L in project.layer_set.all()}
@@ -336,12 +336,12 @@ def project_page(request, **more_context):
         },
 
         'base_url': settings.BASE_URL,
-        'marker_display_config': {
-            'marker_scale': page_obj.apply_size_factor(1),
-            'circle_radius': page_obj.apply_size_factor(Marker.CIRCLE_RADIUS),
-            'comment_mark_radius': page_obj.apply_size_factor(Marker.COMMENT_MARK_RADIUS),
-            'comment_mark_padding': page_obj.apply_size_factor(Marker.COMMENT_MARK_PADDING),
-        },
+        'marker_display_config': page_obj.apply_size_factor({
+            'marker_scale': 1,
+            'circle_radius': Marker.CIRCLE_RADIUS,
+            'comment_mark_radius': Marker.COMMENT_MARK_RADIUS,
+            'comment_mark_padding': Marker.COMMENT_MARK_PADDING,
+        }),
 
         'pdf_original': pdf_original,   # todo review docs info format (enclose in own dict)
         'pdf_created_time': pdf_created_time,

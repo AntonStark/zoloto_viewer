@@ -229,8 +229,14 @@ class Page(models.Model):
         except Page.DoesNotExist:
             return None
 
-    def apply_size_factor(self, value):
-        return value * self.marker_size_factor / 100
+    def apply_size_factor(self, value: (int, dict)):
+        if isinstance(value, (int, float)):
+            return value * self.marker_size_factor / 100
+        elif isinstance(value, dict):
+            return {k: self.apply_size_factor(v)
+                    for k, v in value.items()}
+        else:
+            raise TypeError('Page.apply_size_factor: value should be int, float or dict with values of such types')
 
     def save(self, *args, **kwargs):
         if not self.code:

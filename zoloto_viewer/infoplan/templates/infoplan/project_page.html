@@ -34,23 +34,22 @@
         }
     </style>
     <style type="text/css">
-        {# todo markers_by_layer.keys -> layers , but layers should be all project layers_set #}
-        {% for layer in markers_by_layer.keys %}
-            .layer-{{ layer.title }} .variables_container {
+        {% for l in layers %}
+            .layer-{{ l.title }} .variables_container {
                 background: white;
                 color: black;
             }
-            .layer_markers.layer-{{ layer.title }} {
-                fill: {{ layer.color.hex_code }};
+            .layer_markers.layer-{{ l.title }} {
+                fill: {{ l.color.hex_code }};
             }
-            .layer_markers.layer-{{ layer.title }} .marker_comment_mark.marker_has_comment {
-                stroke: {{ layer.color.hex_code }};
+            .layer_markers.layer-{{ l.title }} .marker_comment_mark.marker_has_comment {
+                stroke: {{ l.color.hex_code }};
             }
-            .layer-{{ layer.title }} .message_shown .marker_circle {
-                stroke: {{ layer.color.hex_code }};
+            .layer-{{ l.title }} .message_shown .marker_circle {
+                stroke: {{ l.color.hex_code }};
             }
-            .layers-box .layer-{{ layer.title }} {
-                color: {{ layer.color.hex_code }};
+            .layers-box .layer-{{ l.title }} {
+                color: {{ l.color.hex_code }};
             }
         {% endfor %}
     </style>
