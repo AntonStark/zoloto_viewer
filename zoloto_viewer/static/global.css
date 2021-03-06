@@ -284,6 +284,18 @@ ul.side_box_list li.active{
     background-color: lightgray;
 }
 
+.docs-box-panel {
+    font-size: smaller;
+}
+
+.docs-box-panel a {
+    text-decoration: none;
+    color: lightgray;
+}
+.docs-box-panel a[href] {
+    color: unset;
+}
+
 .areas-box-layers-comments {
     float: right;
     font-size: 40%;

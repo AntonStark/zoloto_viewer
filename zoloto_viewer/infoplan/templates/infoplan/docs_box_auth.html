@@ -1,21 +1,42 @@
 {% load timedelta %}
 <div class="menu_header">документация</div>
-{% if pdf_original %}
-    <span class="pdf_generation_label">
-        <small title="{{ pdf_created_time }}">от {{ pdf_created_time|timedelta_pretty }} </small>
-        <span id="pdf_generation_link" data-activate-after="{{ pdf_refresh_timeout }}"
-              onclick="pdfRequest('{{ project.title }}')">&#8635;</span>
-    </span>
-    <br>
-    <a id="pdf_original_link" target="_blank" rel="noopener noreferrer"
-       href="{{ pdf_original.file.url }}">pdf</a>
-{% else %}
-    <br>
-    <small>
-        Файлы ещё не созданы
-        <a href="{% url 'rebuild_pdf_files' project.title %}"
-           style="float: right; cursor: pointer; text-decoration: underline;">
-            сформировать
-        </a>
-    </small>
-{% endif %}
+<div class="docs-box-panel">
+    <table>
+        <tbody>
+        <tr>
+            <td>
+                <i class="fas fa-long-arrow-alt-down"></i>
+                <a>Инфоплан</a>
+            </td>
+            <td>
+                <i class="fas fa-long-arrow-alt-down"></i>
+{#                <a href="{% url 'rebuild_pdf_files' project.title %}">pdf</a>#}
+                <a>pdf</a>
+            </td>
+            <td>
+                <i class="fas fa-long-arrow-alt-down"></i>
+                <a>Кол-во</a>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <i class="fas fa-long-arrow-alt-down"></i>
+                <a>Словарь</a>
+            </td>
+            <td>
+                <i class="fas fa-long-arrow-alt-down"></i>
+                <a>Пикты</a>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+
+{#<span class="pdf_generation_label">#}
+{#    <small title="{{ pdf_created_time }}">от {{ pdf_created_time|timedelta_pretty }} </small>#}
+{#    <span id="pdf_generation_link" data-activate-after="{{ pdf_refresh_timeout }}"#}
+{#          onclick="pdfRequest('{{ project.title }}')">&#8635;</span>#}
+{#</span>#}
+{#<br>#}
+{#<a id="pdf_original_link" target="_blank" rel="noopener noreferrer"#}
+{#   href="{{ pdf_original.file.url }}">pdf</a>#}

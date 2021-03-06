@@ -25,5 +25,5 @@ urlpatterns = [
     path('page/<str:page_code>/edit/', views.edit_project_page, name='edit_project_page'),
 
     path('api/', include('zoloto_viewer.infoplan.urls')),
-    path('docs/', include('zoloto_viewer.documents.urls')),
+    path('project/<str:title>/docs/', include('zoloto_viewer.documents.urls')),
 ]
