@@ -14,5 +14,5 @@ def is_not_disabled(layer_title, disabled_layers):
 @register.filter
 def hidden_layers_url_param(disabled_layers):
     return {
-        HIDDEN_LAYERS_PARAM: ','.join(disabled_layers)
+        HIDDEN_LAYERS_PARAM: ' '.join(disabled_layers)
     } if disabled_layers else {}

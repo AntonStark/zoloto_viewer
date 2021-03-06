@@ -1,6 +1,7 @@
 "use strict";
 function ControllerEnabledLayers() {
     const HIDDEN_LAYERS_PARAM = 'hide_layers';
+    const LAYER_TITLE_SEP = ' ';
 
     const ENABLED_LAYER_CLASS = 'enabled_layer';
     const PAGE_LINK_CLASS = 'project-page-link';
@@ -9,7 +10,7 @@ function ControllerEnabledLayers() {
 
     function _toggleLayerUrlParam(actualUrl, title) {
         const paramValue = actualUrl.searchParams.get(HIDDEN_LAYERS_PARAM);
-        const layerTitles = ( paramValue ? paramValue.split(',') : []);
+        const layerTitles = ( paramValue ? paramValue.split(LAYER_TITLE_SEP) : []);
         let hiddenLayers = layerTitles
             .reduce((hash, l, _) => {
                 hash[l] = true;
@@ -26,9 +27,7 @@ function ControllerEnabledLayers() {
             }
         }
         if (arr.length > 0) {
-            actualUrl.searchParams.append(HIDDEN_LAYERS_PARAM, arr.join(','));
-            // pretty comma encoding
-            actualUrl = new URL(actualUrl.toString().replaceAll('%2C', ','));
+            actualUrl.searchParams.append(HIDDEN_LAYERS_PARAM, arr.join(LAYER_TITLE_SEP));
         }
         return actualUrl;
     }

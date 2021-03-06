@@ -320,7 +320,7 @@ def project_page(request, **more_context):
     markers_by_layer = {L: page_obj.marker_set.filter(layer=L)
                         for L in project.layer_set.all()}
 
-    hidden_layers = request.GET.get('hide_layers', '').split(',')
+    hidden_layers = request.GET.get('hide_layers', '').split(' ')
 
     context = {
         'project': project,
