@@ -128,7 +128,10 @@ class VariablesManager(models.Manager):
             vars_by_side = transformed
 
         res = [
-            {'side': side_key, 'variables': vars_by_side.get(side_key, [])}
+            {
+                'side': side_key,
+                'variables': vars_by_side.get(side_key, [])
+            }
             for side_key in marker.layer.kind.side_keys()
         ]
         return res

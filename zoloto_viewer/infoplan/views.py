@@ -317,9 +317,10 @@ def project_page(request, **more_context):
     page_code_list = project.page_set.values_list('code', 'floor_caption')
     layers = project.layer_set.values_list('title', 'color__hex_code')
     layers_with_comments_by_page = MarkerComment.layer_colors_with_comments_by_page(project=project)
-    layers_visible = set(request.GET.getlist('layer'))
     markers_by_layer = {L: page_obj.marker_set.filter(layer=L)
                         for L in project.layer_set.all()}
+
+    hidden_layers = request.GET.get('hide_layers', '').split(',')
 
     context = {
         'project': project,
@@ -328,8 +329,11 @@ def project_page(request, **more_context):
         'page_code_list': page_code_list,
         'layers': layers,
         'layers_with_comments_by_page': layers_with_comments_by_page,
-        'layers_visible': layers_visible,
         'markers_by_layer': markers_by_layer,
+
+        'state_data': {
+            'hidden_layers': hidden_layers,
+        },
 
         'base_url': settings.BASE_URL,
         'marker_display_config': {

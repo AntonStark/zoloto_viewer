@@ -9,7 +9,7 @@
                 <rect id="project-page-svg-selection-rect"></rect>
                 {% load layers_visibility %}
                 {% for layer, markers in markers_by_layer.items %}
-                    <g class="layer_markers layer-{{ layer.title }} {{ layer.title|is_enabled:layers_visible }}">
+                    <g class="layer_markers layer-{{ layer.title }} {{ layer.title|is_not_disabled:state_data.hidden_layers }}">
                         <symbol id="marker_layer-{{ layer.title }}" overflow="visible">
                             <g transform="scale({{ marker_display_config.marker_scale }})">
                                 {{ layer.kind.svg_figures|safe }}

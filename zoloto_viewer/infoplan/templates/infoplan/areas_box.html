@@ -1,10 +1,11 @@
 {% load layers_visibility %}
 {% load dict_get %}
+{% load query_params %}
 <div class="menu_header">монтажные области</div>
 <ul class="side_box_list">
     {% for code, floor_caption in page_code_list %}
     <li {% if code == page.code %}class="active"{% endif %} >
-        <a href="{% url 'project_page' code %}{{ layers_visible|layer_params }}"
+        <a href="{% url 'project_page' code %}{{ state_data.hidden_layers|hidden_layers_url_param|query_params }}"
            class="pages-box-button">
             {{ floor_caption }}
             <span class="areas-box-layers-comments">

@@ -2,16 +2,17 @@ from django import template
 
 register = template.Library()
 
-LAYER_PARAM = 'layer'
+HIDDEN_LAYERS_PARAM = 'hide_layers'
 ENABLED_LAYER_CLASS = 'enabled_layer'
 
 
 @register.filter
-def is_enabled(layer_title, enabled):
-    return ENABLED_LAYER_CLASS if layer_title in enabled else ''
+def is_not_disabled(layer_title, disabled_layers):
+    return ENABLED_LAYER_CLASS if layer_title not in disabled_layers else ''
 
 
 @register.filter
-def layer_params(enabled_layers):
-    return '' if not enabled_layers \
-        else '?' + '&'.join(f'{LAYER_PARAM}={l}' for l in enabled_layers)
+def hidden_layers_url_param(disabled_layers):
+    return {
+        HIDDEN_LAYERS_PARAM: ','.join(disabled_layers)
+    } if disabled_layers else {}

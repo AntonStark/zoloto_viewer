@@ -34,6 +34,7 @@
         }
     </style>
     <style type="text/css">
+        {# todo markers_by_layer.keys -> layers , but layers should be all project layers_set #}
         {% for layer in markers_by_layer.keys %}
             .layer-{{ layer.title }} .variables_container {
                 background: white;
@@ -47,6 +48,9 @@
             }
             .layer-{{ layer.title }} .message_shown .marker_circle {
                 stroke: {{ layer.color.hex_code }};
+            }
+            .layers-box .layer-{{ layer.title }} {
+                color: {{ layer.color.hex_code }};
             }
         {% endfor %}
     </style>

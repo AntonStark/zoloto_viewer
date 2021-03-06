@@ -43,6 +43,9 @@
             .layer-{{ layer.title }} .message_shown .marker_circle {
                 stroke: {{ layer.color.hex_code }};
             }
+            .layers-box .layer-{{ layer.title }} {
+                color: {{ layer.color.hex_code }};
+            }
         {% endfor %}
     </style>
 </head>

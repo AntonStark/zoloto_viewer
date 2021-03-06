@@ -1,24 +1,35 @@
 "use strict";
 function ControllerEnabledLayers() {
-    const LAYER_PARAM = 'layer';
+    const HIDDEN_LAYERS_PARAM = 'hide_layers';
+
     const ENABLED_LAYER_CLASS = 'enabled_layer';
     const PAGE_LINK_CLASS = 'project-page-link';
 
     let activeLayerTitle = '';
 
-    function _toggleLayerUrlParam(title, actualUrl) {
-        let enabledLayers = actualUrl.searchParams.getAll(LAYER_PARAM)
+    function _toggleLayerUrlParam(actualUrl, title) {
+        const paramValue = actualUrl.searchParams.get(HIDDEN_LAYERS_PARAM);
+        const layerTitles = ( paramValue ? paramValue.split(',') : []);
+        let hiddenLayers = layerTitles
             .reduce((hash, l, _) => {
                 hash[l] = true;
                 return hash;
             }, {});
-        enabledLayers[title] = !enabledLayers[title];
-        // console.log(enabledLayers, enabledLayers[title]);
+        hiddenLayers[title] = !hiddenLayers[title];
+        // console.log(hiddenLayers, hiddenLayers[title]);
 
-        actualUrl.searchParams.delete(LAYER_PARAM);
-        for (const [title, enabled] of Object.entries(enabledLayers))
-            if (enabled)
-                actualUrl.searchParams.append(LAYER_PARAM, title);
+        actualUrl.searchParams.delete(HIDDEN_LAYERS_PARAM);
+        let arr = [];
+        for (const [title, disabled] of Object.entries(hiddenLayers)) {
+            if (disabled) {
+                arr.push(title);
+            }
+        }
+        if (arr.length > 0) {
+            actualUrl.searchParams.append(HIDDEN_LAYERS_PARAM, arr.join(','));
+            // pretty comma encoding
+            actualUrl = new URL(actualUrl.toString().replaceAll('%2C', ','));
+        }
         return actualUrl;
     }
 
@@ -31,13 +42,13 @@ function ControllerEnabledLayers() {
         const layerOwnTitle = ( title.startsWith(layerPrefix) ? title.slice(layerPrefix.length) : title );
 
         let actualUrl = new URL(document.location.href);
-        const newUrl = _toggleLayerUrlParam(layerOwnTitle, actualUrl);
+        const newUrl = _toggleLayerUrlParam(actualUrl, layerOwnTitle);
         window.history.pushState({}, '', newUrl.toString());
 
         const projectPageLinks = document.getElementsByClassName(PAGE_LINK_CLASS);
         for (const linkItem of projectPageLinks) {
             let targetUrl = new URL(linkItem.href);
-            linkItem.href = _toggleLayerUrlParam(layerOwnTitle, targetUrl);
+            linkItem.href = _toggleLayerUrlParam(targetUrl, layerOwnTitle);
         }
     }
 
