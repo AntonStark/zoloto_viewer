@@ -1,7 +1,22 @@
 import collections
+import typing as t
 import uuid
 from django.contrib.postgres import fields
 from django.db import models, transaction
+
+
+class MarkersManager(models.Manager):
+    def by_layer(self, project, page=None) -> t.Dict['viewer.Layer', models.QuerySet]:
+        def _query(layer, page_) -> models.QuerySet:
+            q = self.filter(layer=layer)
+            if page_:
+                q = q.filter(floor=page_)
+            return q
+
+        return {
+            L: _query(L, page)
+            for L in project.layer_set.all()
+        }
 
 
 class Marker(models.Model):
@@ -25,6 +40,8 @@ class Marker(models.Model):
     CIRCLE_RADIUS = 15
     COMMENT_MARK_RADIUS = 2
     COMMENT_MARK_PADDING = 0.7 * CIRCLE_RADIUS
+
+    objects = MarkersManager()
 
     class Meta:
         unique_together = [('floor', 'layer', 'ordinal')]

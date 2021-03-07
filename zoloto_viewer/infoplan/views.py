@@ -317,8 +317,7 @@ def project_page(request, **more_context):
     page_code_list = project.page_set.values_list('code', 'floor_caption')
     layers = project.layer_set.all()
     layers_with_comments_by_page = MarkerComment.layer_colors_with_comments_by_page(project=project)
-    markers_by_layer = {L: page_obj.marker_set.filter(layer=L)
-                        for L in project.layer_set.all()}
+    markers_by_layer = Marker.objects.by_layer(project)
 
     hidden_layers = request.GET.get('hide_layers', '').split(' ')
 

@@ -6,11 +6,12 @@ from django.db import models
 from django.dispatch import receiver
 from os import path
 
+from zoloto_viewer.documents import generators
 from zoloto_viewer.infoplan.pdf_generation import main as pdf_module
 
 
-def additional_files_upload_path(obj, filename):
-    return path.join(obj.project_files_dir(), f'additional_files/{filename}')
+def additional_files_upload_path(obj: 'ProjectFile', filename):
+    return path.join(obj.project.project_files_dir(), f'additional_files/{filename}')
 
 
 def _delete_file(fpath):
@@ -38,6 +39,11 @@ class ProjectFilesManager(models.Manager):
     def pdf_generate_file(self, project):
         obj = self.model(project=project)
         obj._setup_pdf_file()
+        return obj
+
+    def generate_counts(self, project):
+        obj = self.model(project=project)
+        obj._setup_counts_file()
         return obj
 
     def pdf_refresh_timeout(self, project):
@@ -72,12 +78,18 @@ class ProjectFile(models.Model):
     def file_name(self):
         return os.path.basename(self.file.name)
 
+    def _setup_counts_file(self):
+        builder = generators.counts.CountFileBuilder()
+        builder.build(self.project)
+        filename = f'project_{self.project.title}_marker_counts.{builder.extension}'
+        self.kind = self.FileKinds.CSV_LAYER_STATS
+        self.file.save(filename, File(builder.buffer))
+
     def _setup_pdf_file(self):
         bytes_buf = io.BytesIO()
         proposed_filename = pdf_module.generate_pdf(self.project, bytes_buf, with_review=False)
-        self.file.save(proposed_filename, File(bytes_buf))
         self.kind = self.FileKinds.PDF_EXFOLIATION
-        self.save()
+        self.file.save(proposed_filename, File(bytes_buf))
 
 
 # noinspection PyUnusedLocal
