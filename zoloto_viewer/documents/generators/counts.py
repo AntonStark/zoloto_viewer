@@ -1,22 +1,17 @@
-import csv
-
 from zoloto_viewer.infoplan.models import Marker
 from zoloto_viewer.viewer.models import Project
 
 from . import _base
 
 
-class CountFileBuilder(_base.AbstractFileBuilder):
-    def __init__(self):
-        super().__int__(bytes_buffer=False, extension='csv')
+class CountFileBuilder(_base.AbstractCsvFileBuilder):
+    def __init__(self, project: 'Project'):
+        super().__int__(project)
+        self.csv_header = ('Тип элемента', 'Название носителя', 'Количество')
+        self.filename = f'project_{self.project.title}_marker_counts.{self.extension}'
 
-    def build(self, project: 'Project'):
-        csv_header = ('Тип элемента', 'Название носителя', 'Количество')
-        csv_rows = [
+    def make_rows(self):
+        return [
             (L.title, L.desc, markers.count())
-            for L, markers in Marker.objects.by_layer(project).items()
+            for L, markers in Marker.objects.by_layer(self.project).items()
         ]
-
-        writer = csv.writer(self.buffer, dialect='excel', delimiter=',')
-        writer.writerow(csv_header)
-        writer.writerows(csv_rows)

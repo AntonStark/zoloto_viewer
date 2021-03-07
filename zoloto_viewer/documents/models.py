@@ -43,7 +43,12 @@ class ProjectFilesManager(models.Manager):
 
     def generate_counts(self, project):
         obj = self.model(project=project)
-        obj._setup_counts_file()
+        obj._setup_file(self.model.FileKinds.CSV_LAYER_STATS)
+        return obj
+
+    def generate_picts(self, project):
+        obj = self.model(project=project)
+        obj._setup_file(self.model.FileKinds.CSV_PICT_CODES)
         return obj
 
     def pdf_refresh_timeout(self, project):
@@ -73,22 +78,29 @@ class ProjectFile(models.Model):
     objects = ProjectFilesManager()
 
     PDF_GENERATION_TIMEOUT = 600
+    FILE_BUILDERS = {
+        FileKinds.CSV_LAYER_STATS   : generators.counts.CountFileBuilder,
+        FileKinds.CSV_PICT_CODES    : generators.picts.PictListFileBuilder,
+    }
 
     @property
     def file_name(self):
         return os.path.basename(self.file.name)
 
-    def _setup_counts_file(self):
-        builder = generators.counts.CountFileBuilder()
-        builder.build(self.project)
-        filename = f'project_{self.project.title}_marker_counts.{builder.extension}'
-        self.kind = self.FileKinds.CSV_LAYER_STATS
-        self.file.save(filename, File(builder.buffer))
+    def _setup_file(self, kind):
+        builder_cls = self.FILE_BUILDERS.get(kind)
+        if not builder_cls:
+            raise NotImplementedError(f'ProjectFile.FILE_BUILDERS no value for key {kind}')
+
+        self.kind = kind
+        builder = builder_cls(self.project)     # type: generators.AbstractCsvFileBuilder
+        builder.build()
+        self.file.save(builder.filename, File(builder.buffer))
 
     def _setup_pdf_file(self):
+        self.kind = self.FileKinds.PDF_EXFOLIATION
         bytes_buf = io.BytesIO()
         proposed_filename = pdf_module.generate_pdf(self.project, bytes_buf, with_review=False)
-        self.kind = self.FileKinds.PDF_EXFOLIATION
         self.file.save(proposed_filename, File(bytes_buf))
 
 
