@@ -24,6 +24,20 @@ def get_counts_file(request, title):
 
 @login_required
 @csrf.csrf_exempt
+@http.require_GET
+def get_picts_file(request, title):
+    try:
+        project = Project.objects.get(title=title)
+    except Project.DoesNotExist:
+        raise Http404
+
+    # todo freshness check <- file etag-like attr
+    pf = ProjectFile.objects.generate_picts(project)
+    return FileResponse(pf.file)
+
+
+@login_required
+@csrf.csrf_exempt
 def rebuild_pdf_files(request, title):
     try:
         project = Project.objects.get(title=title)
