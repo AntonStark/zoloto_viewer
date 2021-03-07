@@ -1,6 +1,6 @@
 from datetime import datetime
 from django.contrib.auth.decorators import login_required
-from django.http import Http404, JsonResponse
+from django.http import FileResponse, Http404, JsonResponse
 from django.shortcuts import redirect
 from django.views.decorators import csrf, http
 from django.utils import timezone
@@ -12,13 +12,14 @@ from zoloto_viewer.documents.models import ProjectFile
 @login_required
 @csrf.csrf_exempt
 @http.require_GET
-def get_project_doc(request, title, kind):
+def get_counts_file(request, title):
     try:
         project = Project.objects.get(title=title)
     except Project.DoesNotExist:
         raise Http404
 
-    debug = ''
+    pf = ProjectFile.objects.generate_counts(project)
+    return FileResponse(pf.file)
 
 
 @login_required
@@ -28,6 +29,8 @@ def rebuild_pdf_files(request, title):
         project = Project.objects.get(title=title)
     except Project.DoesNotExist:
         raise Http404
+
+    deb = ''
     pdf_refresh_timeout = ProjectFile.objects.pdf_refresh_timeout(project)
 
     if datetime.now() < pdf_refresh_timeout:
