@@ -16,5 +16,5 @@ class PictListFileBuilder(_base.AbstractCsvFileBuilder):
         variables = MarkerVariable.objects\
             .filter(marker__floor__project=self.project)\
             .values_list('value', flat=True)
-        pict_codes = set(re.findall('@[A-z]+@', '\n'.join(variables)))
+        pict_codes = set(re.findall(MarkerVariable.PICT_PATTERN, '\n'.join(variables)))
         return [(c,) for c in pict_codes]

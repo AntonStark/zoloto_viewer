@@ -168,6 +168,8 @@ class MarkerVariable(models.Model):
 
     objects = VariablesManager()
 
+    PICT_PATTERN = '@[A-z\d]+@'
+
     class Meta:
         unique_together = ['marker', 'side', 'key']
         ordering = ['side', 'key']

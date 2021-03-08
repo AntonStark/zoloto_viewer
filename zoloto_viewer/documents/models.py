@@ -51,6 +51,11 @@ class ProjectFilesManager(models.Manager):
         obj._setup_file(self.model.FileKinds.CSV_PICT_CODES)
         return obj
 
+    def generate_vars_index_file(self, project):
+        obj = self.model(project=project)
+        obj._setup_file(self.model.FileKinds.CSV_VARIABLES)
+        return obj
+
     def pdf_refresh_timeout(self, project):
         pdf_docs_set = self.filter(project=project, kind__exact=self.model.FileKinds.PDF_EXFOLIATION)
         latest_date = pdf_docs_set.latest('date_created') if pdf_docs_set.exists() else None
@@ -81,6 +86,7 @@ class ProjectFile(models.Model):
     FILE_BUILDERS = {
         FileKinds.CSV_LAYER_STATS   : generators.counts.CountFileBuilder,
         FileKinds.CSV_PICT_CODES    : generators.picts.PictListFileBuilder,
+        FileKinds.CSV_VARIABLES     : generators.vars_index.VarsIndexFileBuilder,
     }
 
     @property
