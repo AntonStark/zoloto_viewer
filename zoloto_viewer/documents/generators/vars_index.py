@@ -20,8 +20,8 @@ class VarsIndexFileBuilder(_base.AbstractCsvFileBuilder):
 
         def process_var(variable: str):
             variable = html.unescape(variable)
-            # filter masterpage marks
-            if variable.startswith('mp:'):
+            # filter empty and masterpage marks
+            if not variable or variable.startswith('mp:'):
                 return []
 
             variable = variable.replace('&tab', '')
@@ -40,7 +40,13 @@ class VarsIndexFileBuilder(_base.AbstractCsvFileBuilder):
                 var_first_use.setdefault(lang_pair, v.marker.number)
                 var_count[lang_pair] += 1
 
-        return [
+        def by_rus(row):
+            target: str = row[2]
+            # hack to sort non-words first
+            startswith_letter = target[0].isalnum()
+            return not startswith_letter, target
+
+        return sorted([
             (number, var_count[lang_pair], lang_pair[0], lang_pair[1])
             for lang_pair, number in var_first_use.items()
-        ]
+        ], key=by_rus)
