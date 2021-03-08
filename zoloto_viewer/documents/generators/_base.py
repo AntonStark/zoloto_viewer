@@ -8,8 +8,6 @@ from zoloto_viewer.viewer.models import Project
 class AbstractCsvFileBuilder(abc.ABC):
     def __int__(self, project: 'Project'):
         self.project = project
-        self.filename = ''
-        self.extension = 'csv'
         self.csv_header = ()
         self.buffer = io.StringIO()
 

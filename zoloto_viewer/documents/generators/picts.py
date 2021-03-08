@@ -10,7 +10,6 @@ class PictListFileBuilder(_base.AbstractCsvFileBuilder):
     def __init__(self, project: 'Project'):
         super().__int__(project)
         self.csv_header = ('Код пиктограммы',)
-        self.filename = f'project_{self.project.title}_picts.{self.extension}'
 
     def make_rows(self):
         variables = MarkerVariable.objects\

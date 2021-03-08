@@ -19,7 +19,7 @@ def get_counts_file(request, title):
         raise Http404
 
     pf = ProjectFile.objects.generate_counts(project)
-    return FileResponse(pf.file)
+    return FileResponse(pf.file, filename=pf.public_name)
 
 
 @login_required
@@ -33,7 +33,7 @@ def get_picts_file(request, title):
 
     # todo freshness check <- file etag-like attr
     pf = ProjectFile.objects.generate_picts(project)
-    return FileResponse(pf.file)
+    return FileResponse(pf.file, filename=pf.public_name)
 
 
 @login_required
@@ -46,7 +46,7 @@ def get_vars_file(request, title):
         raise Http404
 
     pf = ProjectFile.objects.generate_vars_index_file(project)
-    return FileResponse(pf.file)
+    return FileResponse(pf.file, filename=pf.public_name)
 
 
 @login_required

@@ -36,25 +36,24 @@ class ProjectFilesManager(models.Manager):
             # ...
         }
 
+    def create_file(self, project, kind):
+        obj = self.model(project=project, kind=kind)
+        obj._setup_file()
+        return obj
+
     def pdf_generate_file(self, project):
         obj = self.model(project=project)
         obj._setup_pdf_file()
         return obj
 
     def generate_counts(self, project):
-        obj = self.model(project=project)
-        obj._setup_file(self.model.FileKinds.CSV_LAYER_STATS)
-        return obj
+        return self.create_file(project, self.model.FileKinds.CSV_LAYER_STATS)
 
     def generate_picts(self, project):
-        obj = self.model(project=project)
-        obj._setup_file(self.model.FileKinds.CSV_PICT_CODES)
-        return obj
+        return self.create_file(project, self.model.FileKinds.CSV_PICT_CODES)
 
     def generate_vars_index_file(self, project):
-        obj = self.model(project=project)
-        obj._setup_file(self.model.FileKinds.CSV_VARIABLES)
-        return obj
+        return self.create_file(project, self.model.FileKinds.CSV_VARIABLES)
 
     def pdf_refresh_timeout(self, project):
         pdf_docs_set = self.filter(project=project, kind__exact=self.model.FileKinds.PDF_EXFOLIATION)
@@ -89,19 +88,35 @@ class ProjectFile(models.Model):
         FileKinds.CSV_VARIABLES     : generators.vars_index.VarsIndexFileBuilder,
     }
 
+    @staticmethod
+    def make_name(project, kind):
+        file_kinds = ProjectFile.FileKinds
+        rules = {
+            file_kinds.CSV_LAYER_STATS  : f'project_{project.title}_marker_counts.csv',
+            file_kinds.CSV_PICT_CODES   : f'project_{project.title}_picts.csv',
+            file_kinds.CSV_VARIABLES    : f'project_{project.title}_vars.csv',
+        }
+        return rules[kind]
+
     @property
     def file_name(self):
         return os.path.basename(self.file.name)
 
-    def _setup_file(self, kind):
-        builder_cls = self.FILE_BUILDERS.get(kind)
-        if not builder_cls:
-            raise NotImplementedError(f'ProjectFile.FILE_BUILDERS no value for key {kind}')
+    @property
+    def public_name(self):
+        return self._make_name()
 
-        self.kind = kind
+    def _setup_file(self):
+        builder_cls = self.FILE_BUILDERS.get(self.kind)
+        if not builder_cls:
+            raise NotImplementedError(f'ProjectFile.FILE_BUILDERS no value for key {self.kind}')
+
         builder = builder_cls(self.project)     # type: generators.AbstractCsvFileBuilder
         builder.build()
-        self.file.save(builder.filename, File(builder.buffer))
+        self.file.save(self._make_name(), File(builder.buffer))
+
+    def _make_name(self):
+        return self.__class__.make_name(self.project, self.kind)
 
     def _setup_pdf_file(self):
         self.kind = self.FileKinds.PDF_EXFOLIATION
@@ -113,7 +128,7 @@ class ProjectFile(models.Model):
 # noinspection PyUnusedLocal
 @receiver(models.signals.post_delete, sender=ProjectFile)
 def delete_project_file(sender, instance: ProjectFile, *args, **kwargs):
-    """ Deletes page image on `post_delete` """
+    """Deletes filesystem file on `post_delete`"""
     if instance.file:
         _delete_file(instance.file.path)
 

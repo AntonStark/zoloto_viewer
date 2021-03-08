@@ -8,7 +8,6 @@ class CountFileBuilder(_base.AbstractCsvFileBuilder):
     def __init__(self, project: 'Project'):
         super().__int__(project)
         self.csv_header = ('Тип элемента', 'Название носителя', 'Количество')
-        self.filename = f'project_{self.project.title}_marker_counts.{self.extension}'
 
     def make_rows(self):
         return [

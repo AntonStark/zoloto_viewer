@@ -13,7 +13,6 @@ class VarsIndexFileBuilder(_base.AbstractCsvFileBuilder):
     def __init__(self, project: 'Project'):
         super().__int__(project)
         self.csv_header = ('Номер первого носителя', 'Кол-во употреблений', 'Первая строка', 'Вторая строка')
-        self.filename = f'project_{self.project.title}_vars.{self.extension}'
 
     def make_rows(self):
         pict_regex = re.compile(MarkerVariable.PICT_PATTERN)
