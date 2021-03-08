@@ -7,7 +7,7 @@ from django.dispatch import receiver
 from os import path
 
 from zoloto_viewer.documents import generators
-from zoloto_viewer.infoplan.pdf_generation import main as pdf_module
+from zoloto_viewer.documents.pdf_generation import main as pdf_module
 
 
 def additional_files_upload_path(obj: 'ProjectFile', filename):

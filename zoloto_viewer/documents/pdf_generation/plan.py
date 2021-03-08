@@ -2,8 +2,9 @@ from django.db.models.fields.files import ImageFieldFile
 from reportlab.lib import colors
 from reportlab.pdfgen import canvas as rc
 
-from zoloto_viewer.infoplan.pdf_generation import layout
 from zoloto_viewer.viewer.models import Page
+
+from . import layout
 
 
 class PlanBox:

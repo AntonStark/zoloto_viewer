@@ -5,8 +5,9 @@ from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas as rc
 
 django.setup()
-from zoloto_viewer.infoplan.pdf_generation import layout, message, plan
 from zoloto_viewer.viewer.models import Page
+
+from . import layout, message, plan
 
 
 def test_plan(with_review=False):

@@ -1,8 +1,7 @@
 import re
 from reportlab.lib import units, colors
 
-from zoloto_viewer.infoplan.pdf_generation import layout, utils
-from zoloto_viewer.infoplan.models import MarkerVariable
+from . import layout, utils
 
 
 def set_colors(canvas, color):
