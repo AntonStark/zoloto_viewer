@@ -414,6 +414,7 @@ g.layer_markers.enabled_layer {
     flex-grow: 1;
     min-height: 0;
     display: flex;
+    tab-size: 4;
 }
 
 .variables_container ul {
@@ -448,6 +449,11 @@ g.layer_markers.enabled_layer {
     -moz-user-select: none;
     -ms-user-select: none;
     user-select: none;
+}
+.variables_container pre {
+    font-size: 12px;
+    font-family: "Zoloto Picts v1", serif;
+    margin: 0;
 }
 
 .variables_container ul li.wrong_variable {

@@ -8,9 +8,20 @@ class Transformation(abc.ABC):
         pass
 
 
+def tag_wrap(content, tag, **attrs):
+    attrs['class'] = attrs.pop('class_', None)
+    attrs_str = ' '.join(f'{k}="{v}"' for k, v in attrs.items() if v is not None)
+    return f'<{tag} {attrs_str}>{content}</{tag}>'
+
+
 class HideMasterPageLine(Transformation):
     def apply(self, variables_list, **kwargs):
         return [var for var in variables_list if not var.startswith('mp:')]
+
+
+class EliminateTabs(Transformation):
+    def apply(self, variables_list, **kwargs):
+        return [tag_wrap(var.replace('&amp;tab', '\t'), 'pre') for var in variables_list]
 
 
 class NewlinesToBr(Transformation):
@@ -72,12 +83,9 @@ class ReplacePictCodes(Transformation):
     REPLACE_DICT = dict(REPLACE_TABLE)
 
     def substitute_pict_codes(self, var):
-        def tag_wrap(icon):
-            return f'<span class="infoplan_icon">{icon}</span>'
-
         for code, pict in self.REPLACE_DICT.items():
             if code in var:
-                var = var.replace(code, tag_wrap(pict))
+                var = var.replace(code, tag_wrap(pict, 'span', class_='infoplan_icon'))
         return var
 
     def apply(self, variables_list, **kwargs):
