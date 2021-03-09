@@ -6,10 +6,11 @@ from zoloto_viewer.viewer.models import Project
 
 
 class AbstractCsvFileBuilder(abc.ABC):
-    def __int__(self, project: 'Project'):
+    def __init__(self, project: 'Project'):
         self.project = project
         self.csv_header = ()
         self.buffer = io.StringIO()
+        super().__init__()
 
     @abc.abstractmethod
     def make_rows(self):

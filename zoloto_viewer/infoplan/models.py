@@ -18,6 +18,21 @@ class MarkersManager(models.Manager):
             for L in project.layer_set.all()
         }
 
+    def max_last_modified(self, layer=None, page=None, project=None):
+        if not any([layer, page, project]):
+            raise ValueError('At least one of filtering arguments needed')
+        if layer and page:
+            q = self.filter(layer=layer, floor=page)
+        elif layer:
+            q = self.filter(layer=layer)
+        elif page:
+            q = self.filter(floor=page)
+        else:
+            q = self.filter(floor__project=project)
+
+        lm = q.aggregate(value=models.Max('last_modified'))['value']
+        return lm
+
 
 class Marker(models.Model):
     """

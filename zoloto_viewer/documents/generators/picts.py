@@ -8,7 +8,7 @@ from . import _base
 
 class PictListFileBuilder(_base.AbstractCsvFileBuilder):
     def __init__(self, project: 'Project'):
-        super().__int__(project)
+        super().__init__(project)
         self.csv_header = ('Код пиктограммы',)
 
     def make_rows(self):
@@ -16,4 +16,4 @@ class PictListFileBuilder(_base.AbstractCsvFileBuilder):
             .filter(marker__floor__project=self.project)\
             .values_list('value', flat=True)
         pict_codes = set(re.findall(MarkerVariable.PICT_PATTERN, '\n'.join(variables)))
-        return [(c,) for c in pict_codes]
+        return ((c,) for c in pict_codes)

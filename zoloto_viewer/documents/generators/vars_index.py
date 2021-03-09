@@ -11,7 +11,7 @@ from zoloto_viewer.viewer.models import Project
 
 class VarsIndexFileBuilder(_base.AbstractCsvFileBuilder):
     def __init__(self, project: 'Project'):
-        super().__int__(project)
+        super().__init__(project)
         self.csv_header = ('Номер первого носителя', 'Кол-во употреблений', 'Первая строка', 'Вторая строка')
 
     def make_rows(self):

@@ -6,6 +6,7 @@ from django.views.decorators import csrf, http
 from django.utils import timezone
 
 from zoloto_viewer.viewer.models import Project
+from zoloto_viewer.infoplan.models import Marker
 from zoloto_viewer.documents.models import ProjectFile
 
 
@@ -31,7 +32,6 @@ def get_picts_file(request, title):
     except Project.DoesNotExist:
         raise Http404
 
-    # todo freshness check <- file etag-like attr
     pf = ProjectFile.objects.generate_picts(project)
     return FileResponse(pf.file, filename=pf.public_name)
 
@@ -45,8 +45,14 @@ def get_vars_file(request, title):
     except Project.DoesNotExist:
         raise Http404
 
-    pf = ProjectFile.objects.generate_vars_index_file(project)
-    return FileResponse(pf.file, filename=pf.public_name)
+    existing_file = ProjectFile.objects.filter(
+        project=project,
+        kind=ProjectFile.FileKinds.CSV_VARIABLES
+    ).first()   # type: ProjectFile
+    if not existing_file or Marker.objects.max_last_modified(project=project) > existing_file.date_created:
+        existing_file = ProjectFile.objects.generate_vars_index_file(project)
+
+    return FileResponse(existing_file.file, filename=existing_file.public_name)
 
 
 @login_required
