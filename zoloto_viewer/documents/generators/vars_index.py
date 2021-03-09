@@ -41,8 +41,8 @@ class VarsIndexFileBuilder(_base.AbstractCsvFileBuilder):
 
         def by_rus(row):
             target: str = row[2]
-            # hack to sort non-words first
-            startswith_letter = target[0].isalnum()
+            # hack to sort words first
+            startswith_letter = target[0].isalnum() if target else True
             return not startswith_letter, target
 
         return sorted([
