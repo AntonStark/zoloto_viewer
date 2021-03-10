@@ -1,5 +1,8 @@
 import abc
 import html
+import re
+
+from zoloto_viewer.infoplan.models import MarkerVariable
 
 
 class Transformation(abc.ABC):
@@ -80,12 +83,17 @@ class ReplacePictCodes(Transformation):
         ('@SKATE@', '\ue92e'),
         ('@ELECTRO@', '\ue92f')
     ]
+    DEFAULT_PICT = '\u25fb'
     REPLACE_DICT = dict(REPLACE_TABLE)
 
     def substitute_pict_codes(self, var):
-        for code, pict in self.REPLACE_DICT.items():
-            if code in var:
-                var = var.replace(code, tag_wrap(pict, 'span', class_='infoplan_icon'))
+        used = re.findall(MarkerVariable.PICT_PATTERN, var)
+        for code in used:
+            pict = self.REPLACE_DICT.get(code, self.DEFAULT_PICT)
+            var = var.replace(code, tag_wrap(pict, 'span', class_='infoplan_icon'))
+        # for code, pict in self.REPLACE_DICT.items():
+        #     if code in var:
+        #         var = var.replace(code, tag_wrap(pict, 'span', class_='infoplan_icon'))
         return var
 
     def apply(self, variables_list, **kwargs):
