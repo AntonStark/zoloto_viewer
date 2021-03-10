@@ -320,7 +320,7 @@ def project_page(request, **more_context):
     layers_with_comments_by_page = MarkerComment.layer_colors_with_comments_by_page(project=project)
     markers_by_layer = Marker.objects.by_layer(project, page=page_obj)
 
-    hidden_layers = request.GET.get('hide_layers', '').split(' ')
+    hidden_layers = request.GET['hide_layers'].split(' ') if 'hide_layers' in request.GET else []
 
     context = {
         'project': project,
