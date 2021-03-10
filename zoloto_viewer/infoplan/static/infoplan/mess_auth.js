@@ -58,9 +58,17 @@ function buildMessBox(data) {
 
         const sides = data.layer.kind.sides;
 
+        let infoplanHeader = document.createElement('div');
         let variablesLabel = document.createElement('span');
         variablesLabel.setAttribute('style', 'font-size: 10px;');
         variablesLabel.textContent = 'Инфоплан';
+        let numberLabel = document.createElement('span');
+        // numberLabel.style.float = 'right';
+        numberLabel.style.marginLeft = '10px';
+        numberLabel.style.fontSize = '10px';
+        numberLabel.style.fontWeight = 'bold';
+        numberLabel.textContent = data.number;
+        infoplanHeader.append(variablesLabel, numberLabel);
 
         let variablesDiv  = document.createElement('div');
         variablesDiv.setAttribute('class', `variables_container`);
@@ -69,7 +77,7 @@ function buildMessBox(data) {
         variablesDiv.append(...sideNumbers.map((e, i) => buildSideNBlock(i + 1)(data)));
 
         let infoplanDiv  = document.createElement('div');
-        infoplanDiv.append(variablesLabel, variablesDiv);
+        infoplanDiv.append(infoplanHeader, variablesDiv);
 
         return infoplanDiv;
     }
