@@ -184,6 +184,7 @@ class MarkerVariable(models.Model):
     objects = VariablesManager()
 
     PICT_PATTERN = '@[A-z\d]+@'
+    MASTER_PAGE_MARK = 'mp:'
 
     class Meta:
         unique_together = ['marker', 'side', 'key']
