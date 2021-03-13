@@ -2,12 +2,9 @@ import abc
 import csv
 import io
 
-from zoloto_viewer.viewer.models import Project
-
 
 class AbstractCsvFileBuilder(abc.ABC):
-    def __init__(self, project: 'Project'):
-        self.project = project
+    def __init__(self):
         self.csv_header = ()
         self.buffer = io.StringIO()
         super().__init__()

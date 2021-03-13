@@ -8,8 +8,9 @@ from . import _base
 
 class PictListFileBuilder(_base.AbstractCsvFileBuilder):
     def __init__(self, project: 'Project'):
-        super().__init__(project)
+        super().__init__()
         self.csv_header = ('Код пиктограммы',)
+        self.project = project
 
     def make_rows(self):
         variables = MarkerVariable.objects\

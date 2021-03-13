@@ -11,8 +11,9 @@ from zoloto_viewer.viewer.models import Project
 
 class VarsIndexFileBuilder(_base.AbstractCsvFileBuilder):
     def __init__(self, project: 'Project'):
-        super().__init__(project)
+        super().__init__()
         self.csv_header = ('Номер первого носителя', 'Кол-во употреблений', 'Первая строка', 'Вторая строка')
+        self.project = project
 
     def make_rows(self):
         pict_regex = re.compile(MarkerVariable.PICT_PATTERN)
