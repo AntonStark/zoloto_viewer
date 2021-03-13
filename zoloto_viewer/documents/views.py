@@ -32,7 +32,7 @@ def get_picts_file(request, title):
     except Project.DoesNotExist:
         raise Http404
 
-    pf = ProjectFile.objects.generate_picts(project)
+    pf = ProjectFile.objects.generate_pict_list(project)
     return FileResponse(pf.file, filename=pf.public_name)
 
 
@@ -49,8 +49,30 @@ def get_vars_file(request, title):
         project=project,
         kind=ProjectFile.FileKinds.CSV_VARIABLES
     ).first()   # type: ProjectFile
-    if not existing_file or Marker.objects.max_last_modified(project=project) > existing_file.date_created:
+    if not existing_file or \
+            Marker.objects.max_last_modified(project=project) > existing_file.date_created:
         existing_file = ProjectFile.objects.generate_vars_index_file(project)
+
+    return FileResponse(existing_file.file, filename=existing_file.public_name)
+
+
+@login_required
+@csrf.csrf_exempt
+@http.require_GET
+def get_infoplan_file(request, title):
+    try:
+        project = Project.objects.get(title=title)
+    except Project.DoesNotExist:
+        raise Http404
+
+    existing_file = ProjectFile.objects.filter(
+        project=project,
+        kind=ProjectFile.FileKinds.TAR_INFOPLAN
+    ).first()   # type: ProjectFile
+    # fixme DRY: параметры дублируются сначала при проверке, а потом при создании
+    if not existing_file or \
+            Marker.objects.max_last_modified(project=project) > existing_file.date_created:
+        existing_file = ProjectFile.objects.generate_infoplan_archive(project)
 
     return FileResponse(existing_file.file, filename=existing_file.public_name)
 
