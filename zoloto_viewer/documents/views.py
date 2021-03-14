@@ -63,7 +63,7 @@ def get_infoplan_file(request, title):
 
 @login_required
 @csrf.csrf_exempt
-def rebuild_pdf_files(request, title):
+def get_pdf_file(request, title):
     project = get_object_or_404(Project, title=title)
     deb = ''
     pdf_refresh_timeout = ProjectFile.objects.pdf_refresh_timeout(project)
