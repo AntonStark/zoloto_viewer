@@ -142,7 +142,7 @@ function loadProjectFormValidator(e) {
     if (planSelected === 0) {
         alert('Добавление проекта невозможно\n' +
             'без указания названия проекта и\n' +
-            'добавления пространств');
+            'добавления монтажных зон');
         e.preventDefault();
     }
 }

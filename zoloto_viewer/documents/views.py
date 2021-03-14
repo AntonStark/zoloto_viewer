@@ -1,7 +1,7 @@
 from datetime import datetime
 from django.contrib.auth.decorators import login_required
-from django.http import FileResponse, Http404, JsonResponse
-from django.shortcuts import redirect
+from django.http import FileResponse, JsonResponse
+from django.shortcuts import get_object_or_404, redirect
 from django.views.decorators import csrf, http
 from django.utils import timezone
 
@@ -14,11 +14,7 @@ from zoloto_viewer.documents.models import ProjectFile
 @csrf.csrf_exempt
 @http.require_GET
 def get_counts_file(request, title):
-    try:
-        project = Project.objects.get(title=title)
-    except Project.DoesNotExist:
-        raise Http404
-
+    project = get_object_or_404(Project, title=title)
     pf = ProjectFile.objects.generate_counts(project)
     return FileResponse(pf.file, filename=pf.public_name)
 
@@ -27,11 +23,7 @@ def get_counts_file(request, title):
 @csrf.csrf_exempt
 @http.require_GET
 def get_picts_file(request, title):
-    try:
-        project = Project.objects.get(title=title)
-    except Project.DoesNotExist:
-        raise Http404
-
+    project = get_object_or_404(Project, title=title)
     pf = ProjectFile.objects.generate_pict_list(project)
     return FileResponse(pf.file, filename=pf.public_name)
 
@@ -40,11 +32,7 @@ def get_picts_file(request, title):
 @csrf.csrf_exempt
 @http.require_GET
 def get_vars_file(request, title):
-    try:
-        project = Project.objects.get(title=title)
-    except Project.DoesNotExist:
-        raise Http404
-
+    project = get_object_or_404(Project, title=title)
     existing_file = ProjectFile.objects.filter(
         project=project,
         kind=ProjectFile.FileKinds.CSV_VARIABLES
@@ -60,11 +48,7 @@ def get_vars_file(request, title):
 @csrf.csrf_exempt
 @http.require_GET
 def get_infoplan_file(request, title):
-    try:
-        project = Project.objects.get(title=title)
-    except Project.DoesNotExist:
-        raise Http404
-
+    project = get_object_or_404(Project, title=title)
     existing_file = ProjectFile.objects.filter(
         project=project,
         kind=ProjectFile.FileKinds.TAR_INFOPLAN
@@ -80,11 +64,7 @@ def get_infoplan_file(request, title):
 @login_required
 @csrf.csrf_exempt
 def rebuild_pdf_files(request, title):
-    try:
-        project = Project.objects.get(title=title)
-    except Project.DoesNotExist:
-        raise Http404
-
+    project = get_object_or_404(Project, title=title)
     deb = ''
     pdf_refresh_timeout = ProjectFile.objects.pdf_refresh_timeout(project)
 

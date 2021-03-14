@@ -79,7 +79,7 @@ class Marker(models.Model):
 
     @property
     def number(self):
-        return '/'.join([self.layer.title, self.floor.floor_caption, str(self.ordinal)])
+        return f'{self.layer.title}/{self.floor.floor_caption}/{self.ordinal}'
 
     @classmethod
     def position_attrs(cls):

@@ -4,7 +4,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db import IntegrityError
 from django.http import Http404, JsonResponse
-from django.shortcuts import render, redirect
+from django.shortcuts import get_object_or_404, render, redirect
 from django.views.decorators import csrf, http
 
 from zoloto_viewer.infoplan import views as infoplan_views
@@ -47,10 +47,7 @@ def load_project(request):
 
 @login_required
 def edit_project(request, title):
-    try:
-        project_obj = Project.objects.get(title=title)
-    except Project.DoesNotExist:
-        raise Http404
+    project_obj = get_object_or_404(Project, title=title)
     if request.method != 'POST':
         pages = Page.objects.filter(project=project_obj)
         context = {
@@ -83,12 +80,8 @@ def edit_project(request, title):
 
 @login_required
 def project(request, title):
-    try:
-        proj = Project.objects.get(title=title)
-    except Project.DoesNotExist:
-        raise Http404
-
-    first_page = proj.first_page()
+    project = get_object_or_404(Project, title=title)
+    first_page = project.first_page()
     if not first_page:
         raise Http404
 
@@ -97,12 +90,8 @@ def project(request, title):
 
 @login_required
 def remove_project(request, title):
-    try:
-        project_obj = Project.objects.get(title=title)
-    except Project.DoesNotExist:
-        raise Http404
-
-    project_obj.delete()
+    project = get_object_or_404(Project, title=title)
+    project.delete()
     return redirect(to='projects')
 
 
@@ -166,10 +155,7 @@ def edit_project_page(request, page_code):
 @login_required
 @csrf.csrf_exempt
 def add_project_layer(request, title):
-    try:
-        project = Project.objects.get(title=title)
-    except Project.DoesNotExist:
-        raise Http404
+    project = get_object_or_404(Project, title=title)
 
     last_color = Layer.max_color(project.layer_set)
     color = last_color.next() if last_color else Color.objects.first()
@@ -205,13 +191,8 @@ def add_project_layer(request, title):
 @login_required
 @csrf.csrf_exempt
 def edit_project_layer(request, project_title, layer_title):
-    try:
-        project = Project.objects.get(title=project_title)
-    except Project.DoesNotExist:
-        raise Http404
-    layer = Layer.objects.filter(project=project, title=layer_title).first()
-    if not layer:
-        raise Http404
+    project = get_object_or_404(Project, title=project_title)
+    layer = get_object_or_404(Layer, project=project, title=layer_title)
 
     context = {
         'project': project,

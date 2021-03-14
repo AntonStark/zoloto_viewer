@@ -3,7 +3,7 @@ import operator
 import uuid
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse, Http404
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, render
 from django.views import View
 from django.views.decorators import csrf, http
@@ -61,10 +61,7 @@ def create_marker(request):
 class MarkerView(View):
     @method_decorator(marker_api)
     def get(self, request, marker_uid: uuid.UUID):
-        try:
-            marker = Marker.objects.get(uid=marker_uid)
-        except Marker.DoesNotExist:
-            raise Http404
+        marker = get_object_or_404(Marker, uid=marker_uid)
 
         is_pretty = request.GET.get('pretty')
         filters = [
@@ -92,10 +89,7 @@ class MarkerView(View):
     @method_decorator(marker_api)
     def patch(self, request, marker_uid: uuid.UUID):
         """Update marker position attributes: pos_x, pos_y, rotation"""
-        try:
-            marker = Marker.objects.get(uid=marker_uid)
-        except Marker.DoesNotExist:
-            raise Http404
+        marker = get_object_or_404(Marker, uid=marker_uid)
 
         try:
             req = json.loads(request.body)
@@ -142,10 +136,7 @@ class MarkerView(View):
         #       {side: 2, variables: []}
         #   ]
         # }
-        try:
-            marker = Marker.objects.get(uid=marker_uid)
-        except Marker.DoesNotExist:
-            raise Http404
+        marker = get_object_or_404(Marker, uid=marker_uid)
 
         try:
             req = json.loads(request.body)
@@ -213,13 +204,9 @@ class MarkerView(View):
     @method_decorator(login_required)
     @method_decorator(marker_api)
     def delete(self, _, marker_uid: uuid.UUID):
-        try:
-            marker = Marker.objects.get(uid=marker_uid)
-        except Marker.DoesNotExist:
-            raise Http404
-        else:
-            marker.delete()
-            return JsonResponse({'status': 'ok'}, status=200)
+        marker = get_object_or_404(Marker, uid=marker_uid)
+        marker.delete()
+        return JsonResponse({'status': 'ok'}, status=200)
 
 
 @http.require_POST
@@ -238,20 +225,13 @@ def update_wrong_status(request, marker_uid: uuid.UUID):
     if not isinstance(is_wrong, bool):
         return JsonResponse({'error': '\'wrong\' must be boolean'}, status=400)
 
-    try:
-        marker = Marker.objects.get(uid=marker_uid)
-    except Marker.DoesNotExist:
-        raise Http404
+    marker = get_object_or_404(Marker, uid=marker_uid)
 
-    try:
-        target = MarkerVariable.objects.get(marker=marker, key=key)
-    except MarkerVariable.DoesNotExist:
-        raise Http404
-    else:
-        if not target.value:    # не позволять пометить пустую переменную
-            return JsonResponse({'error': 'empty variable could not be wrong'}, status=400)
-        target.wrong = is_wrong
-        target.save()
+    target = get_object_or_404(MarkerVariable, marker=marker, key=key)
+    if not target.value:    # не позволять пометить пустую переменную
+        return JsonResponse({'error': 'empty variable could not be wrong'}, status=400)
+    target.wrong = is_wrong
+    target.save()
 
     rep = marker.to_json()
     rep.update({'variable': target.to_json()})
@@ -278,10 +258,7 @@ def load_marker_review(request, marker_uid: uuid.UUID):
         return JsonResponse({'error': 'json object must contain fields: ' + ', '.join(fields_)}, status=400)
     explicit_end_review = exit_type == 'button'
 
-    try:
-        marker = Marker.objects.get(uid=marker_uid)
-    except Marker.DoesNotExist:
-        raise Http404
+    marker = get_object_or_404(Marker, uid=marker_uid)
     # always create new comment, previous comments not visible
     if comment:
         marker.markercomment_set.create(content=comment)
@@ -295,11 +272,7 @@ def load_marker_review(request, marker_uid: uuid.UUID):
 @csrf.csrf_exempt
 @marker_api
 def resolve_marker_comments(request, marker_uid: uuid.UUID):
-    try:
-        marker = Marker.objects.get(uid=marker_uid)
-    except Marker.DoesNotExist:
-        raise Http404
-
+    marker = get_object_or_404(Marker, uid=marker_uid)
     for c in marker.markercomment_set.all():
         c.resolve()
     return JsonResponse(marker.to_json())
