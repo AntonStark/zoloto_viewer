@@ -68,7 +68,7 @@ class ProjectFilesManager(models.Manager):
             # `last_modified and last_modified > date_created` to treat empty layers as up-to-date
             if not (layer_infoplan and layer_infoplan.is_fresh_layer_file()):
                 layer_infoplan = self._generate_layer_infoplan(layer)
-            per_layer_csv_files.append((layer_infoplan.file.path, layer_infoplan.file_name))
+            per_layer_csv_files.append((layer_infoplan.file.path, layer_infoplan.public_name))
 
         kind = self.model.FileKinds.TAR_INFOPLAN
         obj = self.model(project=project, kind=kind)
