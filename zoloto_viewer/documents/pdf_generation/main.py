@@ -1,40 +1,82 @@
-import os
-from django.utils import timezone
-from reportlab.pdfbase import pdfmetrics
-from reportlab.pdfbase.ttfonts import TTFont
+import re
 from reportlab.pdfgen import canvas
 
-from zoloto_viewer.viewer.models import Project, Page
+from zoloto_viewer.viewer.models import Project, Page, Layer
+from zoloto_viewer.infoplan.models import Marker, MarkerVariable
 
 from . import layout, message, plan
 
 
-def generate_pdf(project: Project, buffer, with_review: bool):
-    pt_sans_path = os.path.join(os.path.dirname(__file__), 'fonts/pt_sans.ttf')
-    pdfmetrics.registerFont(TTFont('FreePTSans', pt_sans_path))
+def generate_pdf(project: Project, buffer, filename):
 
-    timestamp = timezone.now().strftime('%d%m_%H%M')
-    filename = '_'.join([project.title, 'reviewed' if with_review else 'original', timestamp]) + '.pdf'
     if buffer:
         file_canvas = canvas.Canvas(buffer, pagesize=layout.Definitions.PAGE_SIZE)
     else:
         file_canvas = canvas.Canvas(filename, pagesize=layout.Definitions.PAGE_SIZE)
 
     first_iteration = True
-    for L in project.layer_set.order_by('title').all():
+    for L in project.layer_set.order_by('title').all():     # type: Layer
         for P in Page.objects.filter(marker__layer=L).distinct():
             title = [P.floor_caption, L.title]
-            floor_layer_markers = P.marker_set.filter(layer=L)
 
             if not first_iteration:
                 file_canvas.showPage()
-            plan.plan_page(file_canvas, P, floor_layer_markers,
-                           title, L.raw_color, L.title, L.desc, with_review=with_review)
+
+            marker_positions = collect_marker_positions(P, L)
+            legend_data = L.title, L.desc
+            plan.plan_page(file_canvas, P, marker_positions,
+                           title, L.kind_id, color_adapter(L.color.rgb_code), legend_data)
 
             file_canvas.showPage()
-            message.message_pages(file_canvas, floor_layer_markers,
-                                  L.raw_color, title, with_review=with_review)
+            marker_messages = collect_messages_data(P, L)
+            message.message_pages(file_canvas, marker_messages, L.kind.sides,
+                                  color_adapter(L.color.rgb_code), title)
             first_iteration = False
-    file_canvas.setTitle(filename)      # todo construct proper file title
+    file_canvas.setTitle(filename)
     file_canvas.save()
     return filename
+
+
+def color_adapter(html_color):
+    """
+    Transform to inner package format
+    :param html_color: string like 'rgb(36,182,255)'
+    :return: {model, values} where model = 'CMYK' | 'RGB' and values: 3 or 4 int tuple
+    """
+    parse3 = re.match(r'^(?P<model>\w+)\((?P<values>\d+%?, ?\d+%?, ?\d+%?(?:, ?\d+%?)?)\)$', html_color)
+    model, values_string = parse3.groups()
+    return {
+        'model': model.upper(),
+        'values': [int(v.rstrip('%')) for v in values_string.split(',')]
+    }
+
+
+def collect_marker_positions(floor: Page, layer: Layer):
+    marker_positions = Marker.objects.get_positions(floor, layer)
+    marker_numbers = Marker.objects.get_numbers(floor, layer)
+    return [
+        (marker_numbers[marker_uid], marker_positions[marker_uid])
+        for marker_uid in marker_positions.keys()
+        if marker_uid in marker_numbers.keys()
+    ]
+
+
+def collect_messages_data(floor: Page, layer: Layer):
+    def marker_infoplan(vars_info_by_side, marker_uid, side_keys):
+        return [
+            (side_key, vars_info_by_side.get((marker_uid, side_key), []))
+            for side_key in side_keys
+        ]
+
+    vars_by_side, markers = MarkerVariable.objects.vars_page_layer_by_size(floor, layer)
+    marker_numbers = Marker.objects.get_numbers(floor, layer)
+
+    res = [
+        (
+            marker_numbers[marker_uid],
+            marker_infoplan(vars_by_side, marker_uid, layer.kind.side_keys())
+        )
+        for marker_uid in marker_numbers.keys()
+        if marker_uid in markers
+    ]
+    return res

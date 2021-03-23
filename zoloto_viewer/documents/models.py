@@ -113,6 +113,7 @@ class ProjectFile(models.Model):
             file_kinds.CSV_VARIABLES    : 'project_{project.title}_vars.csv',
             file_kinds.CSV_INFOPLAN     : 'project_{project.title}_layer_{layer.title}_infoplan.csv',
             file_kinds.TAR_INFOPLAN     : 'project_{project.title}_infoplan.tar',
+            file_kinds.PDF_EXFOLIATION  : 'project_{project.title}_pdf.pdf',
         }
         return rules[kind].format(project=project, **extra)
 
@@ -149,8 +150,9 @@ class ProjectFile(models.Model):
     def _setup_pdf_file(self):
         self.kind = self.FileKinds.PDF_EXFOLIATION
         bytes_buf = io.BytesIO()
-        proposed_filename = pdf_module.generate_pdf(self.project, bytes_buf, with_review=False)
-        self.file.save(proposed_filename, File(bytes_buf))
+        filename = self.__class__.make_name(self.kind, project=self.project)
+        pdf_module.generate_pdf(self.project, bytes_buf, filename)
+        self.file.save(filename, File(bytes_buf))
 
     def _setup_archive_file(self, files):
         bytes_buf = generators.infoplan_archive.make_tar_archive(files)

@@ -6,7 +6,7 @@ from django.db import models, transaction
 
 
 class MarkersManager(models.Manager):
-    def by_layer(self, project, page=None) -> t.Dict['viewer.Layer', models.QuerySet]:
+    def by_layer(self, project, page=None) -> t.Dict['viewer.Layer', models.QuerySet]:  # noqa
         def _query(layer, page_) -> models.QuerySet:
             q = self.filter(layer=layer)
             if page_:
@@ -33,6 +33,14 @@ class MarkersManager(models.Manager):
         lm = q.aggregate(value=models.Max('last_modified'))['value']
         return lm
 
+    def get_numbers(self, floor, layer):
+        return {m.uid: m.number
+                for m in self.filter(floor=floor, layer=layer).all()}
+
+    def get_positions(self, floor, layer):
+        return {m.uid: m.position
+                for m in self.filter(floor=floor, layer=layer).all()}
+
 
 class Marker(models.Model):
     """
@@ -49,7 +57,7 @@ class Marker(models.Model):
     pos_y = models.IntegerField()
     rotation = models.IntegerField(default=0)
 
-    correct = models.BooleanField(null=True, default=None)  # todo remove after pdf generation review (point too)
+    correct = models.BooleanField(null=True, default=None)  # todo remove after pdf generation review (points too)
     points = fields.JSONField(default=list)     # [ [P], ..., [P] ] | [ [P1, P2, P3], ... ], P = [x: float, y: float]
 
     CIRCLE_RADIUS = 15
@@ -60,6 +68,7 @@ class Marker(models.Model):
 
     class Meta:
         unique_together = [('floor', 'layer', 'ordinal')]
+        ordering = ['ordinal']
 
     @property
     def all_comments_resolved(self):
@@ -81,18 +90,13 @@ class Marker(models.Model):
     def number(self):
         return f'{self.layer.title}/{self.floor.floor_caption}/{self.ordinal}'
 
+    @property
+    def position(self):
+        return self.pos_x, self.pos_y, self.rotation
+
     @classmethod
     def position_attrs(cls):
         return ['pos_x', 'pos_y', 'rotation']
-
-    @staticmethod
-    def multipoint_mid(mp):
-        if len(mp) == 3:        # multipoint = [P1, P2, P3]
-            return mp[1]        # ignore splines for now
-        elif len(mp) == 1:      # multipoint = [P]
-            return mp[0]
-        else:
-            return None
 
     def save(self, *args, **kwargs):
         if self.ordinal is None and self.layer and self.floor:
@@ -100,17 +104,6 @@ class Marker(models.Model):
             max_ordinal = markers_same_series.aggregate(value=models.Max('ordinal'))['value']
             self.ordinal = max_ordinal + 1 if max_ordinal else 1
         super().save(*args, **kwargs)
-
-    def polygon_points(self):
-        # 9todo review draw marker during pdf generation
-        return list(map(Marker.multipoint_mid, self.points))
-
-    def center_position(self):
-        points = [p for p in map(Marker.multipoint_mid, self.points) if p is not None]
-        return sum([p[0] for p in points]) / len(points), sum([p[1] for p in points]) / len(points)
-
-    def ord_number(self):
-        return int(self.number.split('/')[-1])
 
     def to_json(self):
         return {
@@ -140,33 +133,47 @@ class VariablesManager(models.Manager):
             self.bulk_create(variables)
             marker.save()   # to update marker.last_modified
 
-    def vars_by_side(self, marker: Marker, apply_transformations=None):
-        # [
-        #   {side: 1, variables: ['a', 'b']},
-        #   {side: 2, variables: []}
-        # ]
-        vars = marker.markervariable_set.values_list('side', 'key', 'value')
+    @staticmethod
+    def _vars_by_side(queryset: models.QuerySet, apply_transformations=None):
+        markers = set()
         vars_by_side = collections.defaultdict(list)
-        for s, k, v in vars:
-            vars_by_side[s].append(v)
+        vars = queryset.values_list('marker', 'side', 'key', 'value')
+        for m, s, _, v in vars:
+            vars_by_side[(m, s)].append(v)
+            markers.add(m)
 
         if apply_transformations:
             transformed = {}
-            for s in vars_by_side.keys():
-                vars = vars_by_side[s]
+            for k in vars_by_side.keys():
+                vars = vars_by_side[k]
                 for tr in apply_transformations:
-                    vars = tr.apply(vars, side=s)
-                transformed[s] = vars
+                    vars = tr.apply(vars, side=k)
+                transformed[k] = vars
             vars_by_side = transformed
 
+        return vars_by_side, markers
+
+    def vars_of_marker_by_side(self, marker: Marker, apply_transformations=None):
+        # [
+        #   {marker: UUID(), side: 1, variables: ['a', 'b']},
+        #   {marker: UUID(), side: 2, variables: []}
+        # ]
+        variables = self.filter(marker=marker)
+        vars_by_side, markers = self.__class__._vars_by_side(variables, apply_transformations)
         res = [
             {
                 'side': side_key,
-                'variables': vars_by_side.get(side_key, [])
+                'variables': vars_by_side.get((marker_uid, side_key), []),
             }
+            for marker_uid in markers
             for side_key in marker.layer.kind.side_keys()
         ]
         return res
+
+    def vars_page_layer_by_size(self, page, layer, apply_transformations=None):
+        variables = self.filter(marker__floor=page, marker__layer=layer)
+        vars_by_side, markers = self.__class__._vars_by_side(variables, apply_transformations)
+        return vars_by_side, markers
 
 
 class MarkerVariable(models.Model):
@@ -183,7 +190,7 @@ class MarkerVariable(models.Model):
 
     objects = VariablesManager()
 
-    PICT_PATTERN = '@[A-z\d]+@'
+    PICT_PATTERN = r'@[A-z\d]+@'
     MASTER_PAGE_MARK = 'mp:'
 
     class Meta:

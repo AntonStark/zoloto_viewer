@@ -74,7 +74,7 @@ class MarkerView(View):
         rep = marker.to_json()
         rep.update({
             'comments': marker.comments_json,
-            'infoplan': MarkerVariable.objects.vars_by_side(marker, apply_transformations=filters),
+            'infoplan': MarkerVariable.objects.vars_of_marker_by_side(marker, apply_transformations=filters),
         })
         rep.update({
             'layer': {
@@ -190,7 +190,7 @@ class MarkerView(View):
         rep = marker.to_json()
         rep.update({
             'comments': marker.comments_json,
-            'infoplan': MarkerVariable.objects.vars_by_side(marker),
+            'infoplan': MarkerVariable.objects.vars_of_marker_by_side(marker),
         })
         rep.update({
             'layer': {

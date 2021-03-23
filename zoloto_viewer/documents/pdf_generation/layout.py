@@ -11,13 +11,21 @@ class Definitions:
     PAGE_SIZE = landscape(A3)
     WIDTH, HEIGHT = PAGE_SIZE
 
-    BOUND_LEFT = 40 * mm
-    BOUND_RIGHT = WIDTH - 15 * mm
+    # BOUND_LEFT = 40 * mm
+    BOUND_LEFT = 0          # no bounds
+    # BOUND_RIGHT = WIDTH - 15 * mm
+    BOUND_RIGHT = WIDTH     # no bounds
 
-    TOP_LINE = HEIGHT - 20 * mm
-    BOTTOM_LINE = 23 * mm
-    AREA_HEIGHT = 227 * mm
+    # TOP_LINE = HEIGHT - 20 * mm
+    TOP_LINE = HEIGHT       # don't draw header
+    # BOTTOM_LINE = 23 * mm
+    BOTTOM_LINE = 0         # don't draw footer
+    # AREA_HEIGHT = 227 * mm
+    AREA_HEIGHT = HEIGHT    # use full height as no header and footer
     SECOND_LINE = BOTTOM_LINE + AREA_HEIGHT
+
+    DEFAULT_FONT_NAME = 'FreePTSans'
+    DEFAULT_FONT_FILE = os.path.join(os.path.dirname(__file__), 'fonts/pt_sans.ttf')
 
     HEADER_FONT_SIZE = 30
     HEADER_FONT_NAME = 'Aeroport'
@@ -30,10 +38,15 @@ class Definitions:
     PADDING_FOOTER = 15.6 * mm
     PADDING_HEADER = TOP_LINE - HEADER_FONT_SIZE
 
+    MESSAGES_PADDING_LEFT = 20 * mm
+    MESSAGES_PADDING_RIGHT = MESSAGES_PADDING_LEFT
+    MESSAGES_FONT_NAME = 'Picts_v1'
+    MESSAGES_FONT_FILE = os.path.join(os.path.dirname(__file__), 'fonts/picts_v1.ttf')
+
     # SEPARATOR_WIDTH = 1     # N.B. if other than 1, need to draw rect
 
 
-def work_area_position():
+def plan_area_position():
     return Definitions.BOUND_LEFT, Definitions.BOTTOM_LINE
 
 
@@ -44,14 +57,27 @@ def work_area_size():
     return area_width, area_height
 
 
+def mess_area_position():
+    return Definitions.MESSAGES_PADDING_LEFT, Definitions.BOTTOM_LINE
+
+
+def mess_area_size():
+    d = Definitions
+    area_width = d.WIDTH - d.MESSAGES_PADDING_LEFT - d.MESSAGES_PADDING_RIGHT
+    area_height = d.AREA_HEIGHT
+    return area_width, area_height
+
+
 def load_fonts():
     global ADD_FONTS_LOADED
     if ADD_FONTS_LOADED:
         return
 
     d = Definitions
+    pdfmetrics.registerFont(ttfonts.TTFont(d.DEFAULT_FONT_NAME, d.DEFAULT_FONT_FILE))
     pdfmetrics.registerFont(ttfonts.TTFont(d.HEADER_FONT_NAME, d.HEADER_FONT_FILE))
     pdfmetrics.registerFont(ttfonts.TTFont(d.FOOTER_FONT_NAME, d.FOOTER_FONT_FILE))
+    pdfmetrics.registerFont(ttfonts.TTFont(d.MESSAGES_FONT_NAME, d.MESSAGES_FONT_FILE))
     ADD_FONTS_LOADED = True
 
 

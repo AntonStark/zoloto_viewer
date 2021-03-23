@@ -1,7 +1,8 @@
+import itertools
 import re
 from reportlab.lib import units, colors
 
-from . import layout, utils
+from . import layout
 
 
 def set_colors(canvas, color):
@@ -16,11 +17,13 @@ def set_colors(canvas, color):
 
 
 class MessageBox:
-    FONT_NAME = 'FreePTSans'
+    FONT_NAME = layout.Definitions.DEFAULT_FONT_NAME
+    # FONT_NAME = layout.Definitions.MESSAGES_FONT_NAME
     FONT_SIZE = 7
 
     PADDING_LEFT = 0.5 * FONT_SIZE
     PADDING_RIGHT = PADDING_LEFT
+    PADDING_SIDES = PADDING_LEFT
     PADDING_BOTTOM = 0.5 * FONT_SIZE
     PADDING_TOP = 0.1 * FONT_SIZE
 
@@ -28,16 +31,20 @@ class MessageBox:
     CORRECT_MARK_RADIUS = 10
     CORRECT_MARK_FONT_SIZE = 1.5 * CORRECT_MARK_RADIUS
 
-    def __init__(self, canvas, longest_value, max_var_count):
+    def __init__(self, canvas, text_lines, max_var_lines, sides=1):
         mb = MessageBox
         self._canvas = canvas
         self._canvas.saveState()
         self._canvas.setFont(mb.FONT_NAME, mb.FONT_SIZE)
-        text_width = self._canvas.stringWidth(longest_value)
+        self.max_text_width = max(map(self._canvas.stringWidth, text_lines))
         self._canvas.restoreState()
 
-        text_height = (max_var_count + 2) * 1.2 * mb.FONT_SIZE          # 1.2 for interline space
-        self._box_width = text_width + mb.PADDING_LEFT + mb.PADDING_RIGHT
+        # number, empty, side header = 3
+        text_height = (max_var_lines + 3) * 1.2 * mb.FONT_SIZE          # 1.2 for interline space
+        self._box_width = mb.PADDING_LEFT \
+                          + 1 * self.max_text_width \
+                          + (sides - 1) * (mb.PADDING_SIDES + self.max_text_width) \
+                          + mb.PADDING_RIGHT
         self._box_height = text_height + mb.PADDING_BOTTOM + mb.PADDING_TOP
 
     def get_size(self):
@@ -93,10 +100,10 @@ class MessageBox:
         canvas.drawText(var_text)
         canvas.restoreState()
 
-    @staticmethod
-    def draw_message_v2(canvas, number, variables, position, size, layer_color,
+    def draw_message_v2(self, canvas, number, infoplan, position, size, layer_color,
                         correct: bool = None, comment_lines: list = None):
         """второй вариант функции с заливкой только под номером и рамкой"""
+        # infoplan: [(side, vars_list)]
         mb = MessageBox
         canvas.saveState()
         x_start, y_start = position
@@ -107,27 +114,37 @@ class MessageBox:
         canvas.setFont(mb.FONT_NAME, mb.FONT_SIZE)
         nr_w = canvas.stringWidth(number) + mb.PADDING_LEFT + mb.PADDING_RIGHT
         nr_h = mb.NUMBER_RECT_HEIGHT
+        x_text = x_start + mb.PADDING_LEFT
         y_top = y_start + box_height
         canvas.rect(x_start, y_top - nr_h, nr_w, nr_h, stroke=0, fill=1)
+        y_number = y_top - mb.FONT_SIZE - mb.PADDING_TOP
+        canvas.setFillColor(colors.white)
+        canvas.drawString(x_text, y_number, number)
 
-        var_text = canvas.beginText(x_start + mb.PADDING_LEFT, y_top - mb.FONT_SIZE - mb.PADDING_TOP)
-        var_text.setFont(mb.FONT_NAME, mb.FONT_SIZE)
-        var_text.setFillColor(colors.white)
-        var_text.textLine(number)
-        var_text.textLine()
-        for value, wrong in variables:
-            if wrong:
-                var_text.setFillColor(colors.red)
-            else:
-                var_text.setFillColor(colors.black)
-            var_text.textLine(value)
+        side_labels = {
+            1: 'Сторона A',
+            2: 'Сторона B',
+            3: 'Сторона C',
+            4: 'Сторона D',
+        }
 
-        if comment_lines:
-            var_text.textLine()
-            var_text.setFillColor(colors.black)
-            for l in comment_lines:
-                var_text.textLine(l)
-        canvas.drawText(var_text)
+        for side, vars_list in infoplan:
+            y_text = y_number - 2 * 1.2 * mb.FONT_SIZE
+            side_text = canvas.beginText(x_text + (side - 1) * (mb.PADDING_SIDES + self.max_text_width), y_text)
+            side_text.setFont(mb.FONT_NAME, mb.FONT_SIZE)
+            side_text.setFillColor(colors.black)
+
+            side_header = side_labels.get(side, 'Сторона')
+            side_text.textLine(side_header)
+            for value in vars_list:
+                side_text.textLines(value, trim=0)
+
+            if comment_lines and side == 1:
+                side_text.textLine()
+                side_text.setFillColor(colors.black)
+                for l in comment_lines:
+                    side_text.textLine(l)
+            canvas.drawText(side_text)
         if correct is not None:
             mb.draw_check_mark(canvas, (x_start + box_width, y_start + box_height), correct)
 
@@ -182,57 +199,67 @@ class MessagesArea:
     def reset(self):
         self._row_start = self._area_height - MessagesArea.PADDING_TOP - self._box_height
 
-    def error_message(self, canvas, markers):
+    def error_message(self, canvas, messages):
         canvas.setFont(MessageBox.FONT_NAME, MessageBox.FONT_SIZE)
         canvas.drawString(self._box_width + MessagesArea.PADDING_ROW, self._row_start,
                           'Недостаточно места для отображения переменных. '
-                          + f'Блоки сообщений {", ".join(m.number for m in markers)} были пропущены.')
+                          + f'Блоки сообщений {", ".join(number for number, _ in messages)} были пропущены.')
 
 
-def message_pages(canvas, markers_query_set, layer_color, title, with_review=False):
+def calc_variable_metrics(marker_messages):
+    # marker_messages: [ ( number, [(side, vars_list)] ), ]
+    def var_lines(value: str):
+        return value.count('\n') + 1
+
+    max_var_count = max(
+        sum(var_lines(v) for v in vars_list)
+        for _, infoplan in marker_messages
+        for _, vars_list in infoplan
+    )
+
+    def variable_lines(variables):
+        return itertools.chain.from_iterable(v.split('\n') for v in variables)
+
+    var_lines = list(itertools.chain.from_iterable(
+        variable_lines(vars_list)
+        for _, infoplan in marker_messages
+        for _, vars_list in infoplan
+    ))
+    return var_lines, max_var_count
+
+
+def message_pages(canvas, marker_messages, marker_sides, layer_color, title):
     def chunk(seq, n):
         for i in range(0, len(seq), n):
             yield seq[i:i + n]
 
-    longest_value, max_var_count = utils.calc_variable_metrics(markers_query_set)
-    message_box = MessageBox(canvas, longest_value, max_var_count)
+    # marker_messages: [ ( number, [(side, vars_list)] ), ]
+    var_lines, max_var_count = calc_variable_metrics(marker_messages)
+    message_box = MessageBox(canvas, var_lines, max_var_count, marker_sides)
     box_size = message_box.get_size()
 
-    area_width, area_height = layout.work_area_size()
-    area_left, area_bottom = layout.work_area_position()
+    area_width, area_height = layout.mess_area_size()
+    area_left, area_bottom = layout.mess_area_position()
     area = MessagesArea(area_width, area_height, message_box)
 
-    layout.draw_header(canvas, title)
-    layout.draw_footer(canvas)
+    # turn off header and footer
+    # layout.draw_header(canvas, title)
+    # layout.draw_footer(canvas)
+    without_comment_lines = 0
     batch_size = area.column_count()
-    markers = sorted(markers_query_set, key=lambda m: m.ord_number())
-    for marker_chunk in chunk(markers, batch_size):
-        comments = [m.comment for m in marker_chunk]
-        max_comment_height = max(map(message_box.comment_height, comments)) if with_review else 0
-
-        positions = area.place_row(max_comment_height)
+    for mess_chunk in chunk(marker_messages, batch_size):
+        positions = area.place_row(without_comment_lines)
         if not positions:
             canvas.showPage()
-            layout.draw_header(canvas, title)
-            layout.draw_footer(canvas)
+            # turn off header and footer
+            # layout.draw_header(canvas, title)
+            # layout.draw_footer(canvas)
 
             area.reset()
-            positions = area.place_row(max_comment_height)
+            positions = area.place_row(without_comment_lines)
         if not positions:
-            area.error_message(canvas, marker_chunk)
+            area.error_message(canvas, mess_chunk)
 
-        for marker, (offset_x, offset_y) in zip(marker_chunk, positions):
+        for (number, infoplan), (offset_x, offset_y) in zip(mess_chunk, positions):
             box_offset = area_left + offset_x, area_bottom + offset_y
-
-            number = marker.number
-            variables = marker.markervariable_set.all()
-            var_data = list(map(
-                lambda v: (v.value, v.wrong if with_review else False),
-                variables
-            ))
-            correctness = marker.correct if with_review else None
-            comment_lines = message_box.place_comment(marker.comment) if with_review else []
-
-            MessageBox.draw_message_v2(canvas, number, var_data, box_offset, box_size, layer_color,
-                                       correct=correctness,
-                                       comment_lines=comment_lines)
+            message_box.draw_message_v2(canvas, number, infoplan, box_offset, box_size, layer_color)

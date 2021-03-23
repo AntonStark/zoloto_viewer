@@ -1,3 +1,4 @@
+from collections import namedtuple
 from django.db.models.fields.files import ImageFieldFile
 from reportlab.lib import colors
 from reportlab.pdfgen import canvas as rc
@@ -5,6 +6,9 @@ from reportlab.pdfgen import canvas as rc
 from zoloto_viewer.viewer.models import Page
 
 from . import layout
+
+
+MarkerData = namedtuple('MarkerData', ['x', 'y', 'a', 'number'])
 
 
 class PlanBox:
@@ -16,14 +20,15 @@ class PlanBox:
 
     CORRECT_CIRCLE_RADIUS = 10
 
-    def __init__(self, image_field: ImageFieldFile, indd_bounds, layer_color):
+    def __init__(self, image_field: ImageFieldFile, indd_bounds, layer_color, layer_kind):
         self._img = image_field.path
         self._img_size = image_field.width, image_field.height
         self._indd_bounds = indd_bounds
         self._color = layer_color
+        self._marker_kind = layer_kind
 
         self._box_width, self._box_height = layout.work_area_size()
-        self._box_x, self._box_y = layout.work_area_position()
+        self._box_x, self._box_y = layout.plan_area_position()
 
         self._markers = []
 
@@ -31,9 +36,10 @@ class PlanBox:
         return self._box_x, self._box_y + self._box_height
 
     def add_marker(self, m):
-        # todo rewrite according to marker kinds, then
-        # todo remove Marker methods polygon_points and center_position and underlying fields
-        self._markers.append((m.polygon_points(), m.center_position(), m.number, m.correct))
+        self._markers.append(MarkerData(*m.position, number=m.number))
+
+    def add_marker2(self, number, position):
+        self._markers.append(MarkerData(*position, number=number))
 
     def _scale(self, point):
         gb_top, gb_left, gb_bottom, gb_right = self._indd_bounds
@@ -51,15 +57,15 @@ class PlanBox:
         can_y = self._box_y + rel_y * self._box_height
         return can_x, can_y
 
-    def _draw_marker(self, canvas, points):
-        path = canvas.beginPath()
-        path.moveTo(*self._calc_pos(points[0]))
-        for p in points:
-            path.lineTo(*self._calc_pos(p))
-        path.close()
-        canvas.drawPath(path, stroke=0, fill=1)
+    def _draw_marker(self, canvas, center, kind, convert_pos=True):
+        if convert_pos:
+            x, y = self._calc_pos(center)
+        else:
+            x, y = center
+        # todo respect kind
+        canvas.circle(x, y, 5, stroke=0, fill=1)
 
-    def _draw_review_status(self, canvas, center, correct):
+    def _draw_review_status(self, canvas, center, correct=True):
         if correct is not None:
             if correct:
                 canvas.setStrokeColor(colors.green)
@@ -107,62 +113,51 @@ class PlanBox:
                              height=self._box_height, preserveAspectRatio=True, anchor='sw')
 
         self._set_color(canvas)
-        for points, center, number, correct in self._markers:
-            self._draw_marker(canvas, points)
-            self._draw_caption(canvas, center, number)
+        for m in self._markers:   # type: MarkerData
+            center = m.x, m.y
+            self._draw_marker(canvas, center, self._marker_kind)
+            # todo draw using svg path somehow
+            self._draw_caption(canvas, center, m.number)
             if with_review:
-                self._draw_review_status(canvas, center, correct)
+                self._draw_review_status(canvas, center)
 
     def draw_marker_example(self, canvas, position):
         if not self._markers:
             return
-        orig_points, orig_center = self._markers[0][:2]
-        clear_points = list(map(
-            lambda point: self._scale((point[0] - orig_center[0], point[1] - orig_center[1])),
-            orig_points
-        ))
-        points = list(map(
-            lambda point: (point[0] + position[0], point[1] + position[1]),
-            clear_points
-        ))
-
-        path = canvas.beginPath()
-        path.moveTo(*points[0])
-        for p in points:
-            path.lineTo(*p)
-        path.close()
-        self._set_color(canvas)
-        canvas.drawPath(path, stroke=0, fill=1)
+        self._draw_marker(canvas, position, self._marker_kind, convert_pos=False)
 
 
 class PlanLegend:
-    FONT_NAME = 'FreePTSans'
+    FONT_NAME = layout.Definitions.DEFAULT_FONT_NAME
     FONT_SIZE = 7
 
-    LEGEND_PADDING_TOP = 15
-    LEGEND_PADDING_LEFT = 20
-    DESC_PADDING_LEFT = 2 * LEGEND_PADDING_LEFT
+    LEGEND_PADDING_TOP = 150
+    LEGEND_PADDING_LEFT = 130
+    DESC_PADDING_LEFT = LEGEND_PADDING_LEFT + 20
 
-    @staticmethod
-    def draw_legend(canvas, box, layer_title, layer_desc):
-        pl = PlanLegend
+    @classmethod
+    def draw_legend(cls, canvas, box, layer_title, layer_desc):
         x, y = box.left_top_corner()
-        box.draw_marker_example(canvas, (x + pl.LEGEND_PADDING_LEFT, y - pl.LEGEND_PADDING_TOP))
+        x_mark, x_text = x + cls.LEGEND_PADDING_LEFT, x + cls.DESC_PADDING_LEFT
+        y_top_line = y - cls.LEGEND_PADDING_TOP
+        y_next_line = y_top_line - 1.5 * cls.FONT_SIZE
+        box.draw_marker_example(canvas, (x_mark, y_top_line))
 
-        canvas.setFont(pl.FONT_NAME, pl.FONT_SIZE)
+        canvas.setFont(cls.FONT_NAME, cls.FONT_SIZE)
         canvas.setFillColor(colors.black)
-        canvas.drawString(x + pl.DESC_PADDING_LEFT, y - pl.LEGEND_PADDING_TOP, layer_title)
-        canvas.drawString(x + pl.DESC_PADDING_LEFT, y - pl.LEGEND_PADDING_TOP - 1.5 * pl.FONT_SIZE, layer_desc)
+        canvas.drawString(x_text, y_top_line, layer_title)
+        canvas.drawString(x_text, y_next_line, layer_desc)
 
 
-def plan_page(canvas, floor: Page, markers, title,
-              layer_color, layer_title, layer_desc, with_review=False):
-    box = PlanBox(floor.plan, floor.geometric_bounds, layer_color)
-    for m in markers:
-        box.add_marker(m)
+def plan_page(canvas, floor: Page, marker_positions, title,
+              layer_kind, layer_color, legend_data):
+    box = PlanBox(floor.plan, floor.geometric_bounds, layer_color, layer_kind)
+    for number, position in marker_positions:
+        box.add_marker2(number, position)
 
-    layout.draw_header(canvas, title)
-    layout.draw_footer(canvas)
-    box.draw(canvas, with_review=with_review)
+    # turn off header and footer
+    # layout.draw_header(canvas, title)
+    # layout.draw_footer(canvas)
+    box.draw(canvas)
 
-    PlanLegend.draw_legend(canvas, box, layer_title, layer_desc)
+    PlanLegend.draw_legend(canvas, box, *legend_data)
