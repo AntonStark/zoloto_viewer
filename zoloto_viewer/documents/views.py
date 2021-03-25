@@ -51,7 +51,8 @@ def get_infoplan_file(request, title):
 @csrf.csrf_exempt
 def get_pdf_file(request, title):
     project = get_object_or_404(Project, title=title)
-    pf = ProjectFile.objects.look_for_fresh(project, ProjectFile.FileKinds.PDF_EXFOLIATION)
+    # pf = ProjectFile.objects.look_for_fresh(project, ProjectFile.FileKinds.PDF_EXFOLIATION)
+    pf = None   # fixme enable fresh lookup
     if not pf:
         pf = ProjectFile.objects.pdf_generate_file(project)
     return FileResponse(pf.file, filename=pf.public_name)

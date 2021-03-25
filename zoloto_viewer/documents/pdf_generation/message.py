@@ -20,6 +20,7 @@ class MessageBox:
     FONT_NAME = layout.Definitions.DEFAULT_FONT_NAME
     # FONT_NAME = layout.Definitions.MESSAGES_FONT_NAME
     FONT_SIZE = 7
+    PICT_FONT_SIZE = 10
 
     PADDING_LEFT = 0.5 * FONT_SIZE
     PADDING_RIGHT = PADDING_LEFT
@@ -32,11 +33,11 @@ class MessageBox:
     CORRECT_MARK_FONT_SIZE = 1.5 * CORRECT_MARK_RADIUS
 
     def __init__(self, canvas, text_lines, max_var_lines, sides=1):
-        mb = MessageBox
+        mb = self.__class__
         self._canvas = canvas
+
         self._canvas.saveState()
-        self._canvas.setFont(mb.FONT_NAME, mb.FONT_SIZE)
-        self.max_text_width = max(map(self._canvas.stringWidth, text_lines))
+        self.max_text_width = self.obtain_max_width(self._canvas, text_lines)
         self._canvas.restoreState()
 
         # number, empty, side header = 3
@@ -137,7 +138,7 @@ class MessageBox:
             side_header = side_labels.get(side, 'Сторона')
             side_text.textLine(side_header)
             for value in vars_list:
-                side_text.textLines(value, trim=0)
+                MessageBox.print_var_lines(side_text, value)
 
             if comment_lines and side == 1:
                 side_text.textLine()
@@ -149,6 +150,44 @@ class MessageBox:
             mb.draw_check_mark(canvas, (x_start + box_width, y_start + box_height), correct)
 
         canvas.restoreState()
+
+    # CAUTION: DRY violation with print_var_lines
+    @classmethod
+    def obtain_max_width(cls, canvas, lines):
+        def obtain_width(line):
+            res = line
+            res = replace_tabs(res)
+            res = parse_picts(res)  # res: [(str, bool), ]
+
+            text_font = layout.Definitions.DEFAULT_FONT_NAME
+            pict_font = layout.Definitions.PICT_FONT_NAME
+            w = 0
+            for text, is_pict in res:
+                font_name = pict_font if is_pict else text_font
+                font_size = MessageBox.PICT_FONT_SIZE if is_pict else MessageBox.FONT_SIZE
+                canvas.setFont(font_name, font_size)
+                w += canvas.stringWidth(text)
+            return w
+
+        canvas.setFont(cls.FONT_NAME, cls.FONT_SIZE)
+        max_text_width = max(map(obtain_width, lines))
+        return max_text_width
+
+    @staticmethod
+    def print_var_lines(text_obj, lines):
+        for line in lines.split('\n'):
+            res = line
+            res = replace_tabs(res)
+            res = parse_picts(res)  # res: [(str, bool), ]
+
+            text_font = layout.Definitions.DEFAULT_FONT_NAME
+            pict_font = layout.Definitions.PICT_FONT_NAME
+            for text, is_pict in res:
+                font_name = pict_font if is_pict else text_font
+                font_size = MessageBox.PICT_FONT_SIZE if is_pict else MessageBox.FONT_SIZE
+                text_obj.setFont(font_name, font_size)
+                text_obj.textOut(text)
+            text_obj.textLine()
 
     @staticmethod
     def draw_check_mark(canvas, position, correct: bool):
@@ -204,6 +243,35 @@ class MessagesArea:
         canvas.drawString(self._box_width + MessagesArea.PADDING_ROW, self._row_start,
                           'Недостаточно места для отображения переменных. '
                           + f'Блоки сообщений {", ".join(number for number, _ in messages)} были пропущены.')
+
+
+def replace_tabs(line: str):
+    picts_collapsed = re.sub(r'<span[A-z=_" ]*>(.+?)</span>', 'P', line)
+    while '\t' in picts_collapsed:
+        pos = picts_collapsed.index('\t')
+        spaces = 4 - pos % 4
+        picts_collapsed = picts_collapsed.replace('\t', ' ' * spaces, 1)
+        line = line.replace('\t', ' ' * spaces, 1)
+    return line
+
+
+def parse_picts(line):
+    # '<span class="infoplan_icon">◻</span>\nПервая + пикта в начале\nFirst + pict in front'
+    parsed = []
+    while pict_tag_found := re.search(r'<span[A-z=_" ]*>(.+?)</span>', line):
+        if pict_tag_found.start(0) != 0:
+            pre_str = line[0: pict_tag_found.start(0)]
+            parsed.append((pre_str, False))
+            line = line.replace(pre_str, '')
+        else:
+            pict_tag, pict_code = pict_tag_found[0], pict_tag_found[1]
+            parsed.append((pict_code, True))
+            line = line.replace(pict_tag, '', 1)
+    else:
+        remainder = line
+        if remainder:
+            parsed.append((remainder, False))
+    return parsed
 
 
 def calc_variable_metrics(marker_messages):

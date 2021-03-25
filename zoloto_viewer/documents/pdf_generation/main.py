@@ -3,6 +3,7 @@ from reportlab.pdfgen import canvas
 
 from zoloto_viewer.viewer.models import Project, Page, Layer
 from zoloto_viewer.infoplan.models import Marker, MarkerVariable
+from zoloto_viewer.infoplan.utils import variable_transformations as transformations
 
 from . import layout, message, plan
 
@@ -68,7 +69,13 @@ def collect_messages_data(floor: Page, layer: Layer):
             for side_key in side_keys
         ]
 
-    vars_by_side, markers = MarkerVariable.objects.vars_page_layer_by_size(floor, layer)
+    filters = [
+        transformations.UnescapeHtml(),
+        transformations.HideMasterPageLine(),
+        transformations.EliminateTabsText(),
+        transformations.ReplacePictCodes()
+    ]
+    vars_by_side, markers = MarkerVariable.objects.vars_page_layer_by_size(floor, layer, apply_transformations=filters)
     marker_numbers = Marker.objects.get_numbers(floor, layer)
 
     res = [

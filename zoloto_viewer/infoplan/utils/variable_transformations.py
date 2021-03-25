@@ -27,9 +27,19 @@ class EliminateTabs(Transformation):
         return [tag_wrap(var.replace('&amp;tab', '\t'), 'pre') for var in variables_list]
 
 
+class EliminateTabsText(Transformation):
+    def apply(self, variables_list, **kwargs):
+        return [var.replace('&tab', '\t') for var in variables_list]
+
+
 class NewlinesToBr(Transformation):
     def apply(self, variables_list, **kwargs):
         return [var.replace('\n', '<br>') for var in variables_list]
+
+
+class UnescapeHtml(Transformation):
+    def apply(self, variables_list, **kwargs):
+        return [html.unescape(v) for v in variables_list]
 
 
 class ReplacePictCodes(Transformation):
@@ -91,9 +101,6 @@ class ReplacePictCodes(Transformation):
         for code in used:
             pict = self.REPLACE_DICT.get(code, self.DEFAULT_PICT)
             var = var.replace(code, tag_wrap(pict, 'span', class_='infoplan_icon'))
-        # for code, pict in self.REPLACE_DICT.items():
-        #     if code in var:
-        #         var = var.replace(code, tag_wrap(pict, 'span', class_='infoplan_icon'))
         return var
 
     def apply(self, variables_list, **kwargs):

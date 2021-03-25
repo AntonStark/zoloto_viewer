@@ -27,6 +27,9 @@ class Definitions:
     DEFAULT_FONT_NAME = 'FreePTSans'
     DEFAULT_FONT_FILE = os.path.join(os.path.dirname(__file__), 'fonts/pt_sans.ttf')
 
+    PICT_FONT_NAME = 'Picts_v1'
+    PICT_FONT_FILE = os.path.join(os.path.dirname(__file__), 'fonts/picts_v1.ttf')
+
     HEADER_FONT_SIZE = 30
     HEADER_FONT_NAME = 'Aeroport'
     HEADER_FONT_FILE = os.path.join(os.path.dirname(__file__), 'fonts/Aeroport-regular.ttf')
@@ -40,8 +43,6 @@ class Definitions:
 
     MESSAGES_PADDING_LEFT = 20 * mm
     MESSAGES_PADDING_RIGHT = MESSAGES_PADDING_LEFT
-    MESSAGES_FONT_NAME = 'Picts_v1'
-    MESSAGES_FONT_FILE = os.path.join(os.path.dirname(__file__), 'fonts/picts_v1.ttf')
 
     # SEPARATOR_WIDTH = 1     # N.B. if other than 1, need to draw rect
 
@@ -77,7 +78,7 @@ def load_fonts():
     pdfmetrics.registerFont(ttfonts.TTFont(d.DEFAULT_FONT_NAME, d.DEFAULT_FONT_FILE))
     pdfmetrics.registerFont(ttfonts.TTFont(d.HEADER_FONT_NAME, d.HEADER_FONT_FILE))
     pdfmetrics.registerFont(ttfonts.TTFont(d.FOOTER_FONT_NAME, d.FOOTER_FONT_FILE))
-    pdfmetrics.registerFont(ttfonts.TTFont(d.MESSAGES_FONT_NAME, d.MESSAGES_FONT_FILE))
+    pdfmetrics.registerFont(ttfonts.TTFont(d.PICT_FONT_NAME, d.PICT_FONT_FILE))
     ADD_FONTS_LOADED = True
 
 
