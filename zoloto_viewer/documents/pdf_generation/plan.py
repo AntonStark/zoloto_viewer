@@ -35,10 +35,7 @@ class PlanBox:
     def left_top_corner(self):
         return self._box_x, self._box_y + self._box_height
 
-    def add_marker(self, m):
-        self._markers.append(MarkerData(*m.position, number=m.number))
-
-    def add_marker2(self, number, position):
+    def add_marker(self, number, position):
         self._markers.append(MarkerData(*position, number=number))
 
     def _scale(self, point):
@@ -153,7 +150,7 @@ def plan_page(canvas, floor: Page, marker_positions, title,
               layer_kind, layer_color, legend_data):
     box = PlanBox(floor.plan, floor.geometric_bounds, layer_color, layer_kind)
     for number, position in marker_positions:
-        box.add_marker2(number, position)
+        box.add_marker(number, position)
 
     # turn off header and footer
     # layout.draw_header(canvas, title)
