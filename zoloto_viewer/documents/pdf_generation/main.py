@@ -16,23 +16,35 @@ def generate_pdf(project: Project, buffer, filename):
         file_canvas = canvas.Canvas(filename, pagesize=layout.Definitions.PAGE_SIZE)
 
     first_iteration = True
-    for L in project.layer_set.order_by('title').all():     # type: Layer
+    for P in project.page_set.all():
+        if not first_iteration:
+            file_canvas.showPage()
+
+        layers = Layer.objects.filter(marker__floor=P).distinct()
+        layers_data = [
+            plan.LayerData(L.id, L.title, L.desc, color_adapter(L.color.rgb_code), L.kind_id)
+            for L in layers
+        ]
+        marker_positions = {
+            L.id: collect_marker_positions(P, L)
+            for L in layers
+        }
+        plan.plan_page(file_canvas, P, marker_positions, layers_data)
+        first_iteration = False
+
+    for L in project.layer_set.all():       # type: Layer
         for P in Page.objects.filter(marker__layer=L).distinct():
             title = [P.floor_caption, L.title]
 
-            if not first_iteration:
-                file_canvas.showPage()
-
-            marker_positions = collect_marker_positions(P, L)
-            legend_data = L.title, L.desc
-            plan.plan_page(file_canvas, P, marker_positions,
-                           title, L.kind_id, color_adapter(L.color.rgb_code), legend_data)
+            marker_positions = {L.id: collect_marker_positions(P, L)}
+            layers_data = [plan.LayerData(L.id, L.title, L.desc, color_adapter(L.color.rgb_code), L.kind_id)]
+            file_canvas.showPage()
+            plan.plan_page(file_canvas, P, marker_positions, layers_data)
 
             file_canvas.showPage()
             marker_messages = collect_messages_data(P, L)
             message.message_pages(file_canvas, marker_messages, L.kind.sides,
                                   color_adapter(L.color.rgb_code), title)
-            first_iteration = False
     file_canvas.setTitle(filename)
     file_canvas.save()
     return filename
