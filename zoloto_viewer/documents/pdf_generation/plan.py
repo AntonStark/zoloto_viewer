@@ -57,16 +57,30 @@ class PlanBox:
         can_y = self._box_y + rel_y * self._box_height
         return can_x, can_y
 
-    def _draw_marker(self, canvas, center, layer_id, convert_pos=True):
+    def _draw_marker(self, canvas, center, rotation, layer_id, convert_pos=True):
         if convert_pos:
             x, y = self._calc_pos(center)
         else:
             x, y = center
         canvas.saveState()
         self._set_color(canvas, self._layer_colors[layer_id])
-        # todo respect kind
+
+        d = layout.Definitions
+        canvas.setFont(d.MARK_FONT_NAME, d.MARK_FONT_SIZE)
+        # x = x
+        # y = y
         marker_kind = self._layer_kinds[layer_id]
-        canvas.circle(x, y, 5, stroke=0, fill=1)
+        marks = {
+            1: '\uE901',
+            2: '\uE902',
+            3: '\uE903',
+            4: '\uE904',
+            5: '\uE900',
+        }
+        canvas.translate(x, y)
+        canvas.rotate(-rotation)
+        canvas.drawString(- d.MARK_FONT_SIZE / 2, - d.MARK_FONT_SIZE / 2, marks[marker_kind])
+        # canvas.circle(x, y, 5, stroke=0, fill=1)
         canvas.restoreState()
 
     def _draw_review_status(self, canvas, center, correct=True):
@@ -121,13 +135,13 @@ class PlanBox:
                 center = m.x, m.y
                 layer_id = m.layer_id
                 self._set_color(canvas, self._layer_colors[layer_id])
-                self._draw_marker(canvas, center, layer_id)
+                self._draw_marker(canvas, center, m.a, layer_id)
                 self._draw_caption(canvas, center, m.number)
                 if with_review:
                     self._draw_review_status(canvas, center)
 
     def draw_marker_example(self, canvas, position, layer_id):
-        self._draw_marker(canvas, position, layer_id, convert_pos=False)
+        self._draw_marker(canvas, position, 0, layer_id, convert_pos=False)
 
 
 class PlanLegend:

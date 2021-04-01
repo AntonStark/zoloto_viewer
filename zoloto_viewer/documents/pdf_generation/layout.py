@@ -30,6 +30,10 @@ class Definitions:
     PICT_FONT_NAME = 'Picts_v1'
     PICT_FONT_FILE = os.path.join(os.path.dirname(__file__), 'fonts/picts_v1.ttf')
 
+    MARK_FONT_SIZE = 22
+    MARK_FONT_NAME = 'Elements_font'
+    MARK_FONT_FILE = os.path.join(os.path.dirname(__file__), 'fonts/elements_font.ttf')
+
     HEADER_FONT_SIZE = 30
     HEADER_FONT_NAME = 'Aeroport'
     HEADER_FONT_FILE = os.path.join(os.path.dirname(__file__), 'fonts/Aeroport-regular.ttf')
@@ -79,6 +83,7 @@ def load_fonts():
     pdfmetrics.registerFont(ttfonts.TTFont(d.HEADER_FONT_NAME, d.HEADER_FONT_FILE))
     pdfmetrics.registerFont(ttfonts.TTFont(d.FOOTER_FONT_NAME, d.FOOTER_FONT_FILE))
     pdfmetrics.registerFont(ttfonts.TTFont(d.PICT_FONT_NAME, d.PICT_FONT_FILE))
+    pdfmetrics.registerFont(ttfonts.TTFont(d.MARK_FONT_NAME, d.MARK_FONT_FILE))
     ADD_FONTS_LOADED = True
 
 
