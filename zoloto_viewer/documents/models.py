@@ -126,7 +126,10 @@ class ProjectFile(models.Model):
         return self._make_name()
 
     def _make_name(self):
-        return self.__class__.make_name(self.kind, project=self.project)
+        extra = {}
+        if self.kind == self.FileKinds.CSV_INFOPLAN:
+            extra['layer'] = self.layer
+        return self.__class__.make_name(self.kind, project=self.project, **extra)
 
     def _setup_file(self):
         builder_cls = self.FILE_BUILDERS.get(self.kind)
