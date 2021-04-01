@@ -58,6 +58,14 @@ class PlanBox:
         return can_x, can_y
 
     def _draw_marker(self, canvas, center, rotation, layer_id, convert_pos=True):
+        MARKS = {
+            1: '\uE901',
+            2: '\uE902',
+            3: '\uE903',
+            4: '\uE904',
+            5: '\uE900',
+        }
+
         if convert_pos:
             x, y = self._calc_pos(center)
         else:
@@ -67,19 +75,12 @@ class PlanBox:
 
         d = layout.Definitions
         canvas.setFont(d.MARK_FONT_NAME, d.MARK_FONT_SIZE)
-        # x = x
-        # y = y
+        centralize = - d.MARK_FONT_SIZE / 2
         marker_kind = self._layer_kinds[layer_id]
-        marks = {
-            1: '\uE901',
-            2: '\uE902',
-            3: '\uE903',
-            4: '\uE904',
-            5: '\uE900',
-        }
+
         canvas.translate(x, y)
         canvas.rotate(-rotation)
-        canvas.drawString(- d.MARK_FONT_SIZE / 2, - d.MARK_FONT_SIZE / 2, marks[marker_kind])
+        canvas.drawString(centralize, centralize, MARKS[marker_kind])
         # canvas.circle(x, y, 5, stroke=0, fill=1)
         canvas.restoreState()
 
