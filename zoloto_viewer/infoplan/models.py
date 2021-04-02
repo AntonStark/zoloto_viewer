@@ -170,7 +170,7 @@ class VariablesManager(models.Manager):
         ]
         return res
 
-    def vars_page_layer_by_size(self, page, layer, apply_transformations=None):
+    def vars_page_layer_by_side(self, page, layer, apply_transformations=None):
         variables = self.filter(marker__floor=page, marker__layer=layer)
         vars_by_side, markers = self.__class__._vars_by_side(variables, apply_transformations)
         return vars_by_side, markers

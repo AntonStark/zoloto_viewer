@@ -87,7 +87,7 @@ def collect_messages_data(floor: Page, layer: Layer):
         transformations.EliminateTabsText(),
         transformations.ReplacePictCodes()
     ]
-    vars_by_side, markers = MarkerVariable.objects.vars_page_layer_by_size(floor, layer, apply_transformations=filters)
+    vars_by_side, markers = MarkerVariable.objects.vars_page_layer_by_side(floor, layer, apply_transformations=filters)
     marker_numbers = Marker.objects.get_numbers(floor, layer)
 
     res = [
@@ -96,6 +96,5 @@ def collect_messages_data(floor: Page, layer: Layer):
             marker_infoplan(vars_by_side, marker_uid, layer.kind.side_keys())
         )
         for marker_uid in marker_numbers.keys()
-        if marker_uid in markers
     ]
     return res
