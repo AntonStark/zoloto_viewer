@@ -169,6 +169,9 @@ class MessageBox:
                 w += canvas.stringWidth(text)
             return w
 
+        if not lines:
+            return 0
+
         canvas.setFont(cls.FONT_NAME, cls.FONT_SIZE)
         max_text_width = max(map(obtain_width, lines))
         return max_text_width
