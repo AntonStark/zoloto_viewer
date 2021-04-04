@@ -29,6 +29,7 @@ INSTALLED_APPS = [
     'zoloto_viewer.infoplan',
     'zoloto_viewer.documents',
     'fontawesome-free',
+    'storages',
 ]
 
 MIDDLEWARE = [

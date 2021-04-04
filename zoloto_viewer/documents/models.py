@@ -7,6 +7,7 @@ from django.dispatch import receiver
 from zoloto_viewer.documents import generators
 from zoloto_viewer.documents.pdf_generation import main as pdf_module
 from zoloto_viewer.infoplan.models import Marker
+from zoloto_viewer.config.settings .storage_backends import S3MediaStorage
 
 
 def additional_files_upload_path(obj: 'ProjectFile', filename):
@@ -90,7 +91,8 @@ class ProjectFile(models.Model):
         TAR_INFOPLAN = 6        # архив с инфопланами по слоям
 
     project = models.ForeignKey('viewer.Project', on_delete=models.CASCADE)
-    file = models.FileField(upload_to=additional_files_upload_path, null=False, blank=True, default='')
+    file = models.FileField(upload_to=additional_files_upload_path, storage=S3MediaStorage(),
+                            null=False, blank=True, default='')
     kind = models.IntegerField(choices=FileKinds.choices)
     date_created = models.DateTimeField(auto_now_add=True)
     layer = models.ForeignKey('viewer.Layer', on_delete=models.CASCADE, null=True)
@@ -138,7 +140,7 @@ class ProjectFile(models.Model):
 
         builder = builder_cls(self.project)     # type: generators.AbstractCsvFileBuilder
         builder.build()
-        self.file.save(self._make_name(), File(builder.buffer))
+        self.file.save(self._make_name(), File(builder.buffer_bytes))
 
     def _setup_layer_file(self):
         builder_cls = self.FILE_BUILDERS.get(self.kind)
@@ -148,7 +150,7 @@ class ProjectFile(models.Model):
         builder = builder_cls(self.layer)       # type: generators.AbstractCsvFileBuilder
         builder.build()
         filename = self.__class__.make_name(self.kind, project=self.project, layer=self.layer)
-        self.file.save(filename, File(builder.buffer))
+        self.file.save(filename, File(builder.buffer_bytes))
 
     def _setup_pdf_file(self):
         self.kind = self.FileKinds.PDF_EXFOLIATION
@@ -176,7 +178,8 @@ class ProjectFile(models.Model):
 def delete_project_file(sender, instance: ProjectFile, *args, **kwargs):
     """Deletes filesystem file on `post_delete`"""
     if instance.file:
-        _delete_file(instance.file.path)
+        # _delete_file(instance.file.path)
+        instance.file.delete(save=False)
 
 
 # noinspection PyUnusedLocal

@@ -13,6 +13,10 @@ class AbstractCsvFileBuilder(abc.ABC):
     def make_rows(self):
         pass
 
+    @property
+    def buffer_bytes(self):
+        return io.BytesIO(self.buffer.getvalue().encode('utf-8'))
+
     def build(self):
         writer = csv.writer(self.buffer, dialect='excel', delimiter=',')
         writer.writerow(self.csv_header)
