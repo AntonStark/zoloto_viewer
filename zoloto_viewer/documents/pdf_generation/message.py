@@ -29,6 +29,7 @@ class MessageBox:
     PADDING_TOP = 0.1 * FONT_SIZE
 
     NUMBER_RECT_HEIGHT = 1.6 * FONT_SIZE
+    MESSAGE_SIDE_MIN_WIDTH = 50
     CORRECT_MARK_RADIUS = 10
     CORRECT_MARK_FONT_SIZE = 1.5 * CORRECT_MARK_RADIUS
 
@@ -170,7 +171,7 @@ class MessageBox:
             return w
 
         if not lines:
-            return 0
+            return cls.MESSAGE_SIDE_MIN_WIDTH
 
         canvas.setFont(cls.FONT_NAME, cls.FONT_SIZE)
         max_text_width = max(map(obtain_width, lines))
