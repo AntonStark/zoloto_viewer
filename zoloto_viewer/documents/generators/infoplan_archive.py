@@ -3,7 +3,9 @@ import typing as t
 import tarfile
 
 
-def make_tar_archive(files: t.Tuple[t.Union[str, t.Tuple[str, str]]]) -> io.BytesIO:
+def make_tar_archive(files: t.Tuple[t.Union[str,
+                                            t.Tuple[str, str],
+                                            t.Tuple[io.BytesIO, str]]]) -> io.BytesIO:
     """
     :param files: iterable of either file paths or tuples (path, name)
     :return: io.BytesIO (not closed, for django save to FieldFile)
@@ -14,6 +16,11 @@ def make_tar_archive(files: t.Tuple[t.Union[str, t.Tuple[str, str]]]) -> io.Byte
             if isinstance(f, str):
                 archive.add(f)
             else:
-                path, name = f
-                archive.add(path, arcname=name)
+                target, name = f
+                if isinstance(target, io.BytesIO):
+                    tarinfo = tarfile.TarInfo(name=name)
+                    tarinfo.size = len(target.getvalue().decode('utf-8'))
+                    archive.addfile(tarinfo, target)
+                else:
+                    archive.add(target, arcname=name)
     return buffer

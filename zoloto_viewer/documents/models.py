@@ -7,7 +7,7 @@ from django.dispatch import receiver
 from zoloto_viewer.documents import generators
 from zoloto_viewer.documents.pdf_generation import main as pdf_module
 from zoloto_viewer.infoplan.models import Marker
-from zoloto_viewer.config.settings .storage_backends import S3MediaStorage
+from zoloto_viewer.config.settings .storage_backends import S3MediaStorage, s3_download_bytes
 
 
 def additional_files_upload_path(obj: 'ProjectFile', filename):
@@ -69,7 +69,10 @@ class ProjectFilesManager(models.Manager):
             # `last_modified and last_modified > date_created` to treat empty layers as up-to-date
             if not (layer_infoplan and layer_infoplan.is_fresh_layer_file()):
                 layer_infoplan = self._generate_layer_infoplan(layer)
-            per_layer_csv_files.append((layer_infoplan.file.path, layer_infoplan.public_name))
+            per_layer_csv_files.append(
+                (s3_download_bytes(layer_infoplan.file.name),
+                 layer_infoplan.public_name)
+            )
 
         kind = self.model.FileKinds.TAR_INFOPLAN
         obj = self.model(project=project, kind=kind)
