@@ -38,7 +38,7 @@ function buildMessBox(data) {
                 let sideInput = document.createElement('textarea');
                 sideInput.setAttribute('class', 'variables-container-side-input')
                 sideInput.setAttribute('data-number', nSide);
-                sideInput.setAttribute('rows', 6);
+                sideInput.setAttribute('rows', 8);
 
                 function htmlDecode(input) {
                     var doc = new DOMParser().parseFromString(input, "text/html");
