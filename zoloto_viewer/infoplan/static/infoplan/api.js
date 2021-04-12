@@ -62,6 +62,18 @@ function handlerMessageDivFocus(e) {
         commentField[0].focus();
 }
 
+function takeMessageToFront(e) {
+    const container = e.currentTarget;
+
+    function getZIndex(elem) { return Number(elem.style.zIndex); }
+    const maxZIndex = Math.max(...Array.from(
+        document.getElementsByClassName('message_container')
+        ).map(getZIndex)
+    );
+
+    container.style.zIndex = maxZIndex + 1;
+}
+
 function handleToggleWrong(marker_uid, variable_key) {
     const toggledStatus = !varWrongnessManager.status(marker_uid, variable_key);
     const data = {'key': variable_key, 'wrong': toggledStatus};

@@ -74,7 +74,9 @@ function ControllerMessageBox(render) {
         wrapper.style.outline = 'none';
 
         wrapper.append(mess);
+        wrapper.setAttribute('class', 'message_container');
         wrapper.addEventListener('focus', handlerMessageDivFocus);
+        wrapper.addEventListener('click', takeMessageToFront);
         return wrapper;
     }
 
