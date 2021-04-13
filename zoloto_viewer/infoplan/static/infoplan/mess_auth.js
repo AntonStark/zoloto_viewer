@@ -150,30 +150,6 @@ function variablesContainerBlur(e) {
     }
 }
 
-function onSuccessLoadReview(markerData) {
-    const markerUid = markerData.marker;
-    messageBoxManager.hide(markerUid);
-    refreshMarkerElement(markerData);
-}
-
-function onErrorLoadReview(rep) {
-    console.log(rep);
-    alert('Возникла ошибка при сохранении.\nПопробуйте чуть позже или обратитесь к администратору.');
-}
-
-function handlerMessBlur(marker_uid) {
-    const box = messageBoxManager.get(marker_uid);
-    if (box !== undefined) {
-        if (box.dataset.btnClicked) {
-            // todo why this dataset used? still needed?
-            delete box.dataset.btnClicked;
-            return;
-        }
-    }
-
-    messageBoxManager.hide(marker_uid);
-}
-
 function handlerResolveCommentsBtnClick(marker_uid) {
     doApiCall(
         'POST',
@@ -214,5 +190,14 @@ function handlerConfirmBtnClick(marker_uid) {
 
     doApiCall('PUT', API_MARKER_PUT_VARS(marker_uid), {
         infoplan: sideObjects
-    }, onSuccessLoadReview, onErrorLoadReview);
+    }, function onSuccessLoadReview(markerData) {
+        const markerUid = markerData.marker;
+        messageBoxManager.hide(markerUid);
+        refreshMarkerElement(markerData);
+    }, function onErrorLoadReview(rep) {
+        console.log(rep);
+        alert('Возникла ошибка при сохранении.\nПопробуйте чуть позже или обратитесь к администратору.');
+    });
 }
+
+const handlerMessBlur = handlerConfirmBtnClick;

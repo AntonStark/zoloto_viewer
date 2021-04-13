@@ -143,38 +143,10 @@ function onSuccessLoadReview(markerData) {
 }
 
 function handlerMessBlur(marker_uid) {
-    const box = messageBoxManager.get(marker_uid);
-    if (box !== undefined) {
-        if (box.dataset.btnClicked) {
-            delete box.dataset.btnClicked;
-            return;
-        }
-    }
-
-    const variables = varWrongnessManager.data(marker_uid);
-    let comment = messageBoxManager.read(marker_uid);
-    if (comment === undefined) {
-        console.error('method for comment returned undefined', marker_uid);
-        comment = '';
-    }
-
-    const data = {
-        variables: variables,
-        comment: comment,
-        exit_type: 'blur',
-    };
-    doApiCall('POST', API_MARKER_LOAD_REVIEW(marker_uid), data,
-        onSuccessLoadReview);
-
     messageBoxManager.hide(marker_uid);
 }
 
 function handlerConfirmBtnClick(marker_uid) {
-    const box = messageBoxManager.get(marker_uid);
-    if (box !== undefined) {    // to distinguish click form blur in blur handler
-        box.dataset.btnClicked = 'true';
-    }
-
     const variables = varWrongnessManager.data(marker_uid);
     let comment = messageBoxManager.read(marker_uid);
     if (comment === undefined) {

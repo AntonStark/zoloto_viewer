@@ -173,6 +173,7 @@ function ControllerMapInteractions() {
         if (isInsertMode())
             return;
 
+        messageBoxManager.hideAll();
         rectSelectionCorner = getSvgCoordinates(e);
         const [xInit, yInit] = _takeSelectionRect(getSvgCoordinates(e), false);
         _boundSelectionRect(xInit, yInit);
