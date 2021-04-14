@@ -262,6 +262,8 @@ def load_marker_review(request, marker_uid: uuid.UUID):
     # always create new comment, previous comments not visible
     if comment:
         marker.markercomment_set.create(content=comment)
+    if explicit_end_review:
+        marker.reviewed = True
     marker.save()
 
     return JsonResponse(marker.to_json())
@@ -275,6 +277,8 @@ def resolve_marker_comments(request, marker_uid: uuid.UUID):
     marker = get_object_or_404(Marker, uid=marker_uid)
     for c in marker.markercomment_set.all():
         c.resolve()
+    marker.reviewed = False
+    marker.save()
     return JsonResponse(marker.to_json())
 
 

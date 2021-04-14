@@ -143,6 +143,21 @@ function onSuccessLoadReview(markerData) {
 }
 
 function handlerMessBlur(marker_uid) {
+    const variables = varWrongnessManager.data(marker_uid);
+    let comment = messageBoxManager.read(marker_uid);
+    if (comment === undefined) {
+        console.error('method for comment returned undefined', marker_uid);
+        comment = '';
+    }
+
+    const data = {
+        variables: variables,
+        comment: comment,
+        exit_type: 'blur',
+    };
+    doApiCall('POST', API_MARKER_LOAD_REVIEW(marker_uid), data,
+        onSuccessLoadReview);
+
     messageBoxManager.hide(marker_uid);
 }
 

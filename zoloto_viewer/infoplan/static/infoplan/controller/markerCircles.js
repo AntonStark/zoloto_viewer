@@ -2,6 +2,7 @@
 function ControllerMarkerCircles() {
     const MARKER_CORRECT_CLASS = 'marker_correct';
     const MARKER_INCORRECT_CLASS = 'marker_wrong';
+    const MARKER_REVIEWED_CLASS = 'marker_reviewed';
     const MARKER_HAS_COMMENT_CLASS = 'marker_has_comment';
     const MARKER_MESSAGE_SHOWN_CLASS = 'message_shown';
 
@@ -19,6 +20,12 @@ function ControllerMarkerCircles() {
             element.classList.toggle(MARKER_CORRECT_CLASS);
         if (element.classList.contains(MARKER_INCORRECT_CLASS) !== !correct)
             element.classList.toggle(MARKER_INCORRECT_CLASS);
+    }
+    function _setReviewed(element, reviewed) {
+        if (!element)
+            return;
+        if (element.classList.contains(MARKER_REVIEWED_CLASS) !== reviewed)
+            element.classList.toggle(MARKER_REVIEWED_CLASS);
     }
     function _setHasComment(element, has) {
         if (!element)
@@ -60,8 +67,9 @@ function ControllerMarkerCircles() {
         // console.log('updateCorrectness', markerData);
         const elem = markerCorrCircles[markerData.marker];
         if (elem !== undefined) {
-            const [correct, hasComment] = [markerData.correct, markerData.has_comment];
-            _setCorrectness(elem.parentNode, correct);
+            const [reviewed, hasComment] = [markerData.reviewed, markerData.has_comment];
+            // _setCorrectness(elem.parentNode, null);
+            _setReviewed(elem.nextElementSibling, reviewed);
             _setHasComment(elem.nextElementSibling, hasComment);
         }
     }

@@ -57,8 +57,7 @@ class Marker(models.Model):
     pos_y = models.IntegerField()
     rotation = models.IntegerField(default=0)
 
-    correct = models.BooleanField(null=True, default=None)  # todo remove after pdf generation review (points too)
-    points = fields.JSONField(default=list)     # [ [P], ..., [P] ] | [ [P1, P2, P3], ... ], P = [x: float, y: float]
+    reviewed = models.BooleanField(default=False)
 
     CIRCLE_RADIUS = 15
     COMMENT_MARK_RADIUS = 2
@@ -109,7 +108,7 @@ class Marker(models.Model):
         return {
             'marker': self.uid,
             'number': self.number,
-            'correct': self.correct,
+            'reviewed': self.reviewed,
             'has_comment': self.has_comments,
             'comments_resolved': self.all_comments_resolved,
             'position': {

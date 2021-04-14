@@ -252,14 +252,17 @@ input.disabled {
     stroke-width: 1px;
 }
 
-.marker_comment_mark:not(.marker_has_comment) {
+.marker_comment_mark {
     stroke: none;
     fill: none;
 }
-.marker_comment_mark.marker_comments_resolved.marker_has_comment {
+.marker_comment_mark.marker_reviewed {
+    stroke: var(--layer-color);
     fill: white;
 }
-
+.marker_comment_mark.marker_has_comment:not(.marker_comments_resolved) {
+    fill: var(--layer-color);
+}
 
 .icon {
     text-decoration: unset;

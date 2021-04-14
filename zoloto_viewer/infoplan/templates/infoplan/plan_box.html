@@ -36,6 +36,7 @@
                                 <circle cx="{{ marker.pos_x }}" cy="{{ marker.pos_y }}" r="{{ cmr }}"
                                         transform="translate({{ cmp }}, -{{ cmp }})"
                                         class="marker_comment_mark
+                                        {{ marker.reviewed|yesno:'marker_reviewed,' }}
                                         {{ marker.has_comments|yesno:'marker_has_comment,' }}
                                         {{ marker.all_comments_resolved|yesno:'marker_comments_resolved,' }}"></circle>
                                 {% endwith %}
