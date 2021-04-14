@@ -70,6 +70,7 @@ function buildMessBox(data) {
 
         let variablesDiv  = document.createElement('div');
         variablesDiv.setAttribute('class', `variables_container`);
+        variablesDiv.style.gridTemplateColumns = `repeat(${sides}, 1fr)`;
 
         if (isInfoplanSet) {
             const sideNumbers = Array.from(Array(sides));

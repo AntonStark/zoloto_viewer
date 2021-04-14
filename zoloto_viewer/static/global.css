@@ -414,9 +414,8 @@ g.layer_markers.enabled_layer {
 }
 
 .variables_container {
-    flex-grow: 1;
     min-height: 0;
-    display: flex;
+    display: grid;
     tab-size: 4;
 }
 
@@ -434,6 +433,7 @@ g.layer_markers.enabled_layer {
 
 .variables-container-side-block {
     display: inline-block;
+    vertical-align: top;
 }
 
 .variables-container-side-block span.infoplan_icon {
