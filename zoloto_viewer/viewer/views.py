@@ -8,7 +8,6 @@ from django.shortcuts import get_object_or_404, render, redirect
 from django.views.decorators import csrf, http
 
 from zoloto_viewer.infoplan import views as infoplan_views
-from zoloto_viewer.documents.models import ProjectFile
 from zoloto_viewer.viewer.models import Color, Project, Layer, MarkerKind, Page
 from zoloto_viewer.viewer.view_helpers import project_form
 
@@ -158,11 +157,18 @@ def add_project_layer(request, title):
     last_color = Layer.max_color(project.layer_set)
     color = last_color.next() if last_color else Color.objects.first()
 
+    return_to_page_code = request.GET['return']
+    is_valid_code = Page.validate_code(return_to_page_code)
+    same_project_page = Page.by_code(return_to_page_code).project == project
+    if not (is_valid_code and same_project_page):
+        return_to_page_code = project.first_page().code
+
     context = {
         'project': project,
         'layer': None,
         'color': color,
         'maker_kind_options': MarkerKind.objects.all(),
+        'return_to_page_code': return_to_page_code,
     }
 
     if request.method != 'POST':
@@ -183,7 +189,7 @@ def add_project_layer(request, title):
     Layer(project=project, title=layer_title, desc=form_data['layer_desc'],
           kind_id=form_data['maker_kind'],
           color_id=form_data['layer_color']).save()
-    return redirect(to='project_page', page_code=project.first_page().code)
+    return redirect(to='project_page', page_code=return_to_page_code)
 
 
 @login_required
@@ -192,11 +198,18 @@ def edit_project_layer(request, project_title, layer_title):
     project = get_object_or_404(Project, title=project_title)
     layer = get_object_or_404(Layer, project=project, title=layer_title)
 
+    return_to_page_code = request.GET['return']
+    is_valid_code = Page.validate_code(return_to_page_code)
+    same_project_page = Page.by_code(return_to_page_code).project == project
+    if not (is_valid_code and same_project_page):
+        return_to_page_code = project.first_page().code
+
     context = {
         'project': project,
         'layer': layer,
         'color': layer.color,
         'maker_kind_options': MarkerKind.objects.all(),
+        'return_to_page_code': return_to_page_code,
     }
 
     if request.method != 'POST':
@@ -218,4 +231,10 @@ def edit_project_layer(request, project_title, layer_title):
     layer.desc = form_data['layer_desc']
     layer.kind_id = form_data['maker_kind']
     layer.save()
-    return redirect(to='project_page', page_code=project.first_page().code)
+
+    return_to_page_code = request.GET['return']
+    is_valid_code = Page.validate_code(return_to_page_code)
+    same_project_page = Page.by_code(return_to_page_code).project == project
+    if not (is_valid_code and same_project_page):
+        return_to_page_code = project.first_page().code
+    return redirect(to='project_page', page_code=return_to_page_code)

@@ -64,7 +64,7 @@
         {% endif %}
     </div>
     <p>
-        <a href="{% url 'project_page' project.first_page.code %}" tabindex="-1"
+        <a href="{% url 'project_page' return_to_page_code %}" tabindex="-1"
            class="fill-button-negative" style="float: left;">Отмена</a>
         <input type="submit" value="{% if layer %}Сохранить изменения{% else %}Добавить тип{% endif %}"
                class="fill-button" style="float: right; font: unset;">
