@@ -85,6 +85,27 @@ function setActiveLayer(layer_li_tag) {
     const layerTitle = layer_li_tag.getElementsByClassName('layer-title-span')[0].textContent;
     enabledLayersController.setActive(layerTitle);
 }
+function toggleLayerHandler(title)
+{ enabledLayersController.toggle(title); }
+function handleClickLayerListItem(layerLiTag, layerClassTitle) {
+    /*  клик по выключенному включает и делает активным,
+        клик по включённому делает активным,
+        и, наконец, клик по активному выключает (и делает активным следующий - пока нет).
+    * */
+    const layerTitle = layerLiTag.getElementsByClassName('layer-title-span')[0].textContent;
+    // console.log('isEnabled', enabledLayersController.isEnabled(layerClassTitle));
+    // console.log('isActive', enabledLayersController.isActive(layerTitle));
+    if (!enabledLayersController.isEnabled(layerClassTitle)) {
+        toggleLayerHandler(layerClassTitle);
+        setActiveLayer(layerLiTag);
+    } else if (!enabledLayersController.isActive(layerTitle)) {
+        setActiveLayer(layerLiTag);
+    } else {
+        toggleLayerHandler(layerClassTitle);
+        // const nextLayerTag = layerLiTag.nextElementSibling || layerLiTag.parentElement.firstElementChild;
+        // setActiveLayer(nextLayerTag);
+    }
+}
 
 window.addEventListener('load', function () {
     const layersMenu = document.getElementById('project-page-layers-box');
@@ -101,9 +122,6 @@ window.addEventListener('load', function () {
     probePt = mapSvgElem.createSVGPoint();
 });
 
-function toggleLayerHandler(title) {
-    enabledLayersController.toggle(title);
-}
 
 function renderMarkerElement(data) {
     console.debug(data);

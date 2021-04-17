@@ -50,6 +50,17 @@ function ControllerEnabledLayers() {
             linkItem.href = _toggleLayerUrlParam(targetUrl, layerOwnTitle);
         }
     }
+    function isEnabled(layerTitle) {
+        const layersList = document.getElementsByClassName('layers-box')[0];
+        if (!layersList)
+            return false;
+
+        const layerLiTag = layersList.getElementsByClassName(layerTitle)[0];
+        if (!layerLiTag)
+            return false;
+
+        return layerLiTag.classList.contains(ENABLED_LAYER_CLASS);
+    }
 
     function setActiveLayer(layerTitle) {
         activeLayerTitle = layerTitle;
@@ -57,10 +68,16 @@ function ControllerEnabledLayers() {
     function getActiveLayer() {
         return activeLayerTitle;
     }
+    function isActive(layerTitle) {
+        return activeLayerTitle === layerTitle;
+    }
 
     return {
         toggle   : toggleLayer,
+        isEnabled: isEnabled,
+
         setActive: setActiveLayer,
         getActive: getActiveLayer,
+        isActive : isActive,
     }
 }

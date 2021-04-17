@@ -6,7 +6,7 @@
     {% for code, floor_caption in page_code_list %}
     <li {% if code == page.code %}class="active"{% endif %} >
         <a href="{% url 'project_page' code %}{{ state_data.hidden_layers|hidden_layers_url_param|query_params }}"
-           class="pages-box-button">
+           class="pages-box-button project-page-link">
             {{ floor_caption }}
             <span class="areas-box-layers-comments">
                 {% with comment_colors=layers_with_comments_by_page|get_item:code %}
