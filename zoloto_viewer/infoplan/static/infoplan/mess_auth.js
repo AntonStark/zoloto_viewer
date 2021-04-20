@@ -72,6 +72,7 @@ function buildMessBox(data) {
 
         let variablesDiv  = document.createElement('div');
         variablesDiv.setAttribute('class', `variables_container`);
+        variablesDiv.style.gridTemplateColumns = `repeat(${sides}, 1fr)`;
 
         const sideNumbers = Array.from(Array(sides));
         variablesDiv.append(...sideNumbers.map((e, i) => buildSideNBlock(i + 1)(data)));
