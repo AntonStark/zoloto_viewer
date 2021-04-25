@@ -132,7 +132,7 @@ def heroku_database_url_adapter(url: str):
     r = re.match(pattern, url)
 
     keys = 'user', 'password', 'host', 'port', 'name'
-    values = operator.itemgetter(keys)(r)
+    values = operator.itemgetter(*keys)(r)
     res = {str.upper(k): v
            for k, v in zip(keys, values)}
 
