@@ -41,3 +41,5 @@ STATICFILES_STORAGE = 'zoloto_viewer.config.settings.storage_backends.S3StaticSt
 STATIC_URL = "https://%s/%s/" % (AWS_S3_CUSTOM_DOMAIN, AWS_LOCATION)
 
 DEFAULT_FILE_STORAGE = 'zoloto_viewer.config.settings.storage_backends.S3MediaStorage'
+
+SENTRY_DSN = 'https://d4fe35ed88c04fc4b404de8cc3a4765a@o578628.ingest.sentry.io/5734971'
