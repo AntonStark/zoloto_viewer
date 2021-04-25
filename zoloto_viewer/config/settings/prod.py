@@ -1,3 +1,5 @@
+import os
+
 from zoloto_viewer.config.settings.common import *
 from zoloto_viewer.config import sentry
 
@@ -13,14 +15,7 @@ ALLOWED_HOSTS = os.getenv('DJANGO_ALLOWED_HOSTS').split(' ')
 # https://docs.djangoproject.com/en/3.0/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': os.getenv('DB_ENGINE'),
-        'NAME': os.getenv('POSTGRES_DB'),
-        'USER': os.getenv('POSTGRES_USER'),
-        'PASSWORD': os.getenv('POSTGRES_PASSWORD'),
-        'HOST': os.getenv('DB_HOST'),
-        'PORT': os.getenv('DB_PORT')
-    }
+    'default': heroku_database_url_adapter(os.getenv('DATABASE_URL')),
 }
 
 MEDIA_ROOT = os.path.join(BASE_DIR, 'mediafiles')
@@ -56,5 +51,5 @@ STATIC_URL = "https://%s/%s/" % (AWS_S3_CUSTOM_DOMAIN, AWS_LOCATION)
 
 DEFAULT_FILE_STORAGE = 'zoloto_viewer.config.settings.storage_backends.S3MediaStorage'
 
-SENTRY_DSN = 'https://bbaebdf5469f4630a9763dc171bb649d@o578628.ingest.sentry.io/5734969'
+SENTRY_DSN = os.getenv('SENTRY_DSN')
 sentry.init(SENTRY_DSN)

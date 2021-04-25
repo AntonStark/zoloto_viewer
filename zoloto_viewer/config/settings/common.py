@@ -110,3 +110,32 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR, "static"),
     '/var/www/zoloto_viewer/static/',
 ]
+
+
+def heroku_database_url_adapter(url: str):
+    """
+    :param url: str - database url
+    postgres://hxqrxtamhjraxm:facb52c95d37ed447e3a7333467cc7c0d49f5dc7bcd4836d9fbae66d79833e6a@ec2-54-72-155-238.eu-west-1.compute.amazonaws.com:5432/d8smb1guvac85k
+    :return: dict with following schema
+        {
+            'ENGINE':
+            'NAME':
+            'USER':
+            'PASSWORD':
+            'HOST':
+            'PORT':
+        }
+    """
+    import re, operator
+
+    pattern = r'^(?P<scheme>\w+)://(?P<user>\w+):(?P<password>\w+)@(?P<host>[\w\-.]+):(?P<port>\d+)/(?P<name>\w+)$'
+    r = re.match(pattern, url)
+
+    keys = 'user', 'password', 'host', 'port', 'name'
+    values = operator.itemgetter(keys)(r)
+    res = {str.upper(k): v
+           for k, v in zip(keys, values)}
+
+    engine = 'django.db.backends.postgresql'
+    res['ENGINE'] = engine
+    return res
