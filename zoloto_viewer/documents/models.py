@@ -7,7 +7,7 @@ from django.dispatch import receiver
 from zoloto_viewer.documents import generators
 from zoloto_viewer.documents.pdf_generation import main as pdf_module
 from zoloto_viewer.infoplan.models import Marker
-from zoloto_viewer.config.settings .storage_backends import S3MediaStorage, s3_download_bytes
+from zoloto_viewer.config.settings .storage_backends import s3_download_bytes
 
 
 def additional_files_upload_path(obj: 'ProjectFile', filename):
@@ -94,7 +94,7 @@ class ProjectFile(models.Model):
         TAR_INFOPLAN = 6        # архив с инфопланами по слоям
 
     project = models.ForeignKey('viewer.Project', on_delete=models.CASCADE)
-    file = models.FileField(upload_to=additional_files_upload_path, storage=S3MediaStorage(),
+    file = models.FileField(upload_to=additional_files_upload_path,
                             null=False, blank=True, default='')
     kind = models.IntegerField(choices=FileKinds.choices)
     date_created = models.DateTimeField(auto_now_add=True)

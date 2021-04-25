@@ -20,5 +20,5 @@ from django.views.generic.base import RedirectView
 
 urlpatterns = [
     path('viewer/', include('zoloto_viewer.viewer.urls')),
-    path('favicon.ico', RedirectView.as_view(url='/static/favicon.ico')),
+    path('favicon.ico', RedirectView.as_view(url=settings.STATIC_URL + 'favicon.ico')),
 ] + (static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT) if settings.DEBUG else [])

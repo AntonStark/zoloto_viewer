@@ -1,5 +1,4 @@
 import base64
-import os
 import re
 import shutil
 import uuid
@@ -9,6 +8,7 @@ from django.contrib.postgres import fields
 from django.db import models
 from django.dispatch import receiver
 from os import path
+from PIL import Image
 
 
 def additional_files_upload_path(obj: 'Project', filename):
@@ -20,6 +20,7 @@ class Project(models.Model):
     title = models.TextField(blank=False, unique=True)
     created = models.DateTimeField(auto_now_add=True)
 
+    # todo remove
     maps_info = models.FileField(upload_to=additional_files_upload_path, null=False, blank=True, default='')
     layers_info = models.FileField(upload_to=additional_files_upload_path, null=False, blank=True, default='')
     poi_names = models.FileField(upload_to=additional_files_upload_path, null=False, blank=True, default='')
@@ -154,12 +155,6 @@ class Layer(models.Model):
         return Color.objects.get(id=color_id) if color_id else None
 
 
-def _delete_file(fpath):
-    """ Deletes file from filesystem. """
-    if path.isfile(fpath):
-        os.remove(fpath)
-
-
 def plan_upload_path(obj: 'Page', filename):
     return path.join(obj.project.project_files_dir(), f'pages/{filename}')
 
@@ -184,16 +179,20 @@ class Page(models.Model):
         ordering = [models.F('document_offset').asc(nulls_last=True)]
 
     @property
-    def orig_file_name(self):
-        return path.basename(self.plan.name)
-
-    @property
     def geometric_bounds(self):
         top = left = 0
         bottom = self.plan.height
         right = self.plan.width
         geometric_bounds = [top, left, bottom, right]
         return geometric_bounds
+
+    @property
+    def orig_file_name(self):
+        return path.basename(self.plan.name)
+
+    @property
+    def plan_pil_obj(self):
+        return Image.open(self.plan)
 
     @staticmethod
     def remove_from_project(project, filename):
@@ -257,4 +256,4 @@ class Page(models.Model):
 def delete_page_file(sender, instance: Page, *args, **kwargs):
     """ Deletes page image on `post_delete` """
     if instance.plan:
-        _delete_file(instance.plan.path)
+        instance.plan.delete(save=False)

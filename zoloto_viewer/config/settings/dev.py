@@ -25,15 +25,19 @@ DATABASES = {
 MEDIA_ROOT = os.getenv('MEDIA_ROOT', '/var/www/zoloto_viewer/media/')
 MEDIA_URL = '/media/'
 
-STATIC_URL = '/static/'
-
 BASE_URL = f'http://localhost:8000'
 
 AWS_STORAGE_BUCKET_NAME = 'zoloto-viewer-dev'
 AWS_ACCESS_KEY_ID = os.environ['AWS_ACCESS_KEY_ID']
 AWS_SECRET_ACCESS_KEY = os.environ['AWS_SECRET_ACCESS_KEY']
 AWS_S3_CUSTOM_DOMAIN = '%s.s3.amazonaws.com' % AWS_STORAGE_BUCKET_NAME
+
 AWS_S3_OBJECT_PARAMETERS = {
     'CacheControl': 'max-age=86400',
 }
-AWS_STORAGE_CLASS = 'zoloto_viewer.config.settings.storage_backends.S3MediaStorage'
+AWS_LOCATION = 'static'
+
+STATICFILES_STORAGE = 'zoloto_viewer.config.settings.storage_backends.S3StaticStorage'
+STATIC_URL = "https://%s/%s/" % (AWS_S3_CUSTOM_DOMAIN, AWS_LOCATION)
+
+DEFAULT_FILE_STORAGE = 'zoloto_viewer.config.settings.storage_backends.S3MediaStorage'

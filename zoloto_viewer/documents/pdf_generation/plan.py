@@ -1,7 +1,7 @@
 import typing as t
 from collections import namedtuple
-from django.db.models.fields.files import ImageFieldFile
 from reportlab.lib import colors
+from reportlab.lib.utils import ImageReader
 from reportlab.pdfgen import canvas as rc
 
 from zoloto_viewer.viewer.models import Page
@@ -22,9 +22,9 @@ class PlanBox:
 
     CORRECT_CIRCLE_RADIUS = 10
 
-    def __init__(self, image_field: ImageFieldFile, indd_bounds, layer_colors, layer_kinds):
-        self._img = image_field.path
-        self._img_size = image_field.width, image_field.height
+    def __init__(self, image_pil, image_size, indd_bounds, layer_colors, layer_kinds):
+        self._img = ImageReader(image_pil)
+        self._img_size = image_size
         self._indd_bounds = indd_bounds
 
         self._layer_colors = layer_colors
@@ -180,7 +180,7 @@ def plan_page(canvas, floor: Page, marker_positions, layers_data: t.List[LayerDa
         ld.id: ld.kind_id
         for ld in layers_data
     }
-    box = PlanBox(floor.plan, floor.geometric_bounds, layer_colors, layer_kinds)
+    box = PlanBox(floor.plan_pil_obj, (floor.plan.width, floor.plan.height), floor.geometric_bounds, layer_colors, layer_kinds)
     for layer_id, layer_markers in marker_positions.items():
         for number, position in layer_markers:
             box.add_marker(layer_id, number, position)
