@@ -1,4 +1,5 @@
 from zoloto_viewer.config.settings.common import *
+from zoloto_viewer.config import sentry
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
@@ -56,3 +57,4 @@ STATIC_URL = "https://%s/%s/" % (AWS_S3_CUSTOM_DOMAIN, AWS_LOCATION)
 DEFAULT_FILE_STORAGE = 'zoloto_viewer.config.settings.storage_backends.S3MediaStorage'
 
 SENTRY_DSN = 'https://bbaebdf5469f4630a9763dc171bb649d@o578628.ingest.sentry.io/5734969'
+sentry.init(SENTRY_DSN)
