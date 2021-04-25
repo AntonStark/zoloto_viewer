@@ -108,7 +108,6 @@ USE_TZ = True
 
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, "static"),
-    '/var/www/zoloto_viewer/static/',
 ]
 
 
