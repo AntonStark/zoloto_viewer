@@ -41,6 +41,7 @@ AWS_S3_OBJECT_PARAMETERS = {
     'CacheControl': 'max-age=86400',
 }
 AWS_LOCATION = 'static'
+AWS_DEFAULT_ACL = 'public-read'
 
 STATICFILES_STORAGE = 'zoloto_viewer.config.settings.storage_backends.S3StaticStorage'
 STATIC_URL = "https://%s/%s/" % (AWS_S3_CUSTOM_DOMAIN, AWS_LOCATION)

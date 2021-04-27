@@ -50,6 +50,7 @@ AWS_S3_OBJECT_PARAMETERS = {
     'CacheControl': 'max-age=%d' % AWS_EXPIREY,
 }
 AWS_LOCATION = 'static'
+AWS_DEFAULT_ACL = 'public-read'
 
 STATIC_URL = "https://%s/%s/" % (AWS_S3_CUSTOM_DOMAIN, AWS_LOCATION)
 
