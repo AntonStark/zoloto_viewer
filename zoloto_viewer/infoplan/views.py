@@ -146,7 +146,6 @@ class MarkerView(View):
         except KeyError:
             return JsonResponse({'error': 'json object must contain field infoplan'}, status=400)
 
-
         def validate_side_objects(data):
             def validate_obj(obj):
                 try:
