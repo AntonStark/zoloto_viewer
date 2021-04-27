@@ -28,7 +28,7 @@ INSTALLED_APPS = [
     'zoloto_viewer.viewer',     # todo rename to project_creator before full DB clean up
     'zoloto_viewer.infoplan',
     'zoloto_viewer.documents',
-    'fontawesome-free',
+    # 'fontawesome-free',
     'storages',
 ]
 
