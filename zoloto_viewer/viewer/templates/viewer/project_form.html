@@ -1,5 +1,7 @@
 {% load static %}
-<script src="{% static 'fontawesome_free/js/all.min.js' %}"></script>
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.3/css/all.css"
+      integrity="sha384-SZXxX4whJ79/gErwcOYf+zWLeJdY/qpuqC4cAa9rOGUstPomtqpuNWT9wdPEn2fk" crossorigin="anonymous">
+
 <script src="{% static 'viewer/areas_drag_n_drop.js' %}"></script>
 <form method="POST" enctype="multipart/form-data" id="load_project_form"
         {% if project %} data-mode="edit" {% endif %}>{% csrf_token %}
