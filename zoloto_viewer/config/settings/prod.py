@@ -34,7 +34,7 @@ SECURE_BROWSER_XSS_FILTER = True
 X_FRAME_OPTIONS = 'DENY'
 
 # for api calls
-BASE_URL = 'https://https://zoloto-viewer.herokuapp.com'
+BASE_URL = 'https://zoloto-viewer.herokuapp.com'
 
 
 AWS_STORAGE_BUCKET_NAME = 'zoloto-viewer'
