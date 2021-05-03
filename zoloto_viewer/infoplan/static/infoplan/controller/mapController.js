@@ -3,6 +3,8 @@ function ControllerMapInteractions() {
     // state
     let markerSelection = [];
     let rectSelectionCorner = undefined;
+    let markerMovement = false;
+    let movementStartPoint = undefined;
 
     // map interaction mode
     function isInsertMode() {
@@ -112,28 +114,6 @@ function ControllerMapInteractions() {
 
         markerCirclesManager.render(mapInteractionsController.isInSelection);
     }
-    function handleClickMarkerCircle(e) {
-        // console.log('handleClickMarkerCircle');
-
-        const circleElement = e.target;
-        const markerUid = circleElement.dataset.markerUid;
-
-        messageBoxManager.hideAll();
-        if (isSelectMode()) {
-            if (e.shiftKey) {
-                addToSelection(markerUid);
-            } else {
-                dropSelection();
-                addToSelection(markerUid);
-            }
-        }
-
-        const markerElement = circleElement.parentNode.previousElementSibling;
-        messageBoxManager.reg(markerElement);
-
-        markerCirclesManager.render(mapInteractionsController.isInSelection);
-        // e.stopPropagation();
-    }
 
     function _takeSelectionRect(secondCorner, reset=true) {
         if (!rectSelectionCorner) {
@@ -168,26 +148,62 @@ function ControllerMapInteractions() {
         rect.setAttributeNS(null, 'width', xCoords[1] - xCoords[0]);
         rect.setAttributeNS(null, 'height', yCoords[1] - yCoords[0]);
     }
+    function _updateMarkersVisiblePositions(offset) {
+        markerCirclesManager.updateMarkerPosition(getSelection(), offset);
+    }
     function handleMouseDown(e) {
         // console.log('handleMouseDown', e);
         if (isInsertMode())
             return;
 
         messageBoxManager.hideAll();
-        rectSelectionCorner = getSvgCoordinates(e);
-        const [xInit, yInit] = _takeSelectionRect(getSvgCoordinates(e), false);
-        _boundSelectionRect(xInit, yInit);
-        _toggleSelectionRect(true);
+
+        const maybeCircleElement = e.target;
+        markerMovement = maybeCircleElement.classList.contains('marker_circle');
+
+        if (!markerMovement) {
+            rectSelectionCorner = getSvgCoordinates(e);
+            const [xInit, yInit] = _takeSelectionRect(getSvgCoordinates(e), false);
+            _boundSelectionRect(xInit, yInit);
+            _toggleSelectionRect(true);
+        }
+        else {
+            movementStartPoint = getSvgCoordinates(e);
+            const markerUid = maybeCircleElement.dataset.markerUid;
+            if (!isInSelection(markerUid)) {
+                if (!e.shiftKey) {
+                    dropSelection();
+                }
+                addToSelection(markerUid);
+                markerCirclesManager.render(mapInteractionsController.isInSelection);
+            }
+        }
 
         mapScaleController.mapSvg().addEventListener('mousemove', mapInteractionsController.handleMouseMove);
     }
     function handleMouseMove(e) {
-        const [xCoords, yCoords] = _takeSelectionRect(getSvgCoordinates(e), false);
-        _boundSelectionRect(xCoords, yCoords);
+        if (!markerMovement) {
+            const [xCoords, yCoords] = _takeSelectionRect(getSvgCoordinates(e), false);
+            _boundSelectionRect(xCoords, yCoords);
+        }
+        else {
+            const endPoint = getSvgCoordinates(e);
+            const offset = [endPoint[0] - movementStartPoint[0], endPoint[1] - movementStartPoint[1]];
+            _updateMarkersVisiblePositions(offset);
+        }
     }
     function handleMouseUp(e) {
         // console.log('handleMouseUp', e);
         mapScaleController.mapSvg().removeEventListener('mousemove', mapInteractionsController.handleMouseMove);
+
+        if (markerMovement) {
+            // обновлять данные в индексе ControllerMarkerCircles.circleCenterIndex и положение сообщения
+            markerCirclesManager.finishMovement(getSelection());
+
+            movementStartPoint = undefined;
+            markerMovement = false;
+            return;
+        }
         // если режим добавления, то mouseup равносильно клику
         // а в режиме выделения, нужно в mouseup смотреть
         // размер прямоугольника выделения если мал, значит клик
@@ -239,7 +255,6 @@ function ControllerMapInteractions() {
 
         handleKeyUp             : handleKeyUp,
         handleKeyPress          : handleKeyPress,
-        handleClickMarkerCircle : handleClickMarkerCircle,
 
         handleMouseDown : handleMouseDown,
         handleMouseMove : handleMouseMove,

@@ -44,6 +44,19 @@ function ControllerMarkerCircles() {
         _setMessShown(elem.parentNode, isShown);
         // console.debug('setShownStatus', markerUid, isShown);
     }
+    function _updateMarkerPosition(markerUid, offset) {
+        const marker = messageBoxManager.getMarker(markerUid);
+        const origin = [Number(marker.dataset.originX), Number(marker.dataset.originY)];
+        const newPos = [origin[0] + offset[0], origin[1] + offset[1]];
+        marker.setAttribute('x', newPos[0]);
+        marker.setAttribute('y', newPos[1]);
+        return newPos;
+    }
+    function _updateMarkerPositionOrigin(markerUid) {
+        const marker = messageBoxManager.getMarker(markerUid);
+        marker.dataset.originX = marker.getAttribute('x');
+        marker.dataset.originY = marker.getAttribute('y');
+    }
     function _evalViewportPosition(circleElement) {
         const transform = circleElement.getCTM();
         let probe = circleElement.ownerSVGElement.createSVGPoint();
@@ -54,10 +67,13 @@ function ControllerMarkerCircles() {
         return [probe.x / scale, probe.y / scale];
     }
 
+    function updateMarkerCircleIndex(markerUid) {
+        circleCenterIndex[markerUid] = _evalViewportPosition(markerCorrCircles[markerUid]);
+    }
     function registerMarkerCircle(circleElement) {
         const markerUid = circleElement.dataset.markerUid;
         markerCorrCircles[markerUid] = circleElement;
-        circleCenterIndex[markerUid] = _evalViewportPosition(circleElement);
+        updateMarkerCircleIndex(markerUid);
     }
     function deleteMarkerCircleGroup(markerUid) {
         markerCorrCircles[markerUid].parentNode.remove();
@@ -165,6 +181,35 @@ function ControllerMarkerCircles() {
             _clearMarkersTouched();
         }, 500);
     }
+    function _positionHelper(markerUid, offset) {
+        // to update several things
+        // use.plan_marker
+        const newPosition = _updateMarkerPosition(markerUid, offset);
+        // circle.marker_circle
+        const markerCircle = markerCorrCircles[markerUid];
+        markerCircle.setAttribute('cx', newPosition[0]);
+        markerCircle.setAttribute('cy', newPosition[1]);
+        // circle.marker_comment_mark
+        const commentMarkCircle = markerCircle.nextElementSibling;
+        commentMarkCircle.setAttribute('cx', newPosition[0]);
+        commentMarkCircle.setAttribute('cy', newPosition[1]);
+    }
+    function updatePosition(markerUidArray, offset) {
+        for (const markerUid of markerUidArray) {
+            _positionHelper(markerUid, offset);
+        }
+    }
+    function finishMovement(markerUidArray) {
+        for (const markerUid of markerUidArray) {
+            updateMarkerCircleIndex(markerUid);
+            _updateMarkerPositionOrigin(markerUid);
+            messageBoxManager.updatePosition(markerUid);
+        }
+        // отправить положение на сервер
+        _addMarkersTouched(markerUidArray);
+        _saveGeometryFromUI();
+        _clearMarkersTouched();
+    }
 
     // регистрируем все circleElement при создании контроллера
     function init() {
@@ -197,5 +242,7 @@ function ControllerMarkerCircles() {
         setSelectionRect: setSelectionRect,
         isInsideSelectionRect   : isInsideSelectionRect,
         updateRotation  : updateRotation,
+        updateMarkerPosition  : updatePosition,
+        finishMovement  : finishMovement,
     }
 }

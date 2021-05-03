@@ -114,17 +114,13 @@ window.addEventListener('load', function () {
         setActiveLayer(layerLiTag);
     }
 
-    for (const markerCircle of document.getElementsByClassName('marker_circle')) {
-        markerCircle.addEventListener('click', mapInteractionsController.handleClickMarkerCircle);
-    }
-
     mapSvgElem = document.getElementById('project-page-plan-svg');
     probePt = mapSvgElem.createSVGPoint();
 });
 
 
 function renderMarkerElement(data) {
-    console.debug(data);
+    // console.debug(data);
     function buildMark(data) {
         const markerUid = data.marker;
         const layerTitle = data.layer;
@@ -141,28 +137,12 @@ function renderMarkerElement(data) {
         use.setAttributeNS(null, 'class', 'plan_marker');
         use.setAttributeNS(null, 'data-marker-uid', markerUid);
         use.setAttributeNS(null, 'data-layer-title', layerTitle);
+        use.setAttributeNS(null, 'data-cx', pos.center_x);
+        use.setAttributeNS(null, 'data-cy', pos.center_y);
 
         return use;
     }
     function buildAdditionalGroup(data) {
-        function buildLinkLine(data) {
-            const posX = data.position.center_x;
-            const posY = data.position.center_y;
-
-            let line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-            line.setAttributeNS(null, 'class', 'marker_link');
-
-            const radius = MARKER_DISPLAY_CONFIG.circle_radius;
-            line.setAttributeNS(null, 'data-mr', radius);
-            line.setAttributeNS(null, 'data-cx', posX);
-            line.setAttributeNS(null, 'data-cy', posY);
-
-            line.setAttributeNS(null, 'x1', posX);
-            line.setAttributeNS(null, 'y1', posY);
-            line.setAttributeNS(null, 'x2', posX);
-            line.setAttributeNS(null, 'y2', posY);
-            return line;
-        }
         function buildMarkerCircle(data) {
             const markerUid = data.marker;
             const layerTitle = data.layer;
@@ -207,7 +187,7 @@ function renderMarkerElement(data) {
 
         let g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
         g.setAttributeNS(null, 'class', `marker_group`);
-        g.append(buildLinkLine(data), buildMarkerCircle(data), buildCommentMark(data));
+        g.append(buildMarkerCircle(data), buildCommentMark(data));
         return g;
     }
 
@@ -220,8 +200,6 @@ function renderMarkerElement(data) {
 
         const markerElement = circleElement.parentNode.previousElementSibling;
         messageBoxManager.reg(markerElement);
-
-        circleElement.addEventListener('click', mapInteractionsController.handleClickMarkerCircle);
     }
 }
 

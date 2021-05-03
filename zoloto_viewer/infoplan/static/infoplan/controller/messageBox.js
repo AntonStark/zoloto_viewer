@@ -126,8 +126,8 @@ function ControllerMessageBox(render) {
                 const position = acquireMessagePosition(markerUid, messContainer);
                 // а теперь выставляем положение и показываем
                 if (position) {
-                    _setPosition(messContainer, position)
-                    _setVisibility(messContainer)
+                    _setPosition(messContainer, position);
+                    _setVisibility(messContainer);
                     visibleMessagesIndex[markerUid] = true;
                 }
                 else {
@@ -171,6 +171,15 @@ function ControllerMessageBox(render) {
 
         deleteMessage(markerUid);
     }
+    function updatePosition(markerUid) {
+        const c = getContainerOrNull(markerUid);
+        if (!c) return;
+
+        const position = acquireMessagePosition(markerUid, c);
+        if (position) {
+            _setPosition(c, position);
+        }
+    }
 
     function hideAllMessages() {
         for (const markerUid in visibleMessagesIndex)
@@ -195,6 +204,7 @@ function ControllerMessageBox(render) {
 
         deleteMessage: deleteMessage,
         delMarkerAndMessage : deleteMarkerAndMessage,
+        updatePosition: updatePosition,
 
         hideAll: hideAllMessages,
         showSelected: showAllSelected,
