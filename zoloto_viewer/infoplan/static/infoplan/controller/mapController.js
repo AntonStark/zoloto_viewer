@@ -17,6 +17,11 @@ function ControllerMapInteractions() {
         if (!control) return true;
         return control.checked;
     }
+    function toggleSelectMode() {
+        const control = document.getElementById('menu_actions_option2');
+        control.checked = true;
+    }
+
     function activeLayer()
     { return enabledLayersController.getActive(); }
     function getPageCode()
@@ -244,6 +249,8 @@ function ControllerMapInteractions() {
     return {
         isInsertMode: isInsertMode,
         isSelectMode: isSelectMode,
+        toggleSelectMode : toggleSelectMode,
+
         activeLayer : activeLayer,
         pageCode    : getPageCode,
 

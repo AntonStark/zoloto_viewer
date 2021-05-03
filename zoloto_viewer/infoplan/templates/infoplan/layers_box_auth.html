@@ -9,7 +9,7 @@
 {% load layers_visibility %}
 {% for l in layers %}
     <li class="layer-{{ l.title }} {{ l.title|is_not_disabled:state_data.hidden_layers }}"
-        onclick="handleClickLayerListItem(this, 'layer-{{ l.title }}')">
+        onclick="handleClickLayerListItem(this)">
         <span style="color: black;" class="layer-title-span">{{ l.title }}</span>
         <span style="float: right">
             <a href="{% url 'edit_project_layer' project_title=project.title layer_title=l.title %}?return={{ page.code }}"

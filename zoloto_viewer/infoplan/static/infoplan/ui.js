@@ -36,9 +36,12 @@ function handleClickMapMinus() {
 function init() {
     mapScaleController.setup();
     markerCirclesManager.init();
+    enabledLayersController.init();
 
     document.getElementById('map_control_plus').addEventListener('click', handleClickMapPlus);
     document.getElementById('map_control_minus').addEventListener('click', handleClickMapMinus);
+
+    document.getElementById('menu_actions_option1').addEventListener('click', enabledLayersController.shift);
 
     window.addEventListener('keyup', mapInteractionsController.handleKeyUp);
     window.addEventListener('keypress', mapInteractionsController.handleKeyPress);
@@ -61,33 +64,9 @@ function updateControlStyle() {
         minus.classList.toggle('disabled');
 }
 
-function setActiveLayer(layer_li_tag) {
-    layer_li_tag.classList.add('active');
-    function getSiblings(elem) {
-        // Setup siblings array and get the first sibling
-        let siblings = [];
-        let sibling = elem.parentNode.firstChild;
-
-        // Loop through each sibling and push to the array
-        while (sibling) {
-            if (sibling.nodeType === 1 && sibling !== elem) {
-                siblings.push(sibling);
-            }
-            sibling = sibling.nextSibling
-        }
-        return siblings;
-    }
-
-    for (const sibling of getSiblings(layer_li_tag)) {
-        sibling.classList.remove('active');
-    }
-
-    const layerTitle = layer_li_tag.getElementsByClassName('layer-title-span')[0].textContent;
-    enabledLayersController.setActive(layerTitle);
-}
 function toggleLayerHandler(title)
 { enabledLayersController.toggle(title); }
-function handleClickLayerListItem(layerLiTag, layerClassTitle) {
+function handleClickLayerListItem(layerLiTag) {
     /*  клик по выключенному включает и делает активным,
         клик по включённому делает активным,
         и, наконец, клик по активному выключает (и делает активным следующий - пока нет).
@@ -95,25 +74,20 @@ function handleClickLayerListItem(layerLiTag, layerClassTitle) {
     const layerTitle = layerLiTag.getElementsByClassName('layer-title-span')[0].textContent;
     // console.log('isEnabled', enabledLayersController.isEnabled(layerClassTitle));
     // console.log('isActive', enabledLayersController.isActive(layerTitle));
-    if (!enabledLayersController.isEnabled(layerClassTitle)) {
-        toggleLayerHandler(layerClassTitle);
-        setActiveLayer(layerLiTag);
+    if (!enabledLayersController.isEnabled(layerTitle)) {
+        enabledLayersController.toggle(layerTitle);
+        enabledLayersController.setActive(layerTitle);
     } else if (!enabledLayersController.isActive(layerTitle)) {
-        setActiveLayer(layerLiTag);
+        enabledLayersController.setActive(layerTitle);
     } else {
-        toggleLayerHandler(layerClassTitle);
+        enabledLayersController.toggle(layerTitle);
+        mapInteractionsController.toggleSelectMode();
         // const nextLayerTag = layerLiTag.nextElementSibling || layerLiTag.parentElement.firstElementChild;
         // setActiveLayer(nextLayerTag);
     }
 }
 
 window.addEventListener('load', function () {
-    const layersMenu = document.getElementById('project-page-layers-box');
-    const layerLiTag = layersMenu.getElementsByTagName('li')[0];
-    if (layerLiTag) {
-        setActiveLayer(layerLiTag);
-    }
-
     mapSvgElem = document.getElementById('project-page-plan-svg');
     probePt = mapSvgElem.createSVGPoint();
 });
