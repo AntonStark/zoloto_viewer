@@ -32,6 +32,9 @@ function ControllerMessageBox(render) {
         else
             return null;
     }
+    function markerLayerTitle(markerUid) {
+        return markerElementIndex[markerUid].dataset.layerTitle;
+    }
 
     function deduceContainer(layerTitle) {
         const c = document.getElementsByClassName('layer_messages layer-' + layerTitle);
@@ -200,6 +203,7 @@ function ControllerMessageBox(render) {
         read: getComment,
         get : getContainerOrNull,
         getMarker: getMarkerOrNull,
+        markerLayerTitle: markerLayerTitle,
         reg : registerMarkerElement,
 
         deleteMessage: deleteMessage,

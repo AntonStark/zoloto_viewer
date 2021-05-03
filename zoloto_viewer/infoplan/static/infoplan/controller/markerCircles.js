@@ -111,8 +111,11 @@ function ControllerMarkerCircles() {
         // console.log(selectionRect[0], selectionRect[1]);
     }
     function isInsideSelectionRect(markerUid) {
+        const isOfEnabledLayer = enabledLayersController.isEnabled(messageBoxManager.markerLayerTitle(markerUid));
+        if (!isOfEnabledLayer)
+            return false;
+
         // return true if center coord is inside specified selection
-        // todo respect visibility
         const res = _getCircleCenterSvgCoord(markerUid);
         if (!res)
             throw Error('circle element not registered');

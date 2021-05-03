@@ -164,7 +164,9 @@ function ControllerMapInteractions() {
         messageBoxManager.hideAll();
 
         const maybeCircleElement = e.target;
-        markerMovement = maybeCircleElement.classList.contains('marker_circle');
+        const movementAllowed = UI_AUTH;    // modification will fail in guest mode
+        markerMovement = movementAllowed
+            && maybeCircleElement.classList.contains('marker_circle');
 
         if (!markerMovement) {
             rectSelectionCorner = getSvgCoordinates(e);

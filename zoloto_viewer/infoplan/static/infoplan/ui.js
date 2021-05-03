@@ -41,7 +41,9 @@ function init() {
     document.getElementById('map_control_plus').addEventListener('click', handleClickMapPlus);
     document.getElementById('map_control_minus').addEventListener('click', handleClickMapMinus);
 
-    document.getElementById('menu_actions_option1').addEventListener('click', enabledLayersController.shift);
+    const insertModeBtn = document.getElementById('menu_actions_option1');
+    if (insertModeBtn)
+        insertModeBtn.addEventListener('click', enabledLayersController.shift);
 
     window.addEventListener('keyup', mapInteractionsController.handleKeyUp);
     window.addEventListener('keypress', mapInteractionsController.handleKeyPress);
