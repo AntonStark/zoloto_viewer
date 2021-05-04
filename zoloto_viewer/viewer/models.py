@@ -202,16 +202,18 @@ class Page(models.Model):
 
     @staticmethod
     def create_or_replace(project, plan, indd_floor, floor_caption):
-        # if plan with equal filename already exists just update them
-        for p in Page.objects.filter(project=project):
-            if p.orig_file_name == plan.name:
-                p.plan.delete(save=False)
-                p.plan = plan
-                p.indd_floor = indd_floor
-                p.floor_caption = floor_caption
-                p.save()
-                return
-        Page(project=project, plan=plan, indd_floor=indd_floor, floor_caption=floor_caption).save()
+        # if plan with equal floor_caption already exists just update them
+        p = Page.objects.filter(project=project, floor_caption=floor_caption).first()
+        if not p:
+            p = Page(project=project, plan=plan, indd_floor=indd_floor, floor_caption=floor_caption)
+            p.save()
+        else:
+            p.plan.delete(save=False)
+            p.plan = plan
+            p.orig_file_name = plan.name
+            p.indd_floor = indd_floor
+            p.save()
+        return p
 
     @staticmethod
     def validate_code(page_code):
