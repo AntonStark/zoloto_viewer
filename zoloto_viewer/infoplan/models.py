@@ -1,7 +1,6 @@
 import collections
 import typing as t
 import uuid
-from django.contrib.postgres import fields
 from django.db import models, transaction
 
 
@@ -104,8 +103,39 @@ class Marker(models.Model):
             self.ordinal = max_ordinal + 1 if max_ordinal else 1
         super().save(*args, **kwargs)
 
-    def to_json(self):
-        return {
+    def copy(self, copy_variables=True, floor=None, pos_x=None, pos_y=None, rotation=None) -> 'Marker':
+        mc = self.__class__(
+            layer=self.layer,
+            floor=self.floor,
+            pos_x=self.pos_x,
+            pos_y=self.pos_y,
+            rotation=self.rotation,
+        )
+
+        if floor and floor != self.floor:
+            mc.floor = floor
+        else:   # move a little to prevent overlay
+            mc.pos_x += 30
+            mc.pos_y += 30
+
+        if pos_x:
+            mc.pos_x = pos_x
+        if pos_y:
+            mc.pos_y = pos_y
+        if rotation:
+            mc.rotation = rotation
+
+        variables = []
+        if copy_variables:
+            variables = [mv.copy(marker_override=mc) for mv in self.markervariable_set.all()]
+
+        with transaction.atomic():
+            mc.save()
+            MarkerVariable.objects.bulk_create(variables)
+        return mc
+
+    def to_json(self, layer=False, page=False):
+        j = {
             'marker': self.uid,
             'number': self.number,
             'reviewed': self.reviewed,
@@ -117,6 +147,11 @@ class Marker(models.Model):
                 'rotation': self.rotation,
             }
         }
+        if layer:
+            j['layer'] = self.layer.title
+        if page:
+            j['page'] = self.floor.code
+        return j
 
 
 class VariablesManager(models.Manager):
@@ -136,18 +171,18 @@ class VariablesManager(models.Manager):
     def _vars_by_side(queryset: models.QuerySet, apply_transformations=None):
         markers = set()
         vars_by_side = collections.defaultdict(list)
-        vars = queryset.values_list('marker', 'side', 'key', 'value')
-        for m, s, _, v in vars:
+        marker_vars = queryset.values_list('marker', 'side', 'key', 'value')
+        for m, s, _, v in marker_vars:
             vars_by_side[(m, s)].append(v)
             markers.add(m)
 
         if apply_transformations:
             transformed = {}
             for k in vars_by_side.keys():
-                vars = vars_by_side[k]
+                marker_vars = vars_by_side[k]
                 for tr in apply_transformations:
-                    vars = tr.apply(vars, side=k)
-                transformed[k] = vars
+                    marker_vars = tr.apply(marker_vars, side=k)
+                transformed[k] = marker_vars
             vars_by_side = transformed
 
         return vars_by_side, markers
@@ -198,6 +233,15 @@ class MarkerVariable(models.Model):
 
     def to_json(self):
         return {'key': self.key, 'side': self.side, 'value': self.value, 'wrong': self.wrong}
+
+    def copy(self, *, marker_override, save=False):
+        mv = self.__class__(marker=marker_override,
+                            side=self.side,
+                            key=self.key,
+                            value=self.value)
+        if save:
+            mv.save()
+        return mv
 
 
 class MarkerComment(models.Model):

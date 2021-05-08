@@ -48,12 +48,38 @@ def create_marker(request):
                     pos_x=center_x, pos_y=center_y, rotation=rotation)
 
     marker.save()
-    rep = marker.to_json()
-    rep.update({
-        'project': project.uid,
-        'layer': layer.title,
-        'page': page.code,
-    })
+    rep = marker.to_json(layer=True, page=True)
+    return JsonResponse(rep)
+
+
+@login_required
+@http.require_POST
+@csrf.csrf_exempt
+def create_marker_clipboard(request):
+    fields_ = ('project', 'page', 'clipboard_uuid')
+    try:
+        req = json.loads(request.body)
+        project, page, original_markers_uuids = operator.itemgetter(*fields_)(req)
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'request body must be json'}, status=400)
+    except KeyError:
+        return JsonResponse({'error': 'json object must contain fields: ' + ', '.join(fields_)}, status=400)
+
+    project = get_object_or_404(Project, uid=uuid.UUID(project))
+    page = get_object_or_404(Page, project=project, code=page)
+
+    markers_created = []
+    for marker_uid in original_markers_uuids:
+        try:
+            m = Marker.objects.get(uid=uuid.UUID(marker_uid))
+        except Marker.DoesNotExist:     # just skip bad uuid
+            continue
+        mc = m.copy(floor=page)
+        markers_created.append(mc)
+
+    rep = {
+        'created': [m.to_json(layer=True, page=True) for m in markers_created]
+    }
     return JsonResponse(rep)
 
 
