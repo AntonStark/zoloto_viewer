@@ -151,6 +151,10 @@ function ControllerMapInteractions() {
         return Math.abs(x2 - x1) < COLLAPSE
             && Math.abs(y2 - y1) < COLLAPSE;
     }
+    function _isCollapsedOffset(offsetX, offsetY) {
+        const COLLAPSE = 10;
+        return Math.sqrt(Math.pow(offsetX, 2) + Math.pow(offsetY, 2)) < COLLAPSE;
+    }
     function _toggleSelectionRect(visibility) {
         const rect = document.getElementById('project-page-svg-selection-rect');
         rect.classList.toggle('active', visibility);
@@ -209,6 +213,7 @@ function ControllerMapInteractions() {
         else {
             const endPoint = getSvgCoordinates(e);
             const offset = [endPoint[0] - movementStartPoint[0], endPoint[1] - movementStartPoint[1]];
+            if (_isCollapsedOffset(offset[0], offset[1])) return;
             _updateMarkersVisiblePositions(offset);
         }
     }
