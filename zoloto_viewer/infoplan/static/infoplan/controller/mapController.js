@@ -26,6 +26,8 @@ function ControllerMapInteractions() {
     { return enabledLayersController.getActive(); }
     function getPageCode()
     { return pageCode; }
+    function getProjectUid()
+    { return projectUid; }
 
     // marker selection
     function isInSelection(markerUid)
@@ -74,6 +76,17 @@ function ControllerMapInteractions() {
         }, function (rep) {
             renderMarkerElement(rep);
             addToSelection(rep.marker);
+            markerCirclesManager.render(mapInteractionsController.isInSelection);
+        });
+    }
+    function _pasteMarkerHelper(clipboardContent) {
+        clipMarkers(clipboardContent,
+            function (rep) {
+            dropSelection();
+            for (const elem of rep.created) {
+                renderMarkerElement(elem);
+                addToSelection(elem.marker);
+            }
             markerCirclesManager.render(mapInteractionsController.isInSelection);
         });
     }
@@ -242,10 +255,29 @@ function ControllerMapInteractions() {
     }
 
     function handleCopyEvent() {
-        console.log('Copy!');
+        if (!UI_AUTH) return;   // modification will fail in guest mode
+
+        const text = encodeClipboardContent(getSelection());
+        // console.debug('Copy!', text);
+        window.navigator.clipboard.writeText(text);
     }
     function handlePasteEvent() {
-        console.log('Paste!');
+        if (!UI_AUTH) return;   // modification will fail in guest mode
+
+        console.debug('Paste start!');
+        function onClipboardResolve(text) {
+            const data = decodeClipboardContent(text);
+            console.debug('Paste!', data);
+            _pasteMarkerHelper(data);
+        }
+        function onError(e) {
+            alert('Доступ к буфферу заблокирован.\n' +
+                'Требуется разрешение.\n' +
+                'Свяжитесь с администратором.')
+        }
+        window.navigator.clipboard.readText()
+            .then(onClipboardResolve)
+            .catch(onError);
     }
 
     return {
@@ -253,6 +285,7 @@ function ControllerMapInteractions() {
         isSelectMode: isSelectMode,
         toggleSelectMode : toggleSelectMode,
 
+        getProjectUid   : getProjectUid,
         activeLayer : activeLayer,
         pageCode    : getPageCode,
 

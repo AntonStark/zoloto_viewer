@@ -1,6 +1,7 @@
 "use strict";
 
 const API_MARKER_CREATE      = `${BASE_URL}/viewer/api/marker/`;
+const API_MARKER_CLIPBOARD   = `${BASE_URL}/viewer/api/marker/from_clipboard/`;
 const API_MARKER_GET_DATA    = (markerUid) => `${BASE_URL}/viewer/api/marker/${markerUid}`;
 const API_MARKER_GET_DATA_PRETTY = (markerUid) => `${BASE_URL}/viewer/api/marker/${markerUid}?pretty=true`;
 const API_MARKER_PUT_VARS    = (markerUid) => `${BASE_URL}/viewer/api/marker/${markerUid}`;
@@ -70,4 +71,8 @@ function deleteMarker(marker_uid, onSuccess) {
 
 function createMarker(args, onSuccess) {
     doApiCall('POST', API_MARKER_CREATE, args, onSuccess);
+}
+
+function clipMarkers(args, onSuccess) {
+    doApiCall('POST', API_MARKER_CLIPBOARD, args, onSuccess);
 }

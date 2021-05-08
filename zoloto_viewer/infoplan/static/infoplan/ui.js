@@ -113,8 +113,8 @@ function renderMarkerElement(data) {
         use.setAttributeNS(null, 'class', 'plan_marker');
         use.setAttributeNS(null, 'data-marker-uid', markerUid);
         use.setAttributeNS(null, 'data-layer-title', layerTitle);
-        use.setAttributeNS(null, 'data-cx', pos.center_x);
-        use.setAttributeNS(null, 'data-cy', pos.center_y);
+        use.setAttributeNS(null, 'data-origin-x', pos.center_x);
+        use.setAttributeNS(null, 'data-origin-y', pos.center_y);
 
         return use;
     }
