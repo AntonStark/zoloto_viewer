@@ -210,7 +210,6 @@ class Page(models.Model):
         else:
             p.plan.delete(save=False)
             p.plan = plan
-            p.orig_file_name = plan.name
             p.indd_floor = indd_floor
             p.save()
         return p
