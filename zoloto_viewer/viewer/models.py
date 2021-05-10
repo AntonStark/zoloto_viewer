@@ -19,6 +19,7 @@ class Project(models.Model):
     uid = models.UUIDField(unique=True, default=uuid.uuid4, editable=False)
     title = models.TextField(blank=False, unique=True)
     created = models.DateTimeField(auto_now_add=True)
+    date_updated = models.DateTimeField(auto_now=True)
 
     # todo remove
     maps_info = models.FileField(upload_to=additional_files_upload_path, null=False, blank=True, default='')
@@ -28,6 +29,14 @@ class Project(models.Model):
 
     layer_info_data = fields.JSONField(null=True)   # possibly not needed anymore
     maps_info_data = fields.JSONField(null=True)
+
+    @property
+    def date_updated_include_layers_pages(self):
+        last_updated_layers = self.layer_set.aggregate(value=models.Max('date_updated'))['value'] \
+            if self.layer_set.exists() else self.date_updated
+        last_updated_pages = self.page_set.aggregate(value=models.Max('date_updated'))['value'] \
+            if self.page_set.exists() else self.date_updated
+        return max([self.date_updated, last_updated_layers, last_updated_pages])
 
     def first_page(self):
         pages = Page.objects.filter(project=self)
@@ -115,6 +124,7 @@ class Layer(models.Model):
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
     title = models.CharField(max_length=256, blank=False)
     desc = models.TextField(blank=True, default='')
+    date_updated = models.DateTimeField(auto_now=True)
 
     number = models.IntegerField(null=True)
     color = models.ForeignKey(Color, on_delete=models.PROTECT, default=1)
@@ -164,6 +174,7 @@ class Page(models.Model):
     uid = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     code = models.CharField(max_length=10, blank=False, unique=True)
     plan = models.ImageField(upload_to=plan_upload_path, null=True, default=None)
+    date_updated = models.DateTimeField(auto_now=True)
 
     indd_floor = models.TextField(blank=False, null=False, editable=False)      # текст, лежащий на слое floor
     floor_caption = models.TextField(null=True)                                 # текст, отображаемый на странице

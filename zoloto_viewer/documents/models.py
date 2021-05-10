@@ -168,12 +168,16 @@ class ProjectFile(models.Model):
         self.file.save(filename, File(bytes_buf))
 
     def is_fresh_project_file(self):
-        project_changes = Marker.objects.max_last_modified(project=self.project)
-        return not project_changes or self.date_created > project_changes
+        markers_last_modified = Marker.objects.max_last_modified(project=self.project)
+        marker_changes_taken = not markers_last_modified or self.date_created > markers_last_modified
+        project_changes_taken = self.date_created > self.project.date_updated_include_layers_pages
+        return marker_changes_taken and project_changes_taken
 
     def is_fresh_layer_file(self):
-        layer_changes = Marker.objects.max_last_modified(layer=self.layer)
-        return not layer_changes or self.date_created > layer_changes
+        layer_markers_last_modified = Marker.objects.max_last_modified(layer=self.layer)
+        marker_changes_taken = not layer_markers_last_modified or self.date_created > layer_markers_last_modified
+        layer_changes_taken = self.date_created > self.layer.date_updated
+        return marker_changes_taken and layer_changes_taken
 
 
 # noinspection PyUnusedLocal
