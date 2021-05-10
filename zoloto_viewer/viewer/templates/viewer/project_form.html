@@ -32,6 +32,11 @@
         {% endfor %}
         </tbody>
     </table>
+    {% if project %}<small>
+        Чтобы заменить изображение монтажной области просто добавьте новое с такой же подписью.
+        <br>
+        Удалять сущестующий файл не нужно.
+    </small>{% endif %}
     <p id="plan_box">
         <label for="plan_input_1" class="fill-button" id="plan_input_label" tabindex="0">Загрузить jpg
             <input name="plan_files_1" id="plan_input_1" type="file" accept="image/*" multiple style="display: none">

@@ -150,6 +150,9 @@ if (projectForm.dataset.mode !== 'edit')
     projectForm.addEventListener('submit', loadProjectFormValidator);
 
 function deleteFileHandler(filename, tr) {
+    const c = confirm('Маркеры будут УДАЛЕНЫ! Продолжить?');
+    if (c !== true) return;
+
     addDeleteFileField(filename);
     tr.remove();
 }
