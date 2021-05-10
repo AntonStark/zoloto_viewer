@@ -50,6 +50,8 @@ function ControllerMarkerCircles() {
         const newPos = [origin[0] + offset[0], origin[1] + offset[1]];
         marker.setAttribute('x', newPos[0]);
         marker.setAttribute('y', newPos[1]);
+        const rotation = marker.transform.animVal[0].angle;
+        marker.setAttribute('transform', `rotate(${rotation} ${newPos[0]} ${newPos[1]})`);
         return newPos;
     }
     function _updateMarkerPositionOrigin(markerUid) {
