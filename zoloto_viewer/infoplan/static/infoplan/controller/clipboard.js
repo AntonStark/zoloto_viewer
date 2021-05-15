@@ -17,11 +17,7 @@ function encodeClipboardContent(markerUidArray) {
     //    ]
     //  }
     // DECISION: send minimal required info to backend, copy with specific endpoint
-    const projectUid = mapInteractionsController.getProjectUid();
-    const pageCode = mapInteractionsController.pageCode();
-    let content = {
-        'project': projectUid,
-        'page': pageCode,
+    const content = {
         'clipboard_uuid': markerUidArray,
     }
     return JSON.stringify(content);

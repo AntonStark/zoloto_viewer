@@ -269,11 +269,14 @@ function ControllerMapInteractions() {
     function handlePasteEvent() {
         if (!UI_AUTH) return;   // modification will fail in guest mode
 
-        console.debug('Paste start!');
+        // console.debug('Paste start!');
         function onClipboardResolve(text) {
-            const data = decodeClipboardContent(text);
-            console.debug('Paste!', data);
-            _pasteMarkerHelper(data);
+            let payload = decodeClipboardContent(text);
+            payload.project = mapInteractionsController.getProjectUid();
+            payload.page = mapInteractionsController.pageCode();
+
+            // console.debug('Paste!', payload);
+            _pasteMarkerHelper(payload);
         }
         function onError(e) {
             alert('Доступ к буфферу заблокирован.\n' +
