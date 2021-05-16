@@ -27,7 +27,7 @@ function doApiCall(method, url, data, onResponse, onError=undefined) {
                 onError(req);
             }
             else {
-                console.error(url, 'returned status = ', req.status, req);
+                console.error(method, url, 'status=', req.status, req);
             }
         }
     };
@@ -75,4 +75,41 @@ function createMarker(args, onSuccess) {
 
 function clipMarkers(args, onSuccess) {
     doApiCall('POST', API_MARKER_CLIPBOARD, args, onSuccess);
+}
+
+function handleFileDownloadWithRetryAfter(uri, firstTry=true) {
+    const method = 'HEAD';
+    let req = new XMLHttpRequest();
+    req.open(method, uri);
+
+    function onSuccess(req) {
+        // console.debug('onSuccess');
+        window.open(uri);
+    }
+    function onRetry(req) {
+        if (firstTry) {
+            alert('На подготовку файла потребуется некоторое время.\n' +
+                'Файл откроется в новой вкладке в течении пары минут\n' +
+                'или повторите запрос позднее.');
+        }
+        const waitSeconds = req.getResponseHeader('Retry-After')
+        // console.debug('retry after', waitSeconds);
+        const timeout = waitSeconds * 1000;
+        setTimeout(handleFileDownloadWithRetryAfter, timeout, uri, false);
+    }
+    function onError(req) {
+        console.log('handleFileDownloadWithRetry', 'unknown error', req);
+    }
+    req.onreadystatechange = function() {
+        if (req.readyState === XMLHttpRequest.DONE) {
+            if (req.status === 200) {
+                onSuccess(req);
+            } else if (req.status === 323) {
+                onRetry(req);
+            } else onError(req);
+        }
+    };
+
+    // console.debug('handleFileDownloadWithRetry', method, uri);
+    req.send();
 }

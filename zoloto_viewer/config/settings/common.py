@@ -30,6 +30,7 @@ INSTALLED_APPS = [
     'zoloto_viewer.documents',
     # 'fontawesome-free',
     'storages',
+    'background_task',
 ]
 
 MIDDLEWARE = [
@@ -110,6 +111,9 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR, "static"),
 ]
 
+# background_task app settings
+MAX_RUN_TIME = 600
+
 
 def heroku_database_url_adapter(url: str):
     """
@@ -125,7 +129,8 @@ def heroku_database_url_adapter(url: str):
             'PORT':
         }
     """
-    import re, operator
+    import operator
+    import re
 
     pattern = r'^(?P<scheme>\w+)://(?P<user>\w+):(?P<password>\w+)@(?P<host>[\w\-.]+):(?P<port>\d+)/(?P<name>\w+)$'
     r = re.match(pattern, url)

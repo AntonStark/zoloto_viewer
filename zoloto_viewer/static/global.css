@@ -299,6 +299,10 @@ ul.side_box_list li.active{
     color: unset;
 }
 
+.docs-box-panel span {
+    cursor: pointer;
+}
+
 .areas-box-layers-comments {
     float: right;
     font-size: 40%;

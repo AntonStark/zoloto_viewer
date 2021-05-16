@@ -10,7 +10,8 @@
             </td>
             <td>
                 <i class="fas fa-long-arrow-alt-down"></i>
-                <a href="{% url 'get_pdf_file' project.title %}">PDF</a>
+{#                <a href="{% url 'get_pdf_file' project.title %}">PDF</a>#}
+                <span onclick="handleFileDownloadWithRetryAfter('{% url 'get_pdf_file' project.title %}')">PDF</span>
             </td>
             <td>
                 <i class="fas fa-long-arrow-alt-down"></i>
