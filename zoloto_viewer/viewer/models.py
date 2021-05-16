@@ -136,9 +136,8 @@ class Layer(models.Model):
         ordering = ['-number']
 
     def save(self, *args, **kwargs):
-        if not self.number and self.title:
+        if self.title:
             self.number = Layer.extract_number(self.title)
-            self.save()
         super(Layer, self).save(*args, **kwargs)
 
     @staticmethod
