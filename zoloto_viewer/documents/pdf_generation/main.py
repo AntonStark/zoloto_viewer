@@ -9,45 +9,46 @@ from . import layout, message, plan
 
 
 def generate_pdf(project: Project, buffer, filename):
+    file_canvas = canvas.Canvas(buffer, pagesize=layout.Definitions.PAGE_SIZE)
+    file_canvas.setTitle(filename)
+    at_canvas_beginning = True
 
-    if buffer:
-        file_canvas = canvas.Canvas(buffer, pagesize=layout.Definitions.PAGE_SIZE)
-    else:
-        file_canvas = canvas.Canvas(filename, pagesize=layout.Definitions.PAGE_SIZE)
-
-    first_iteration = True
-    for P in project.page_set.all():
-        if not first_iteration:
-            file_canvas.showPage()
-
-        layers = Layer.objects.filter(marker__floor=P).distinct()
+    def draw_plan(page, layers):
         layers_data = [
             plan.LayerData(L.id, L.title, L.desc, color_adapter(L.color.rgb_code), L.kind_id)
             for L in layers
         ]
         marker_positions = {
-            L.id: collect_marker_positions(P, L)
+            L.id: collect_marker_positions(page, L)
             for L in layers
         }
-        plan.plan_page(file_canvas, P, marker_positions, layers_data)
-        first_iteration = False
 
-    for L in project.layer_set.all():       # type: Layer
-        for P in Page.objects.filter(marker__layer=L).distinct():
-            title = [P.floor_caption, L.title]
-
-            marker_positions = {L.id: collect_marker_positions(P, L)}
-            layers_data = [plan.LayerData(L.id, L.title, L.desc, color_adapter(L.color.rgb_code), L.kind_id)]
+        nonlocal file_canvas
+        nonlocal at_canvas_beginning
+        if not at_canvas_beginning:
             file_canvas.showPage()
-            plan.plan_page(file_canvas, P, marker_positions, layers_data)
+        plan.plan_page(file_canvas, page, marker_positions, layers_data)
+        at_canvas_beginning = False
 
+    def draw_messages(page, layer):
+        title = [page.floor_caption, layer.title]
+        marker_messages = collect_messages_data(page, layer)
+
+        nonlocal file_canvas
+        nonlocal at_canvas_beginning
+        if not at_canvas_beginning:
             file_canvas.showPage()
-            marker_messages = collect_messages_data(P, L)
-            message.message_pages(file_canvas, marker_messages, L.kind.sides,
-                                  color_adapter(L.color.rgb_code), title)
-    file_canvas.setTitle(filename)
+        message.message_pages(file_canvas, marker_messages, layer.kind.sides,
+                              color_adapter(layer.color.rgb_code), title)
+        at_canvas_beginning = False
+
+    for P in project.page_set.all():
+        page_layers = Layer.objects.filter(marker__floor=P).distinct()
+        draw_plan(P, page_layers)
+        for one_layer in page_layers:       # type: Layer
+            draw_plan(P, [one_layer])
+            draw_messages(P, one_layer)
     file_canvas.save()
-    return filename
 
 
 def color_adapter(html_color):
