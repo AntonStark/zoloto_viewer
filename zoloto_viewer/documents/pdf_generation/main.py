@@ -14,6 +14,7 @@ def generate_pdf(project: Project, buffer, filename):
     at_canvas_beginning = True
 
     def draw_plan(page, layers):
+        title = [page.floor_caption, layers[0].title] if len(layers) == 1 else [page.floor_caption, '']
         layers_data = [
             plan.LayerData(L.id, L.title, L.desc, color_adapter(L.color.rgb_code), L.kind_id)
             for L in layers
@@ -27,7 +28,7 @@ def generate_pdf(project: Project, buffer, filename):
         nonlocal at_canvas_beginning
         if not at_canvas_beginning:
             file_canvas.showPage()
-        plan.plan_page(file_canvas, page, marker_positions, layers_data)
+        plan.plan_page(file_canvas, page, marker_positions, layers_data, title)
         at_canvas_beginning = False
 
     def draw_messages(page, layer):

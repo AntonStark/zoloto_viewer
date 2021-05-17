@@ -14,7 +14,8 @@ def test_plan():
     C = rc.Canvas(filename, pagesize=layout.Definitions.PAGE_SIZE)
     marker_positions = main.collect_marker_positions(P, L)
     layers_data = [plan.LayerData(L.id, L.title, L.desc, main.color_adapter(L.color.rgb_code), L.kind_id)]
-    plan.plan_page(C, P, marker_positions, layers_data)
+    title = [P.floor_caption, L.title]
+    plan.plan_page(C, P, marker_positions, layers_data, title)
     C.save()
 
 

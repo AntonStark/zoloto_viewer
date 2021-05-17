@@ -171,7 +171,7 @@ class PlanLegend:
             canvas.drawString(x_text, y_next_line, ld.description)
 
 
-def plan_page(canvas, floor: Page, marker_positions, layers_data: t.List[LayerData]):
+def plan_page(canvas, floor: Page, marker_positions, layers_data: t.List[LayerData], title):
     layer_colors = {
         ld.id: ld.color
         for ld in layers_data
@@ -185,9 +185,8 @@ def plan_page(canvas, floor: Page, marker_positions, layers_data: t.List[LayerDa
         for number, position in layer_markers:
             box.add_marker(layer_id, number, position)
 
-    # turn off header and footer
-    # layout.draw_header(canvas, title)
-    # layout.draw_footer(canvas)
+    layout.draw_header(canvas, title)
+    layout.draw_footer(canvas)
     box.draw(canvas)
 
     PlanLegend.draw_legend(canvas, box, layers_data)

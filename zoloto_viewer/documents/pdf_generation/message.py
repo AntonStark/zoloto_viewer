@@ -314,18 +314,16 @@ def message_pages(canvas, marker_messages, marker_sides, layer_color, title):
     area_left, area_bottom = layout.mess_area_position()
     area = MessagesArea(area_width, area_height, message_box)
 
-    # turn off header and footer
-    # layout.draw_header(canvas, title)
-    # layout.draw_footer(canvas)
+    layout.draw_header(canvas, title)
+    layout.draw_footer(canvas)
     without_comment_lines = 0
     batch_size = area.column_count()
     for mess_chunk in chunk(marker_messages, batch_size):
         positions = area.place_row(without_comment_lines)
         if not positions:
             canvas.showPage()
-            # turn off header and footer
-            # layout.draw_header(canvas, title)
-            # layout.draw_footer(canvas)
+            layout.draw_header(canvas, title)
+            layout.draw_footer(canvas)
 
             area.reset()
             positions = area.place_row(without_comment_lines)

@@ -11,18 +11,19 @@ class Definitions:
     PAGE_SIZE = landscape(A3)
     WIDTH, HEIGHT = PAGE_SIZE
 
-    # BOUND_LEFT = 40 * mm
-    BOUND_LEFT = 0          # no bounds
-    # BOUND_RIGHT = WIDTH - 15 * mm
-    BOUND_RIGHT = WIDTH     # no bounds
+    BOUND_LEFT = 40 * mm
+    # BOUND_LEFT = 0          # no bounds
+    BOUND_RIGHT = WIDTH - 15 * mm
+    # BOUND_RIGHT = WIDTH     # no bounds
 
-    # TOP_LINE = HEIGHT - 20 * mm
-    TOP_LINE = HEIGHT       # don't draw header
-    # BOTTOM_LINE = 23 * mm
-    BOTTOM_LINE = 0         # don't draw footer
-    # AREA_HEIGHT = 227 * mm
-    AREA_HEIGHT = HEIGHT    # use full height as no header and footer
-    SECOND_LINE = BOTTOM_LINE + AREA_HEIGHT
+    TOP_LINE = HEIGHT - 20 * mm
+    # TOP_LINE = HEIGHT       # don't draw header
+    BOTTOM_LINE = 23 * mm
+    # BOTTOM_LINE = 0         # don't draw footer
+    LINES_PADDING = 1 * mm
+    AREA_HEIGHT = 227 * mm
+    # AREA_HEIGHT = HEIGHT    # use full height as no header and footer
+    SECOND_LINE = BOTTOM_LINE + LINES_PADDING + AREA_HEIGHT + LINES_PADDING
 
     DEFAULT_FONT_NAME = 'FreePTSans'
     DEFAULT_FONT_FILE = os.path.join(os.path.dirname(__file__), 'fonts/pt_sans.ttf')
@@ -40,19 +41,25 @@ class Definitions:
 
     FOOTER_FONT_SIZE = 21
     FOOTER_FONT_NAME = 'Zoloto'
-    FOOTER_FONT_FILE = os.path.join(os.path.dirname(__file__), 'fonts/Zoloto-Display-270819.ttf')
+    FOOTER_FONT_FILE = os.path.join(os.path.dirname(__file__), 'fonts/Zoloto-Display-010520.ttf')
 
     PADDING_FOOTER = 15.6 * mm
     PADDING_HEADER = TOP_LINE - HEADER_FONT_SIZE
 
-    MESSAGES_PADDING_LEFT = 20 * mm
-    MESSAGES_PADDING_RIGHT = MESSAGES_PADDING_LEFT
+    # MESSAGES_PADDING_LEFT = 20 * mm
+    MESSAGES_PADDING_LEFT = BOUND_LEFT
+    # MESSAGES_PADDING_RIGHT = MESSAGES_PADDING_LEFT
+    MESSAGES_PADDING_RIGHT = BOUND_RIGHT
+
+    @classmethod
+    def bottom_line_upper_bound(cls):
+        return cls.BOTTOM_LINE + cls.LINES_PADDING
 
     # SEPARATOR_WIDTH = 1     # N.B. if other than 1, need to draw rect
 
 
 def plan_area_position():
-    return Definitions.BOUND_LEFT, Definitions.BOTTOM_LINE
+    return Definitions.BOUND_LEFT, Definitions.bottom_line_upper_bound()
 
 
 def work_area_size():
@@ -63,12 +70,12 @@ def work_area_size():
 
 
 def mess_area_position():
-    return Definitions.MESSAGES_PADDING_LEFT, Definitions.BOTTOM_LINE
+    return Definitions.MESSAGES_PADDING_LEFT, Definitions.bottom_line_upper_bound()
 
 
 def mess_area_size():
     d = Definitions
-    area_width = d.WIDTH - d.MESSAGES_PADDING_LEFT - d.MESSAGES_PADDING_RIGHT
+    area_width = d.MESSAGES_PADDING_RIGHT - d.MESSAGES_PADDING_LEFT
     area_height = d.AREA_HEIGHT
     return area_width, area_height
 
