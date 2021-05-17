@@ -68,13 +68,13 @@ def get_pdf_file(request, title):
         else HttpResponse(status=200)
 
 
-def _make_retry_later_rep():
+def _make_retry_later_rep(timeout):
     rep = HttpResponse(status=323)
-    rep['Retry-After'] = 20
+    rep['Retry-After'] = timeout
     return rep
 
 
-HTTP_RETRY_LATER = _make_retry_later_rep()
+HTTP_RETRY_LATER = _make_retry_later_rep(timeout=10)
 PDF_GENERATE_TASK_NAME = 'documents__project_file__pdf'
 
 

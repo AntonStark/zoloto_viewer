@@ -230,6 +230,9 @@ class MarkerView(View):
     @method_decorator(marker_api)
     def delete(self, _, marker_uid: uuid.UUID):
         marker = get_object_or_404(Marker, uid=marker_uid)
+        # to update Layer and Page date_updated attribute
+        marker.layer.save()
+        marker.floor.save()
         marker.delete()
         return JsonResponse({'status': 'ok'}, status=200)
 
