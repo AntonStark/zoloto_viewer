@@ -46,6 +46,9 @@ class Definitions:
     PADDING_FOOTER = 15.6 * mm
     PADDING_HEADER = TOP_LINE - HEADER_FONT_SIZE
 
+    PLAN_LEGEND_PADDING_LEFT = 10
+    PLAN_LEGEND_PADDING_TOP = 20
+
     # MESSAGES_PADDING_LEFT = 20 * mm
     MESSAGES_PADDING_LEFT = BOUND_LEFT
     # MESSAGES_PADDING_RIGHT = MESSAGES_PADDING_LEFT
@@ -60,6 +63,11 @@ class Definitions:
 
 def plan_area_position():
     return Definitions.BOUND_LEFT, Definitions.bottom_line_upper_bound()
+
+
+def plan_area_position_left_top():
+    x, y = plan_area_position()
+    return x, y + Definitions.AREA_HEIGHT
 
 
 def work_area_size():
