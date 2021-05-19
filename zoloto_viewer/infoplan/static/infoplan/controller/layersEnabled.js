@@ -49,8 +49,10 @@ function ControllerEnabledLayers() {
             // console.log(layerLiTag);
         }
 
-        setActiveLayer(positionsIndex[0]);
-        shiftActiveLayerToVisible();
+        if (positionsIndex[0]) {
+            setActiveLayer(positionsIndex[0]);
+            shiftActiveLayerToVisible();
+        }
     }
 
     function toggleLayer(layerTitle) {
@@ -102,9 +104,12 @@ function ControllerEnabledLayers() {
         let active = getActiveLayer();
         // console.log(active);
         while (!isEnabled(active)) {    // set active to next
-            setActiveLayer(nextTitle(active));
+            const next = nextTitle(active);
+            if (!next) {
+                break;
+            }
+            setActiveLayer(next);
             active = getActiveLayer();
-            // debugger;
         }
 
     }
