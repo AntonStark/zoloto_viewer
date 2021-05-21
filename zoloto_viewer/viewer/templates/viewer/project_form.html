@@ -6,11 +6,25 @@
 <form method="POST" enctype="multipart/form-data" id="load_project_form"
         {% if project %} data-mode="edit" {% endif %}>{% csrf_token %}
     <p>
+        <label for="project_customer_input">Заказчик</label>
+        <br>
+        <input name="customer" id="project_customer_input" type="text"
+               placeholder="Например, Политех" {% if project %} value="{{ project.customer }}" {% endif %}
+               required size="40">
+    </p>
+    <p>
         <label for="project_name_input">Название проекта</label>
         <br>
         <input name="title" id="project_name_input" type="text"
-               placeholder="Например, Табор" {% if project %} value="{{ project.title }}" {% endif %}
+               placeholder="Сервисная документация" {% if project %} value="{{ project.title }}" {% endif %}
                pattern="[-_A-Za-z0-9ЁёА-я]+" required size="40">
+    </p>
+    <p>
+        <label for="project_stage_input">Название этапа</label>
+        <br>
+        <input name="stage" id="project_stage_input" type="text"
+               placeholder="Навигация в администрации" {% if project %} value="{{ project.stage }}" {% endif %}
+               required size="40">
     </p>
     Монтажные области
     {% if project %}

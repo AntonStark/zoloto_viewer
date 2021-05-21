@@ -27,16 +27,18 @@ def load_project(request):
 
     try:
         title = request.POST['title']
+        customer = request.POST['customer']
+        stage = request.POST['stage']
         if not Project.validate_title(title):
             raise ValueError
     except (KeyError, ValueError):
         return redirect('load_project')
 
     pages_data, _, floor_offsets = project_form.parse_pages(request.POST, request.FILES)
-    if not pages_data or not pages_data:
+    if not pages_data:
         return redirect('load_project')
 
-    project_obj = Project(title=title)
+    project_obj = Project(title=title, customer=customer, stage=stage)
     project_obj.save()
 
     project_obj.store_pages(pages_data)
@@ -56,7 +58,9 @@ def edit_project(request, title):
         return render(request, 'viewer/edit_project.html', context=context)
 
     title = request.POST['title']
-    project_obj.rename_project(title)
+    customer = request.POST['customer']
+    stage = request.POST['stage']
+    project_obj.rename_project(customer, title, stage)
 
     csv_to_delete, pages_to_delete = project_form.files_to_delete(request.POST)
     for page_name in pages_to_delete:

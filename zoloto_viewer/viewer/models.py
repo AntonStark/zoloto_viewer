@@ -17,15 +17,11 @@ def additional_files_upload_path(obj: 'Project', filename):
 
 class Project(models.Model):
     uid = models.UUIDField(unique=True, default=uuid.uuid4, editable=False)
+    customer = models.TextField(blank=False, default='')
     title = models.TextField(blank=False, unique=True)
+    stage = models.TextField(blank=False, default='')
     created = models.DateTimeField(auto_now_add=True)
     date_updated = models.DateTimeField(auto_now=True)
-
-    # todo remove
-    maps_info = models.FileField(upload_to=additional_files_upload_path, null=False, blank=True, default='')
-    layers_info = models.FileField(upload_to=additional_files_upload_path, null=False, blank=True, default='')
-    poi_names = models.FileField(upload_to=additional_files_upload_path, null=False, blank=True, default='')
-    pict_codes = models.FileField(upload_to=additional_files_upload_path, null=False, blank=True, default='')
 
     layer_info_data = fields.JSONField(null=True)   # possibly not needed anymore
     maps_info_data = fields.JSONField(null=True)
@@ -54,9 +50,18 @@ class Project(models.Model):
     def pages_by_caption(self):
         return {p.indd_floor: p for p in self.page_set.all()}
 
-    def rename_project(self, title):
+    def rename_project(self, customer, title, stage):
+        changed = False
+        if customer != self.customer:
+            self.customer = customer
+            changed = True
         if title != self.title:
             self.title = title
+            changed = True
+        if stage != self.stage:
+            self.stage = stage
+            changed = True
+        if changed:
             self.save()
 
     def project_files_dir(self):
