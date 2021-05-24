@@ -13,8 +13,8 @@ from zoloto_viewer.documents.models import ProjectFile
 @login_required
 @csrf.csrf_exempt
 @http.require_GET
-def get_counts_file(request, title):
-    project = get_object_or_404(Project, title=title)
+def get_counts_file(request, project_id):
+    project = get_object_or_404(Project, id=project_id)
     pf = ProjectFile.objects.generate_counts(project)
     return FileResponse(pf.file, filename=pf.public_name)
 
@@ -22,8 +22,8 @@ def get_counts_file(request, title):
 @login_required
 @csrf.csrf_exempt
 @http.require_GET
-def get_picts_file(request, title):
-    project = get_object_or_404(Project, title=title)
+def get_picts_file(request, project_id):
+    project = get_object_or_404(Project, id=project_id)
     pf = ProjectFile.objects.generate_pict_list(project)
     return FileResponse(pf.file, filename=pf.public_name)
 
@@ -31,8 +31,8 @@ def get_picts_file(request, title):
 @login_required
 @csrf.csrf_exempt
 @http.require_GET
-def get_vars_file(request, title):
-    project = get_object_or_404(Project, title=title)
+def get_vars_file(request, project_id):
+    project = get_object_or_404(Project, id=project_id)
     pf = ProjectFile.objects.look_for_fresh(project, ProjectFile.FileKinds.CSV_VARIABLES)
     if not pf:
         pf = ProjectFile.objects.generate_vars_index_file(project)
@@ -42,8 +42,8 @@ def get_vars_file(request, title):
 @login_required
 @csrf.csrf_exempt
 @http.require_GET
-def get_infoplan_file(request, title):
-    project = get_object_or_404(Project, title=title)
+def get_infoplan_file(request, project_id):
+    project = get_object_or_404(Project, id=project_id)
     pf = ProjectFile.objects.look_for_fresh(project, ProjectFile.FileKinds.TAR_INFOPLAN)
     if not pf:
         pf = ProjectFile.objects.generate_infoplan_archive(project)
@@ -53,9 +53,9 @@ def get_infoplan_file(request, title):
 @login_required
 @csrf.csrf_exempt
 @http.require_http_methods(['GET', 'HEAD'])
-def get_pdf_file(request, title):
+def get_pdf_file(request, project_id):
     # with HEAD request not send file content if present
-    project = get_object_or_404(Project, title=title)
+    project = get_object_or_404(Project, id=project_id)
     pf = ProjectFile.objects.look_for_fresh(project, ProjectFile.FileKinds.PDF_EXFOLIATION)
 
     if not pf:

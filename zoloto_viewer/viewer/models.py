@@ -16,12 +16,14 @@ def additional_files_upload_path(obj: 'Project', filename):
 
 
 class Project(models.Model):
+    id = models.AutoField(primary_key=True)
     uid = models.UUIDField(unique=True, default=uuid.uuid4, editable=False)
+    created = models.DateTimeField(auto_now_add=True)
+    date_updated = models.DateTimeField(auto_now=True)
+
     customer = models.TextField(blank=False, default='')
     title = models.TextField(blank=False, unique=True)
     stage = models.TextField(blank=False, default='')
-    created = models.DateTimeField(auto_now_add=True)
-    date_updated = models.DateTimeField(auto_now=True)
 
     layer_info_data = fields.JSONField(null=True)   # possibly not needed anymore
     maps_info_data = fields.JSONField(null=True)
@@ -44,8 +46,7 @@ class Project(models.Model):
 
     @staticmethod
     def validate_title(title: str):
-        return re.match(r'^[-\w]+$', title) is not None \
-               and not Project.objects.filter(title=title).exists()
+        return not Project.objects.filter(title=title).exists()
 
     def pages_by_caption(self):
         return {p.indd_floor: p for p in self.page_set.all()}

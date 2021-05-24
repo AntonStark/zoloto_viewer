@@ -9,7 +9,7 @@ from django.views.decorators import csrf, http
 
 from zoloto_viewer.infoplan import views as infoplan_views
 from zoloto_viewer.viewer.models import Color, Project, Layer, MarkerKind, Page
-from zoloto_viewer.viewer.view_helpers import project_form
+from zoloto_viewer.viewer.view_helpers import project_form, title_short_code
 
 
 @login_required
@@ -47,8 +47,8 @@ def load_project(request):
 
 
 @login_required
-def edit_project(request, title):
-    project_obj = get_object_or_404(Project, title=title)
+def edit_project(request, project_id):
+    project_obj = get_object_or_404(Project, id=project_id)
     if request.method != 'POST':
         pages = Page.objects.filter(project=project_obj)
         context = {
@@ -82,8 +82,8 @@ def edit_project(request, title):
 
 
 @login_required
-def project(request, title):
-    project = get_object_or_404(Project, title=title)
+def project(request, project_id):
+    project = get_object_or_404(Project, id=project_id)
     first_page = project.first_page()
     if not first_page:
         raise Http404
@@ -92,10 +92,22 @@ def project(request, title):
 
 
 @login_required
-def remove_project(request, title):
-    project = get_object_or_404(Project, title=title)
+def remove_project(request, project_id):
+    project = get_object_or_404(Project, id=project_id)
     project.delete()
     return redirect(to='projects')
+
+
+@http.require_http_methods(['GET'])
+def generate_project_code(request):
+    try:
+        title = request.GET['title']
+    except KeyError:
+        return JsonResponse({'title': 'field required'}, status=400)
+    codes_variants = title_short_code.make_code_candidates(title)
+    already_used = set(Project.objects.all().values_list('code', flat=True))
+    codes_free = [c for c in codes_variants if c not in already_used]
+    return codes_free[0]
 
 
 def project_page(request, page_code):
@@ -155,8 +167,8 @@ def edit_project_page(request, page_code):
 
 @login_required
 @csrf.csrf_exempt
-def add_project_layer(request, title):
-    project = get_object_or_404(Project, title=title)
+def add_project_layer(request, project_id):
+    project = get_object_or_404(Project, id=project_id)
 
     last_color = Layer.max_color(project.layer_set)
     color = last_color.next() if last_color else Color.objects.first()
@@ -198,8 +210,8 @@ def add_project_layer(request, title):
 
 @login_required
 @csrf.csrf_exempt
-def edit_project_layer(request, project_title, layer_title):
-    project = get_object_or_404(Project, title=project_title)
+def edit_project_layer(request, project_id, layer_title):
+    project = get_object_or_404(Project, id=project_id)
     layer = get_object_or_404(Layer, project=project, title=layer_title)
 
     return_to_page_code = request.GET['return']

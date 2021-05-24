@@ -6,26 +6,26 @@
         <tr>
             <td>
                 <i class="fas fa-long-arrow-alt-down"></i>
-                <a href="{% url 'get_infoplan_file' project.title %}">Инфоплан</a>
+                <a href="{% url 'get_infoplan_file' project.id %}">Инфоплан</a>
             </td>
             <td>
                 <i class="fas fa-long-arrow-alt-down"></i>
-{#                <a href="{% url 'get_pdf_file' project.title %}">PDF</a>#}
-                <span onclick="handleFileDownloadWithRetryAfter('{% url 'get_pdf_file' project.title %}')">PDF</span>
+{#                <a href="{% url 'get_pdf_file' project.id %}">PDF</a>#}
+                <span onclick="handleFileDownloadWithRetryAfter('{% url 'get_pdf_file' project.id %}')">PDF</span>
             </td>
             <td>
                 <i class="fas fa-long-arrow-alt-down"></i>
-                <a href="{% url 'get_counts_file' project.title %}">Кол-во</a>
+                <a href="{% url 'get_counts_file' project.id %}">Кол-во</a>
             </td>
         </tr>
         <tr>
             <td>
                 <i class="fas fa-long-arrow-alt-down"></i>
-                <a href="{% url 'get_vars_file' project.title %}">Словарь</a>
+                <a href="{% url 'get_vars_file' project.id %}">Словарь</a>
             </td>
             <td>
                 <i class="fas fa-long-arrow-alt-down"></i>
-                <a href="{% url 'get_picts_file' project.title %}">Пикты</a>
+                <a href="{% url 'get_picts_file' project.id %}">Пикты</a>
             </td>
         </tr>
         </tbody>

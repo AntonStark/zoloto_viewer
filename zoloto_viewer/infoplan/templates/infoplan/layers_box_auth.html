@@ -1,6 +1,6 @@
 <div class="menu_header">типы носителей</div>
 <p>
-    <a href="{% url 'add_project_layer' title=project.title %}?return={{ page.code }}" class="fill-button">
+    <a href="{% url 'add_project_layer' project_id=project.id %}?return={{ page.code }}" class="fill-button">
         Добавить тип носителей
     </a>
 </p>
@@ -12,7 +12,7 @@
         onclick="handleClickLayerListItem(this)">
         <span style="color: black;" class="layer-title-span">{{ l.title }}</span>
         <span style="float: right">
-            <a href="{% url 'edit_project_layer' project_title=project.title layer_title=l.title %}?return={{ page.code }}"
+            <a href="{% url 'edit_project_layer' project_id=project.id layer_title=l.title %}?return={{ page.code }}"
                class="hidden icon">&#x270E</a>
             <a class="hidden icon">&#x2A09</a>
         </span>
