@@ -173,11 +173,15 @@ def add_project_layer(request, project_id):
     last_color = Layer.max_color(project.layer_set)
     color = last_color.next() if last_color else Color.objects.first()
 
-    return_to_page_code = request.GET['return']
-    is_valid_code = Page.validate_code(return_to_page_code)
-    same_project_page = Page.by_code(return_to_page_code).project == project
-    if not (is_valid_code and same_project_page):
+    try:
+        return_to_page_code = request.GET['return']
+    except KeyError:
         return_to_page_code = project.first_page().code
+    else:
+        is_valid_code = Page.validate_code(return_to_page_code)
+        same_project_page = Page.by_code(return_to_page_code).project == project
+        if not (is_valid_code and same_project_page):
+            return_to_page_code = project.first_page().code
 
     context = {
         'project': project,
