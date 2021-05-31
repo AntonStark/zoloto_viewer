@@ -316,9 +316,11 @@ def project_page(request, **more_context):
 
     project = page_obj.project
     page_code_list = project.page_set.values_list('code', 'floor_caption')
-    layers = project.layer_set.all()
+    layers = project.layer_set.all().prefetch_related('color')
     layers_with_comments_by_page = MarkerComment.layer_colors_with_comments_by_page(project=project)
-    markers_by_layer = Marker.objects.by_layer(project, page=page_obj)
+    markers_that_page = Marker.objects.filter(floor=page_obj)\
+        .prefetch_related('layer', 'layer__kind', 'markercomment_set')\
+        .order_by()     # turn off sorting
 
     hidden_layers = request.GET['hide_layers'].split(' ') if 'hide_layers' in request.GET else []
 
@@ -329,7 +331,7 @@ def project_page(request, **more_context):
         'page_code_list': page_code_list,
         'layers': layers,
         'layers_with_comments_by_page': layers_with_comments_by_page,
-        'markers_by_layer': markers_by_layer,
+        'markers_that_page': markers_that_page,
 
         'state_data': {
             'hidden_layers': hidden_layers,

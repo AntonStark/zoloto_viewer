@@ -70,7 +70,7 @@ class Marker(models.Model):
 
     @property
     def all_comments_resolved(self):
-        return all(self.markercomment_set.values_list('resolved', flat=True))
+        return all(c.resolved for c in self.markercomment_set.all())
 
     @property
     def comments_json(self):
@@ -263,7 +263,9 @@ class MarkerComment(models.Model):
          has markers with comments and total count of such layers
         """
         from django.contrib.postgres.aggregates import ArrayAgg
-        markers_with_comments_unresolved = Marker.objects.filter(floor__project=project, markercomment__resolved=False)
+        markers_with_comments_unresolved = Marker.objects\
+            .filter(floor__project=project, markercomment__resolved=False)\
+            .order_by()     # turn off sorting
         data = markers_with_comments_unresolved\
             .values_list('floor__code')\
             .annotate(colors=ArrayAgg('layer__color__hex_code', distinct=True))

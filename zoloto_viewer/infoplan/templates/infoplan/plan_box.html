@@ -1,3 +1,4 @@
+{% regroup markers_that_page by layer as markers_by_layer %}
 <div class="scrollable">
     <div id="plan-page-map-container" style="position: relative; height: inherit;">
         <svg id="project-page-plan-svg"
@@ -8,14 +9,15 @@
                 </image>
                 <rect id="project-page-svg-selection-rect"></rect>
                 {% load layers_visibility %}
-                {% for layer, markers in markers_by_layer.items %}
+                {% for per_layer in markers_by_layer %}
+                    {% with per_layer.grouper as layer %}
                     <g class="layer_markers layer-{{ layer.title }} {{ layer.title|is_not_disabled:state_data.hidden_layers }}">
                         <symbol id="marker_layer-{{ layer.title }}" overflow="visible">
                             <g transform="scale({{ marker_display_config.marker_scale }})">
                                 {{ layer.kind.svg_figures|safe }}
                             </g>
                         </symbol>
-                        {% for marker in markers %}
+                        {% for marker in per_layer.list %}
                             <use href="#marker_layer-{{ layer.title }}"
                                  x="{{ marker.pos_x }}" y="{{ marker.pos_y }}"
                                  transform="rotate({{ marker.rotation }} {{ marker.pos_x }} {{ marker.pos_y }})"
@@ -38,13 +40,14 @@
                             </g>
                         {% endfor %}
                     </g>
+                    {% endwith %}
                 {% endfor %}
             </g>
         </svg>
         <div id="project-page-messages-container">
             <div>
-                {% for layer, markers in markers_by_layer.items %}
-                    <div class="layer_messages layer-{{ layer.title }}"></div>
+                {% for l in layers %}
+                    <div class="layer_messages layer-{{ l.title }}"></div>
                 {% endfor %}
             </div>
         </div>
@@ -70,8 +73,8 @@
     </div>
 </div>
 <div class="map_legend">
-    {% load involved_layers %}
-    {% for layer in markers_by_layer|involved_layers %}
+    {% for per_layer in markers_by_layer %}
+        {% with per_layer.grouper as layer %}
         <div>
             <svg width="30" height="30" style="vertical-align: top;">
                 <symbol id="legend_marker_layer-{{ layer.title }}" overflow="visible">
@@ -86,5 +89,6 @@
                 <small>{{ layer.desc }}</small>
             </div>
         </div>
+        {% endwith %}
     {% endfor %}
 </div>
