@@ -7,7 +7,15 @@ SECRET_KEY = 'vh2)6un#nhgh%ytl^%edf7=n^ihkc0$nl5o)6*+$(4sv@lu_61'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
+INSTALLED_APPS = INSTALLED_APPS + INSTALLED_APPS_DEV
+
+MIDDLEWARE = MIDDLEWARE_DEV + MIDDLEWARE
+
 ALLOWED_HOSTS = ['*']
+
+INTERNAL_IPS = [
+    '127.0.0.1',
+]
 
 # Database
 # https://docs.djangoproject.com/en/3.0/ref/settings/#databases
