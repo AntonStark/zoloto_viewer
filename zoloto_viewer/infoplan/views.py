@@ -1,6 +1,8 @@
+import collections
 import json
 import operator
 import uuid
+
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
@@ -316,11 +318,14 @@ def project_page(request, **more_context):
 
     project = page_obj.project
     page_code_list = project.page_set.values_list('code', 'floor_caption')
-    layers = project.layer_set.all().prefetch_related('color')
+    layers = project.layer_set.all().prefetch_related('color', 'kind')
     layers_with_comments_by_page = MarkerComment.layer_colors_with_comments_by_page(project=project)
     markers_that_page = Marker.objects.filter(floor=page_obj)\
-        .prefetch_related('layer', 'layer__kind', 'markercomment_set')\
+        .prefetch_related('markercomment_set')\
         .order_by()     # turn off sorting
+    markers_by_layer = collections.defaultdict(list)
+    for m in markers_that_page:
+        markers_by_layer[m.layer_id].append(m)
 
     hidden_layers = request.GET['hide_layers'].split(' ') if 'hide_layers' in request.GET else []
 
@@ -332,6 +337,7 @@ def project_page(request, **more_context):
         'layers': layers,
         'layers_with_comments_by_page': layers_with_comments_by_page,
         'markers_that_page': markers_that_page,
+        'markers_by_layer': markers_by_layer,
 
         'state_data': {
             'hidden_layers': hidden_layers,
