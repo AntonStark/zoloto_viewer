@@ -123,7 +123,6 @@ function ControllerMapInteractions() {
         if (!inside)
             return;
 
-        // debugger;
         // console.debug(svgX, svgY, activeLayer(), getPageCode());
 
         messageBoxManager.hideAll();
@@ -185,8 +184,7 @@ function ControllerMapInteractions() {
 
         const maybeCircleElement = e.target;
         const movementAllowed = UI_AUTH;    // modification will fail in guest mode
-        markerMovement = movementAllowed
-            && maybeCircleElement.classList.contains('marker_circle');
+        markerMovement = maybeCircleElement.classList.contains('marker_circle');
 
         if (!markerMovement) {
             rectSelectionCorner = getSvgCoordinates(e);
@@ -206,7 +204,9 @@ function ControllerMapInteractions() {
             }
         }
 
-        mapScaleController.mapSvg().addEventListener('mousemove', mapInteractionsController.handleMouseMove);
+        if (!markerMovement || movementAllowed) {
+            mapScaleController.mapSvg().addEventListener('mousemove', mapInteractionsController.handleMouseMove);
+        }
     }
     function handleMouseMove(e) {
         if (!markerMovement) {
