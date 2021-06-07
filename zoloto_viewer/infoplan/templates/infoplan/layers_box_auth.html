@@ -4,7 +4,12 @@
         Добавить тип носителей
     </a>
 </p>
-<form>
+<style>
+    {# to fix height due to additional button; (16px + 18px) is "Добавить тип носителей" (top margin + height) #}
+    .page-table-column-block ul {
+        height: calc(100% - (16px + 18px) - var(--column-vertical-margins) - var(--right-deleted-height));
+    }
+</style>
 <ul class="layers-box side_box_list">
 {% load layers_visibility %}
 {% for l in layers %}
@@ -14,9 +19,8 @@
         <span style="float: right">
             <a href="{% url 'edit_project_layer' project_id=project.id layer_title=l.title %}?return={{ page.code }}"
                class="hidden icon">&#x270E</a>
-            <a class="hidden icon">&#x2A09</a>
+{#            <a class="hidden icon">&#x2A09</a>#}
         </span>
     </li>
 {% endfor %}
 </ul>
-</form>

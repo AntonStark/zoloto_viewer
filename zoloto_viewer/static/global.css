@@ -91,6 +91,7 @@ input.disabled {
     --left-column-width: 230px;
     --right-column-width: 230px;
     --column-vertical-paddings: 12px;
+    --column-vertical-margins: 18px;
     --left-title-height: 18px;
     --left-areas-height: calc(100% - var(--left-title-height) - var(--left-docs-height)
                               - 2 * var(--column-vertical-paddings));
@@ -332,7 +333,7 @@ ul.side_box_list li.active{
 
 .page-table-column-block ul {
     padding-left: 18px;
-    height: calc(100% - var(--column-vertical-paddings));
+    height: calc(100% - var(--column-vertical-margins) - var(--right-deleted-height));
     overflow: auto;
 }
 
