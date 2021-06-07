@@ -93,7 +93,6 @@ function ControllerMapInteractions() {
 
     // map interaction handlers
     function handleKeyUp(e) {
-        // console.log(e);
         if (e.code === 'Backspace' && UI_AUTH) {
             _deleteRoutine(markerSelection);
         } else if (e.code === 'Escape') {
@@ -104,7 +103,11 @@ function ControllerMapInteractions() {
         }
     }
     function handleKeyPress(e) {
-        if (!UI_AUTH) return;   // modification will fail in guest mode
+        if (!UI_AUTH)
+            return;     // modification will fail in guest mode
+        if (e.target.classList.contains('variables-container-side-input'))
+            return;     // skip if in infoplan text block
+
         if (e.code === 'KeyQ') {
             const acceleration = e.shiftKey;
             handleRotationNegative(acceleration);
