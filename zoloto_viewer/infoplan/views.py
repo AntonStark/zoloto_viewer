@@ -319,7 +319,7 @@ def project_page(request, **more_context):
     project = page_obj.project
     page_code_list = project.page_set.values_list('code', 'floor_caption')
     layers = project.layer_set.all().prefetch_related('color', 'kind')
-    layers_with_comments_by_page = MarkerComment.layer_colors_with_comments_by_page(project=project)
+    layers_with_comments_by_page = MarkerComment.layer_with_comments_by_page(project=project)
     markers_that_page = Marker.objects.filter(floor=page_obj)\
         .prefetch_related('markercomment_set')\
         .order_by()     # turn off sorting

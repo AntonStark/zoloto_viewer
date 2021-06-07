@@ -2,18 +2,18 @@
 {% load dict_get %}
 {% load query_params %}
 <div class="menu_header">монтажные области</div>
-<ul class="side_box_list">
+<ul class="areas-box side_box_list">
     {% for code, floor_caption in page_code_list %}
     <li {% if code == page.code %}class="active"{% endif %} >
         <a href="{% url 'project_page' code %}{{ state_data.hidden_layers|hidden_layers_url_param|query_params }}"
            class="pages-box-button project-page-link">
             {{ floor_caption }}
             <span class="areas-box-layers-comments">
-                {% with comment_colors=layers_with_comments_by_page|get_item:code %}
-                    {% for color in comment_colors.limit_3 %}
-                        <i class="fas fa-circle" style="color: {{ color }};"></i>
+                {% with comment_layers=layers_with_comments_by_page|get_item:code %}
+                    {% for layer_title in comment_layers.limit_3 %}
+                        <i class="fas fa-circle layer-{{ layer_title }}"></i>
                     {% endfor %}
-                    {% if comment_colors.count > 3 %}<span style="font-size: small;">{{ comment_colors.count }}</span>{% endif %}
+                    {% if comment_layers.count > 3 %}<span style="font-size: small;">{{ comment_layers.count }}</span>{% endif %}
                 {% endwith %}
             </span>
         </a>
