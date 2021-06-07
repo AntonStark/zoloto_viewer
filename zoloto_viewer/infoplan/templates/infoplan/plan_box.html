@@ -72,7 +72,7 @@
 </div>
 <div class="map_legend">
     {% for layer in layers %}
-        <div {% if layer.id not in markers_by_layer %} style="visibility: hidden;" {% endif %} >
+        <div {% if layer.id not in markers_by_layer %} style="display: none;" {% endif %} >
             <svg width="30" height="30" style="vertical-align: top;">
                 <symbol id="legend_marker_layer-{{ layer.title }}" overflow="visible">
                     {{ layer.kind.svg_figures|safe }}
