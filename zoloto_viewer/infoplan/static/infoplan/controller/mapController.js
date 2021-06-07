@@ -259,15 +259,21 @@ function ControllerMapInteractions() {
         markerCirclesManager.updateRotation(getSelection(), rotationDelta);
     }
 
-    function handleCopyEvent() {
-        if (!UI_AUTH) return;   // modification will fail in guest mode
+    function handleCopyEvent(e) {
+        if (!UI_AUTH)
+            return;     // modification will fail in guest mode
+        if (e.target.classList.contains('variables-container-side-input'))
+            return;     // skip paste in infoplan text block
 
         const text = encodeClipboardContent(getSelection());
         // console.debug('Copy!', text);
         window.navigator.clipboard.writeText(text);
     }
-    function handlePasteEvent() {
-        if (!UI_AUTH) return;   // modification will fail in guest mode
+    function handlePasteEvent(e) {
+        if (!UI_AUTH)
+            return;     // modification will fail in guest mode
+        if (e.target.classList.contains('variables-container-side-input'))
+            return;     // skip paste in infoplan text block
 
         // console.debug('Paste start!');
         function onClipboardResolve(text) {
