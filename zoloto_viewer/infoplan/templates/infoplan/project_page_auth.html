@@ -38,17 +38,8 @@
             .layer_markers.layer-{{ l.title }} {
                 fill: {{ l.color.hex_code }};
             }
-            .layer-{{ l.title }} .message_shown .marker_circle {
-                stroke: {{ l.color.hex_code }};
-            }
             .layer-{{ l.title }} {
                 --layer-color: {{ l.color.hex_code }};
-            }
-            .layers-box .layer-{{ l.title }} {
-                color: {{ l.color.hex_code }};
-            }
-            .areas-box .layer-{{ l.title }} {
-                color: {{ l.color.hex_code }};
             }
         {% endfor %}
     </style>

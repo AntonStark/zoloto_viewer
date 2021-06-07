@@ -252,6 +252,9 @@ input.disabled {
     fill-opacity: 0;    /* invisible yet clickable */
     stroke-width: 1px;
 }
+.message_shown .marker_circle {
+    stroke: var(--layer-color);
+}
 
 .marker_comment_mark {
     stroke: none;
@@ -307,6 +310,14 @@ ul.side_box_list li.active{
 .areas-box-layers-comments {
     float: right;
     font-size: 40%;
+}
+
+.areas-box-layers-comments i {
+    color: var(--layer-color);
+}
+
+ul.layers-box li {
+    color: var(--layer-color);
 }
 
 #projects-table {
