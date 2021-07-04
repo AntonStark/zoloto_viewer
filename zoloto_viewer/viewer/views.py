@@ -77,7 +77,7 @@ def edit_project(request, project_id):
     project_obj.alter_floor_offsets(floor_offsets)
 
     if errors:
-        return redirect(to='edit_project', title=title)
+        return redirect(to='edit_project', project_id=project_obj.id)
     return redirect(to='projects')
 
 

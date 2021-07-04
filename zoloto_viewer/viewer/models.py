@@ -86,9 +86,9 @@ class Project(models.Model):
 
     def alter_floor_offsets(self, floor_offsets):
         for p in Page.objects.filter(project=self):
-            filename = p.orig_file_name
-            if filename in floor_offsets.keys():
-                p.document_offset = floor_offsets[filename]
+            caption = p.floor_caption
+            if caption in floor_offsets.keys():
+                p.document_offset = floor_offsets[caption]
                 p.save()
 
 

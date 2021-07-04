@@ -22,7 +22,13 @@ def parse_pages(req_post, req_files):
         elif k.startswith(OFFSET_LABEL):
             encoded = k[len(OFFSET_LABEL):]
             filename = base64.decodebytes(encoded.encode('utf-8')).decode('utf-8')
-            floor_offsets[filename] = v
+            floor_offsets[filename] = int(v)
+
+    captions_to_offsets = {
+        floor_captions[filename]: offset
+        for filename, offset in floor_offsets.items()
+    }
+    floor_offsets = captions_to_offsets
 
     new_pages_dict = {}
     for key in req_files.keys():
