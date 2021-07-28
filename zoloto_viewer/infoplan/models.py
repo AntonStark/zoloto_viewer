@@ -36,6 +36,10 @@ class MarkersManager(models.Manager):
         return {m.uid: m.number
                 for m in self.filter(floor=floor, layer=layer).all()}
 
+    def get_numbers_list(self, uid_list):
+        return {m.uid: m.number
+                for m in self.filter(uid__in=uid_list).all()}
+
     def get_positions(self, floor, layer):
         return {m.uid: m.position
                 for m in self.filter(floor=floor, layer=layer).all()}
@@ -167,22 +171,25 @@ class VariablesManager(models.Manager):
             self.bulk_create(variables)
             marker.save()   # to update marker.last_modified
 
-    @staticmethod
-    def _vars_by_side(queryset: models.QuerySet, apply_transformations=None):
+    def vars_by_side(self, queryset: models.QuerySet, apply_transformations=None):
         markers = set()
-        vars_by_side = collections.defaultdict(list)
+        vars_by_side = collections.defaultdict(lambda: collections.defaultdict(list))
         marker_vars = queryset.values_list('marker', 'side', 'key', 'value')
-        for m, s, _, v in marker_vars:
-            vars_by_side[(m, s)].append(v)
-            markers.add(m)
+        for mu, s, _, v in marker_vars:
+            vars_by_side[mu][s].append(v)
+            markers.add(mu)
 
         if apply_transformations:
             transformed = {}
-            for k in vars_by_side.keys():
-                marker_vars = vars_by_side[k]
-                for tr in apply_transformations:
-                    marker_vars = tr.apply(marker_vars, side=k)
-                transformed[k] = marker_vars
+            for m in vars_by_side.keys():
+                marker_infoplan = vars_by_side[m]
+                infoplan_transformed = {}
+                for s in marker_infoplan.keys():
+                    marker_vars = marker_infoplan[s]
+                    for tr in apply_transformations:
+                        marker_vars = tr.apply(marker_vars, side=m)
+                    infoplan_transformed[s] = marker_vars
+                transformed[m] = infoplan_transformed
             vars_by_side = transformed
 
         return vars_by_side, markers
@@ -193,11 +200,11 @@ class VariablesManager(models.Manager):
         #   {marker: UUID(), side: 2, variables: []}
         # ]
         variables = self.filter(marker=marker)
-        vars_by_side, markers = self.__class__._vars_by_side(variables, apply_transformations)
+        vars_by_side, markers = self.vars_by_side(variables, apply_transformations)
         res = [
             {
                 'side': side_key,
-                'variables': vars_by_side.get((marker_uid, side_key), []),
+                'variables': vars_by_side[marker_uid].get(side_key, []),
             }
             for marker_uid in markers
             for side_key in marker.layer.kind.side_keys()
@@ -206,7 +213,7 @@ class VariablesManager(models.Manager):
 
     def vars_page_layer_by_side(self, page, layer, apply_transformations=None):
         variables = self.filter(marker__floor=page, marker__layer=layer)
-        vars_by_side, markers = self.__class__._vars_by_side(variables, apply_transformations)
+        vars_by_side, markers = self.vars_by_side(variables, apply_transformations)
         return vars_by_side, markers
 
 

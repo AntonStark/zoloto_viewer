@@ -5,7 +5,8 @@ import re
 
 from . import _base
 
-from zoloto_viewer.infoplan.models import MarkerVariable
+from zoloto_viewer.infoplan.models import Marker, MarkerVariable
+from zoloto_viewer.infoplan.utils import variable_transformations
 from zoloto_viewer.viewer.models import Project
 
 
@@ -16,29 +17,76 @@ class VarsIndexFileBuilder(_base.AbstractCsvFileBuilder):
         self.project = project
 
     def make_rows(self):
-        pict_regex = re.compile(MarkerVariable.PICT_PATTERN)
 
         def process_var(variable: str):
-            variable = html.unescape(variable)
-            # filter empty and masterpage marks
-            if not variable or variable.startswith('mp:'):
+            # filter empty
+            if not variable:
                 return []
 
-            variable = variable.replace('&tab', '')
-            variable = re.sub(pict_regex, '', variable)
-            by_lines = variable.split('\n')
-            # нечётные строчки должны содержать русский текст, а чётные перевод
-            rus, eng = by_lines[::2], by_lines[1::2]
+            lines = variable.split('\n')
+
+            def is_relevant(var):
+                irrelevant_chars = [' ', ',', '-', '—']
+                relevant = [c for c in set(var) if c not in irrelevant_chars]
+                return bool(relevant)
+
+            without_empty = [line for line in lines if is_relevant(line)]
+            lines = without_empty
+            # print(lines)
+
+            def detect_languages(text):
+                languages = []
+
+                contains_cyrillic = re.search(r'[А-ЯА-яё]', text)
+                if contains_cyrillic:
+                    languages += ['ru']
+
+                contains_english = re.search(r'[A-Za-z]', text)
+                if contains_english:
+                    languages += ['en']
+                return languages
+
+            rus = eng = []
+            lang = detect_languages(variable)
+            if 'ru' in lang and 'en' in lang:
+                # чётные строчки должны содержать русский текст, а нечётные перевод
+                rus, eng = lines[::2], lines[1::2]
+            elif 'ru' in lang:
+                rus = lines
+            elif 'en' in lang:
+                eng = lines
             return itertools.zip_longest(rus, eng, fillvalue='')
 
-        variables = MarkerVariable.objects.filter(marker__floor__project=self.project)
+        transformations = [
+            variable_transformations.UnescapeHtml(),
+            variable_transformations.HideMasterPageLine(),
+            variable_transformations.EliminateTabs(),
+            variable_transformations.EliminatePictCodes(),
+            variable_transformations.EliminateNumbers(),
+        ]
 
+        proj_variables = MarkerVariable.objects.filter(marker__floor__project=self.project)
+        vars_by_side, markers = MarkerVariable.objects.vars_by_side(
+            proj_variables,
+            apply_transformations=transformations
+        )
+
+        marker_numbers = Marker.objects.get_numbers_list(markers)
         var_first_use = {}
         var_count = collections.defaultdict(int)
-        for v in variables:
-            for lang_pair in process_var(v.value):
-                var_first_use.setdefault(lang_pair, v.marker.number)
-                var_count[lang_pair] += 1
+
+        for m in vars_by_side.keys():
+            marker_infoplan = vars_by_side[m]
+            for s in marker_infoplan.keys():
+                marker_vars = marker_infoplan[s]
+                for v in marker_vars:
+                    # debug = list(process_var(v))
+                    # print(debug)
+                    # ————————————
+                    # d = ''
+                    for lang_pair in process_var(v):
+                        var_first_use.setdefault(lang_pair, marker_numbers[m])
+                        var_count[lang_pair] += 1
 
         def by_rus(row):
             target: str = row[2]

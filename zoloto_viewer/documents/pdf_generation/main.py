@@ -79,7 +79,7 @@ def collect_marker_positions(floor: Page, layer: Layer):
 def collect_messages_data(floor: Page, layer: Layer):
     def marker_infoplan(vars_info_by_side, marker_uid, side_keys):
         return [
-            (side_key, vars_info_by_side.get((marker_uid, side_key), []))
+            (side_key, vars_info_by_side[marker_uid].get(side_key, []))
             for side_key in side_keys
         ]
 
@@ -89,7 +89,7 @@ def collect_messages_data(floor: Page, layer: Layer):
         transformations.UnescapeTabsText(),
         transformations.ReplacePictCodes()
     ]
-    vars_by_side, markers = MarkerVariable.objects.vars_page_layer_by_side(floor, layer, apply_transformations=filters)
+    vars_by_side, _ = MarkerVariable.objects.vars_page_layer_by_side(floor, layer, apply_transformations=filters)
     marker_numbers = Marker.objects.get_numbers(floor, layer)
 
     res = [
