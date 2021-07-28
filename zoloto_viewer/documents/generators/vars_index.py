@@ -63,6 +63,7 @@ class VarsIndexFileBuilder(_base.AbstractCsvFileBuilder):
             variable_transformations.EliminateTabs(),
             variable_transformations.EliminatePictCodes(),
             variable_transformations.EliminateNumbers(),
+            variable_transformations.EliminateArrows(),
         ]
 
         proj_variables = MarkerVariable.objects.filter(marker__floor__project=self.project)

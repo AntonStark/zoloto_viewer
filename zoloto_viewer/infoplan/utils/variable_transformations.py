@@ -135,6 +135,13 @@ class EliminateNumbers(PerOneTransformation):
         return re.sub(self.NUMBER_PERIODS_REGEX, '', var)
 
 
+class EliminateArrows(PerOneTransformation):
+    ARROWS_REGEX = r'[\u2190-\u2199]+'
+
+    def per_variable(self, var, **kwargs):
+        return re.sub(self.ARROWS_REGEX, '', var)
+
+
 def html_escape_incoming(vars_by_side):
     def _escape(vars_list):
         return [html.escape(v) for v in vars_list]
