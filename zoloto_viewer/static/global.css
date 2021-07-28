@@ -456,6 +456,10 @@ g.layer_markers.enabled_layer {
     font-size: 150%;
 }
 
+.variables-container-side-input {
+    font-family: Arial, serif;
+}
+
 .variables_container ul li {
     white-space: nowrap;
     font-size: 12px;

@@ -15,7 +15,7 @@ function makeDataRequest(markerUid, onResponse, onError=undefined) {
 
 function buildMessBox(data) {
     function buildInfoplanBlock(data) {
-        function buildSideNBlock(nSide) {
+        function buildSideNBlock(nSide, totalSideCount) {
             const sideLabels = {
                 1: 'Сторона A',
                 2: 'Сторона B',
@@ -33,7 +33,9 @@ function buildMessBox(data) {
 
                 let sideLabel = document.createElement('div');
                 sideLabel.setAttribute('style', 'font-size: 10px;');
-                sideLabel.textContent = sideLabels[nSide];
+                if (totalSideCount !== 1) {
+                    sideLabel.textContent = sideLabels[nSide];
+                }
 
                 let sideInput = document.createElement('textarea');
                 sideInput.setAttribute('class', 'variables-container-side-input')
@@ -75,7 +77,7 @@ function buildMessBox(data) {
         variablesDiv.style.gridTemplateColumns = `repeat(${sides}, 1fr)`;
 
         const sideNumbers = Array.from(Array(sides));
-        variablesDiv.append(...sideNumbers.map((e, i) => buildSideNBlock(i + 1)(data)));
+        variablesDiv.append(...sideNumbers.map((e, i) => buildSideNBlock(i + 1, sides)(data)));
 
         let infoplanDiv  = document.createElement('div');
         infoplanDiv.append(infoplanHeader, variablesDiv);
