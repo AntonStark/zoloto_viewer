@@ -86,7 +86,7 @@ def collect_messages_data(floor: Page, layer: Layer):
     filters = [
         transformations.UnescapeHtml(),
         transformations.HideMasterPageLine(),
-        transformations.EliminateTabsText(),
+        transformations.UnescapeTabsText(),
         transformations.ReplacePictCodes()
     ]
     vars_by_side, markers = MarkerVariable.objects.vars_page_layer_by_side(floor, layer, apply_transformations=filters)

@@ -11,6 +11,15 @@ class Transformation(abc.ABC):
         pass
 
 
+class PerOneTransformation(Transformation):
+    @abc.abstractmethod
+    def per_variable(self, var, **kwargs):
+        pass
+
+    def apply(self, variables_list, **kwargs):
+        return [self.per_variable(var, **kwargs) for var in variables_list]
+
+
 def tag_wrap(content, tag, **attrs):
     attrs['class'] = attrs.pop('class_', None)
     attrs_str = ' '.join(f'{k}="{v}"' for k, v in attrs.items() if v is not None)
@@ -22,27 +31,32 @@ class HideMasterPageLine(Transformation):
         return [var for var in variables_list if not var.startswith('mp:')]
 
 
-class EliminateTabs(Transformation):
-    def apply(self, variables_list, **kwargs):
-        return [tag_wrap(var.replace('&amp;tab', '\t'), 'pre') for var in variables_list]
+class UnescapeTabs(PerOneTransformation):
+    def per_variable(self, var, **kwargs):
+        return tag_wrap(var.replace('&amp;tab', '\t'), 'pre')
 
 
-class EliminateTabsText(Transformation):
-    def apply(self, variables_list, **kwargs):
-        return [var.replace('&tab', '\t') for var in variables_list]
+class UnescapeTabsText(PerOneTransformation):
+    def per_variable(self, var, **kwargs):
+        return var.replace('&tab', '\t')
 
 
-class NewlinesToBr(Transformation):
-    def apply(self, variables_list, **kwargs):
-        return [var.replace('\n', '<br>') for var in variables_list]
+class EliminateTabs(PerOneTransformation):
+    def per_variable(self, var, **kwargs):
+        return var.replace('&tab', '')
 
 
-class UnescapeHtml(Transformation):
-    def apply(self, variables_list, **kwargs):
-        return [html.unescape(v) for v in variables_list]
+class NewlinesToBr(PerOneTransformation):
+    def per_variable(self, var, **kwargs):
+        return var.replace('\n', '<br>')
 
 
-class ReplacePictCodes(Transformation):
+class UnescapeHtml(PerOneTransformation):
+    def per_variable(self, var, **kwargs):
+        return html.unescape(var)
+
+
+class ReplacePictCodes(PerOneTransformation):
     REPLACE_TABLE = [
         ('@WC@', '\ue900'),
         ('@MAN@', '\ue901'),
@@ -103,8 +117,22 @@ class ReplacePictCodes(Transformation):
             var = var.replace(code, tag_wrap(pict, 'span', class_='infoplan_icon'))
         return var
 
-    def apply(self, variables_list, **kwargs):
-        return [self.substitute_pict_codes(var) for var in variables_list]
+    def per_variable(self, var, **kwargs):
+        return self.substitute_pict_codes(var)
+
+
+class EliminatePictCodes(PerOneTransformation):
+    PICT_REGEX = re.compile(MarkerVariable.PICT_PATTERN)
+
+    def per_variable(self, var, **kwargs):
+        return re.sub(self.PICT_REGEX, '', var)
+
+
+class EliminateNumbers(PerOneTransformation):
+    NUMBER_PERIODS_REGEX = r'\d+…\d+|\d+\.\.\.?\d+|\d+'
+
+    def per_variable(self, var, **kwargs):
+        return re.sub(self.NUMBER_PERIODS_REGEX, '', var)
 
 
 def html_escape_incoming(vars_by_side):

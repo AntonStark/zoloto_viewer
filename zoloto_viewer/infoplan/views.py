@@ -94,7 +94,7 @@ class MarkerView(View):
         is_pretty = request.GET.get('pretty')
         filters = [
             transformations.HideMasterPageLine(),
-            transformations.EliminateTabs(),
+            transformations.UnescapeTabs(),
             transformations.NewlinesToBr(),
             transformations.ReplacePictCodes()
         ] if is_pretty else []
