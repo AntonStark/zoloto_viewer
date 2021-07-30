@@ -25,23 +25,26 @@ class Definitions:
     # AREA_HEIGHT = HEIGHT    # use full height as no header and footer
     SECOND_LINE = BOTTOM_LINE + LINES_PADDING + AREA_HEIGHT + LINES_PADDING
 
+    zoloto_viewer__documents__pdf_generation = os.path.dirname(__file__)
+    zoloto_viewer = os.path.dirname(os.path.dirname(zoloto_viewer__documents__pdf_generation))
+
     DEFAULT_FONT_NAME = 'FreePTSans'
-    DEFAULT_FONT_FILE = os.path.join(os.path.dirname(__file__), 'fonts/pt_sans.ttf')
+    DEFAULT_FONT_FILE = os.path.join(zoloto_viewer__documents__pdf_generation, 'fonts/pt_sans.ttf')
 
     PICT_FONT_NAME = 'Picts_v1'
-    PICT_FONT_FILE = os.path.join(os.path.dirname(__file__), 'fonts/picts_v1.ttf')
+    PICT_FONT_FILE = os.path.join(zoloto_viewer, 'static/picts_v2.ttf')
 
     MARK_FONT_SIZE = 22
     MARK_FONT_NAME = 'Elements_font'
-    MARK_FONT_FILE = os.path.join(os.path.dirname(__file__), 'fonts/elements_font.ttf')
+    MARK_FONT_FILE = os.path.join(zoloto_viewer__documents__pdf_generation, 'fonts/elements_font.ttf')
 
     HEADER_FONT_SIZE = 30
     HEADER_FONT_NAME = 'Aeroport'
-    HEADER_FONT_FILE = os.path.join(os.path.dirname(__file__), 'fonts/Aeroport-regular.ttf')
+    HEADER_FONT_FILE = os.path.join(zoloto_viewer__documents__pdf_generation, 'fonts/Aeroport-regular.ttf')
 
     FOOTER_FONT_SIZE = 21
     FOOTER_FONT_NAME = 'Zoloto'
-    FOOTER_FONT_FILE = os.path.join(os.path.dirname(__file__), 'fonts/Zoloto-Display-010520.ttf')
+    FOOTER_FONT_FILE = os.path.join(zoloto_viewer__documents__pdf_generation, 'fonts/Zoloto-Display-010520.ttf')
 
     PADDING_FOOTER = 15.6 * mm
     PADDING_HEADER = TOP_LINE - HEADER_FONT_SIZE
