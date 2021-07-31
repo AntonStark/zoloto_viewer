@@ -129,6 +129,7 @@ class MessageBox:
             3: 'Сторона C',
             4: 'Сторона D',
         }
+        side_count = len(infoplan)
 
         for side, vars_list in infoplan:
             y_text = y_number - 2 * 1.2 * mb.FONT_SIZE
@@ -136,16 +137,17 @@ class MessageBox:
             side_text.setFont(mb.FONT_NAME, mb.FONT_SIZE)
             side_text.setFillColor(colors.black)
 
-            side_header = side_labels.get(side, 'Сторона')
-            side_text.textLine(side_header)
+            if side_count != 1:     # не выводить "Сторона A" для односторонних
+                side_header = side_labels.get(side, 'Сторона')
+                side_text.textLine(side_header)
             for value in vars_list:
                 MessageBox.print_var_lines(side_text, value)
 
             if comment_lines and side == 1:
                 side_text.textLine()
                 side_text.setFillColor(colors.black)
-                for l in comment_lines:
-                    side_text.textLine(l)
+                for cl in comment_lines:
+                    side_text.textLine(cl)
             canvas.drawText(side_text)
         if correct is not None:
             mb.draw_check_mark(canvas, (x_start + box_width, y_start + box_height), correct)
@@ -174,6 +176,7 @@ class MessageBox:
             return cls.MESSAGE_SIDE_MIN_WIDTH
 
         canvas.setFont(cls.FONT_NAME, cls.FONT_SIZE)
+        lines += ['Сторона А']  # для простоты используем этот заголовок для всех сторон, длина почти одна у всех
         max_text_width = max(map(obtain_width, lines))
         return max_text_width
 
