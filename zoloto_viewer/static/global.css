@@ -241,6 +241,15 @@ input.disabled {
     max-width: 100px;
 }
 
+.area_title {
+    position: absolute;
+    right: 230px;
+    top: 0;
+
+    font-size: x-large;
+    margin: 5px;
+}
+
 
 
 .plan_marker {
