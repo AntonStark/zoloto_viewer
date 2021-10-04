@@ -187,7 +187,7 @@ class PlanLegend:
         return try_values[-1]
 
 
-def plan_page(canvas, floor: Page, marker_positions, layers_data: t.List[LayerData], title):
+def plan_page(canvas, floor: Page, marker_positions, layers_data: t.List[LayerData], title, super_title):
     layer_colors = {
         ld.id: ld.color
         for ld in layers_data
@@ -201,7 +201,7 @@ def plan_page(canvas, floor: Page, marker_positions, layers_data: t.List[LayerDa
         for number, position in layer_markers:
             box.add_marker(layer_id, number, position)
 
-    layout.draw_header(canvas, title)
+    layout.draw_header(canvas, title, super_title)
     layout.draw_footer(canvas)
     box.draw(canvas)
 

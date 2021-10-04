@@ -7,7 +7,7 @@ from reportlab.pdfgen import canvas as rc
 django.setup()
 from zoloto_viewer.viewer.models import Page
 
-from . import layout, main, message, plan
+from . import layout, main, message_page_writer as message, plan_page_writer as plan
 
 
 def test_plan():
@@ -15,7 +15,7 @@ def test_plan():
     marker_positions = main.collect_marker_positions(P, L)
     layers_data = [plan.LayerData(L.id, L.title, L.desc, main.color_adapter(L.color.rgb_code), L.kind_id)]
     title = [P.floor_caption, L.title]
-    plan.plan_page(C, P, marker_positions, layers_data, title)
+    plan.plan_page(C, P, marker_positions, layers_data, title, ['', ''])
     C.save()
 
 
@@ -24,7 +24,7 @@ def test_mess():
     marker_messages = main.collect_messages_data(P, L)
 
     message.message_pages(C, marker_messages, L.kind.sides,
-                          main.color_adapter(L.color.rgb_code), title)
+                          main.color_adapter(L.color.rgb_code), title, ['', ''])
     C.save()
 
 

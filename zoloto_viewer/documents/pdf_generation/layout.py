@@ -1,4 +1,5 @@
 import os
+from abc import abstractmethod, ABC
 from reportlab.lib.pagesizes import A3, landscape
 from reportlab.lib.units import mm
 from reportlab.pdfbase import pdfmetrics, ttfonts
@@ -42,12 +43,18 @@ class Definitions:
     HEADER_FONT_NAME = 'Aeroport'
     HEADER_FONT_FILE = os.path.join(zoloto_viewer__documents__pdf_generation, 'fonts/Aeroport-regular.ttf')
 
+    SUPER_HEADER_FONT_SIZE = 12
+    SUPER_HEADER_FONT_NAME = HEADER_FONT_NAME
+    SUPER_HEADER_FONT_FILE = HEADER_FONT_FILE
+    SUPER_HEADER_PADDING_TOP_LINE = 5
+
     FOOTER_FONT_SIZE = 21
     FOOTER_FONT_NAME = 'Zoloto'
     FOOTER_FONT_FILE = os.path.join(zoloto_viewer__documents__pdf_generation, 'fonts/Zoloto-Display-010520.ttf')
 
     PADDING_FOOTER = 15.6 * mm
     PADDING_HEADER = TOP_LINE - HEADER_FONT_SIZE
+    PADDING_SUPER_HEADER = TOP_LINE + SUPER_HEADER_PADDING_TOP_LINE
 
     PLAN_LEGEND_PADDING_LEFT = 10
     PLAN_LEGEND_PADDING_TOP = 20
@@ -108,7 +115,7 @@ def load_fonts():
 load_fonts()
 
 
-def draw_header(canvas: Canvas, title):
+def draw_header(canvas: Canvas, title, super_title):
     d = Definitions
     canvas.line(d.BOUND_LEFT, d.TOP_LINE, d.BOUND_RIGHT, d.TOP_LINE)
 
@@ -124,6 +131,10 @@ def draw_header(canvas: Canvas, title):
     else:
         raise TypeError(f'title of type {type(title)} not supported')
 
+    canvas.setFont(d.SUPER_HEADER_FONT_NAME, d.SUPER_HEADER_FONT_SIZE)
+    canvas.drawString(d.BOUND_LEFT, d.PADDING_SUPER_HEADER, super_title[0])
+    canvas.drawRightString(d.BOUND_RIGHT, d.PADDING_SUPER_HEADER, super_title[1])
+
     canvas.line(d.BOUND_LEFT, d.SECOND_LINE, d.BOUND_RIGHT, d.SECOND_LINE)
 
 
@@ -134,3 +145,46 @@ def draw_footer(canvas):
     canvas.setFont(d.FOOTER_FONT_NAME, d.FOOTER_FONT_SIZE)
     canvas.drawString(d.BOUND_LEFT, d.PADDING_FOOTER, 'z')
     canvas.drawRightString(d.BOUND_RIGHT, d.PADDING_FOOTER, str(canvas.getPageNumber()))
+
+
+class AbstractPageWriter(ABC):
+    def __init__(self, canvas):
+        self._canvas = canvas
+
+    @property
+    def canvas(self):
+        return self._canvas
+
+    @abstractmethod
+    def draw_content(self):
+        pass
+
+    @abstractmethod
+    def draw_footer(self):
+        pass
+
+    @abstractmethod
+    def draw_header(self):
+        pass
+
+    def write(self):
+        self.draw_header()
+        self.draw_footer()
+        self.draw_content()
+
+
+class BasePageWriter(AbstractPageWriter, ABC):
+    def __init__(self, canvas, title, super_title):
+        super().__init__(canvas)
+        self._title = title
+        self._super_title = super_title
+
+    def draw_header(self):
+        draw_header(self.canvas, self._title, self._super_title)
+
+    def draw_footer(self):
+        draw_footer(self.canvas)
+
+
+class NotEnoughSpaceException(Exception):
+    pass

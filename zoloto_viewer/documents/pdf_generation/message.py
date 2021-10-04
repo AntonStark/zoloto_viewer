@@ -242,6 +242,15 @@ class MessagesArea:
         else:
             return []
 
+    def place_row_or_raise(self):
+        if self._row_start >= self._box_height:
+            positions = [(c * (self._box_width + MessagesArea.PADDING_ROW), self._row_start)
+                         for c in range(self._column_count)]
+            self._row_start -= self._box_height + MessagesArea.PADDING_COL
+            return positions
+        else:
+            raise layout.NotEnoughSpaceException
+
     def reset(self):
         self._row_start = self._area_height - MessagesArea.PADDING_TOP - self._box_height
 
@@ -301,38 +310,3 @@ def calc_variable_metrics(marker_messages):
         for _, vars_list in infoplan
     ))
     return var_lines, max_var_count
-
-
-def message_pages(canvas, marker_messages, marker_sides, layer_color, title):
-    def chunk(seq, n):
-        for i in range(0, len(seq), n):
-            yield seq[i:i + n]
-
-    # marker_messages: [ ( number, [(side, vars_list)] ), ]
-    var_lines, max_var_count = calc_variable_metrics(marker_messages)
-    message_box = MessageBox(canvas, var_lines, max_var_count, marker_sides)
-    box_size = message_box.get_size()
-
-    area_width, area_height = layout.mess_area_size()
-    area_left, area_bottom = layout.mess_area_position()
-    area = MessagesArea(area_width, area_height, message_box)
-
-    layout.draw_header(canvas, title)
-    layout.draw_footer(canvas)
-    without_comment_lines = 0
-    batch_size = area.column_count()
-    for mess_chunk in chunk(marker_messages, batch_size):
-        positions = area.place_row(without_comment_lines)
-        if not positions:
-            canvas.showPage()
-            layout.draw_header(canvas, title)
-            layout.draw_footer(canvas)
-
-            area.reset()
-            positions = area.place_row(without_comment_lines)
-        if not positions:
-            area.error_message(canvas, mess_chunk)
-
-        for (number, infoplan), (offset_x, offset_y) in zip(mess_chunk, positions):
-            box_offset = area_left + offset_x, area_bottom + offset_y
-            message_box.draw_message_v2(canvas, number, infoplan, box_offset, box_size, layer_color)

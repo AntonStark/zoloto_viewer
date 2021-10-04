@@ -5,7 +5,7 @@ from zoloto_viewer.viewer.models import Project, Page, Layer
 from zoloto_viewer.infoplan.models import Marker, MarkerVariable
 from zoloto_viewer.infoplan.utils import variable_transformations as transformations
 
-from . import layout, message, plan
+from . import layout, message_page_writer as message, plan_page_writer as plan
 
 
 def generate_pdf(project: Project, buffer, filename):
@@ -14,7 +14,11 @@ def generate_pdf(project: Project, buffer, filename):
     at_canvas_beginning = True
 
     def draw_plan(page, layers):
-        title = [page.floor_caption, layers[0].title] if len(layers) == 1 else [page.floor_caption, '']
+        super_title = [page.project.title, page.project.stage]
+        title = [
+            f'Монтажная область {page.file_title}. {page.level_subtitle}',
+            (layers[0].title if len(layers) == 1 else '')
+        ]
         layers_data = [
             plan.LayerData(L.id, L.title, L.desc, color_adapter(L.color.rgb_code), L.kind_id)
             for L in layers
@@ -28,11 +32,15 @@ def generate_pdf(project: Project, buffer, filename):
         nonlocal at_canvas_beginning
         if not at_canvas_beginning:
             file_canvas.showPage()
-        plan.plan_page(file_canvas, page, marker_positions, layers_data, title)
+        plan.plan_page(file_canvas, page, marker_positions, layers_data, title, super_title)
         at_canvas_beginning = False
 
     def draw_messages(page, layer):
-        title = [page.floor_caption, layer.title]
+        super_title = [page.project.title, page.project.stage]
+        title = [
+            f'Монтажная область {page.file_title}. {page.level_subtitle}',
+            layer.title
+        ]
         marker_messages = collect_messages_data(page, layer)
 
         nonlocal file_canvas
@@ -40,7 +48,7 @@ def generate_pdf(project: Project, buffer, filename):
         if not at_canvas_beginning:
             file_canvas.showPage()
         message.message_pages(file_canvas, marker_messages, layer.kind.sides,
-                              color_adapter(layer.color.rgb_code), title)
+                              color_adapter(layer.color.rgb_code), title, super_title)
         at_canvas_beginning = False
 
     for P in project.page_set.all():
