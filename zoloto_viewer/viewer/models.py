@@ -205,6 +205,7 @@ class Page(models.Model):
     indd_floor = models.TextField(blank=False, null=False, editable=False)      # текст, лежащий на слое floor
     floor_caption = models.TextField(null=True)                                 # текст, отображаемый на странице
     document_offset = models.PositiveSmallIntegerField(null=True, default=None) # настройка порядка страниц
+    level = models.FloatField(null=True)
 
     marker_size_factor = models.IntegerField(default=100)       # possible values are: {SIZE_FACTOR_ALLOWED}
 
@@ -222,6 +223,14 @@ class Page(models.Model):
         right = self.plan.width
         geometric_bounds = [top, left, bottom, right]
         return geometric_bounds
+
+    @property
+    def level_subtitle(self):
+        return f'Отметка {self.level:.3f}' if self.level else ''
+
+    @property
+    def file_title(self):
+        return self.indd_floor
 
     @property
     def orig_file_name(self):
