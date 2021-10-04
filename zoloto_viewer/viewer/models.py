@@ -36,6 +36,10 @@ class Project(models.Model):
             if self.page_set.exists() else self.date_updated
         return max([self.date_updated, last_updated_layers, last_updated_pages])
 
+    @property
+    def is_set_layers_groups_started(self):
+        return LayerGroup.objects.filter(project=self).exists()
+
     def first_page(self):
         pages = Page.objects.filter(project=self)
         return pages.first() if pages.exists() else None
@@ -168,6 +172,23 @@ class Layer(models.Model):
     def max_color(layers: models.QuerySet):
         color_id = layers.aggregate(value=models.aggregates.Max('color'))['value']
         return Color.objects.get(id=color_id) if color_id else None
+
+
+class LayerGroup(models.Model):
+    project = models.ForeignKey(Project, on_delete=models.CASCADE)
+    layers = fields.ArrayField(models.IntegerField())
+
+    @classmethod
+    def group_layers(cls, project, layers_ids):
+        def chunks(seq, n):
+            for i in range(0, len(seq), n):
+                yield seq[i:i + n]
+
+        layers_per_group = 5
+        groups = []
+        for layers in chunks(layers_ids, layers_per_group):
+            groups.append(cls(project=project, layers=layers))
+        cls.objects.bulk_create(groups)
 
 
 def plan_upload_path(obj: 'Page', filename):
