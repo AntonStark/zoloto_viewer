@@ -39,7 +39,7 @@ def generate_pdf(project: Project, buffer, filename):
         super_title = [page.project.title, page.project.stage]
         title = [
             f'Монтажная область {page.file_title}. {page.level_subtitle}',
-            layer.title
+            ''
         ]
         marker_messages = make_messages_obj(page, layer)
 

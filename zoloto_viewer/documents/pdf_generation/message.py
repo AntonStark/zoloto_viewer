@@ -44,14 +44,11 @@ class MessageElem:
     canvas: Any = field(init=False)
     text_lines_per_side: dict = field(init=False)
     max_var_width: int = field(init=False)
-    max_lines: int = field(init=False)
+    side_heights: dict = field(init=False)
 
     def __post_init__(self):
         self._infoplan_to_lines()
-        self._set_max_lines()
-
-    def _set_max_lines(self):
-        self.max_lines = max(len(lines) for lines in self.text_lines_per_side.values())
+        self._calc_side_heights()
 
     def draw(self, position):
         self.canvas.saveState()
@@ -74,7 +71,7 @@ class MessageElem:
     def get_height(self):
         # number, empty = 2
         # 1.2 for interline space
-        height = (self.max_lines + 2) * 1.2 * self.FONT_SIZE
+        height = 2 * 1.2 * self.FONT_SIZE + max(self.side_heights.values()) + self.PADDING_BOTTOM
         return height
 
     def get_side_header(self, side: int):
@@ -132,8 +129,13 @@ class MessageElem:
         side_text.setFillColor(colors.black)
 
         text_lines = self.text_lines_per_side[side_number]
+        first_line = True
         for line in text_lines:     # type: TextPictLine
-            line.write_to_text(side_text)
+            if first_line:
+                line.write_to_text_no_newline(side_text)
+            else:
+                line.write_to_text_newline_before(side_text)
+            first_line = False
         self.canvas.drawText(side_text)
 
     def _infoplan_to_lines(self):
@@ -149,11 +151,27 @@ class MessageElem:
             # use dict
             self.text_lines_per_side[side] = side_lines
 
+    def _calc_side_heights(self):
+        self.side_heights = dict()
+        for side, lines in self.text_lines_per_side.items():
+            line_heights = [
+                self.PICT_FONT_SIZE if line.contains_picts() else self.FONT_SIZE
+                for line in lines
+            ]
+            # 1.2 for interline space
+            self.side_heights[side] = 1.2 * sum(line_heights)
+
 
 class TextPictLine:
     def __init__(self, source):
         # source: [(text: str, is_pict: bool), ]
         self._source = source
+
+    def __repr__(self):
+        return self._source.__repr__()
+
+    def contains_picts(self):
+        return any(is_pict for text, is_pict in self._source)
 
     @classmethod
     def from_plain(cls, text):
@@ -170,7 +188,30 @@ class TextPictLine:
         for text, is_pict in self._source:
             text_obj.setFont(self._font_name(is_pict), self._font_size(is_pict))
             text_obj.textOut(text)
+        is_pict = False
+        text_obj.setFont(self._font_name(is_pict), self._font_size(is_pict))
         text_obj.textLine()
+
+    def write_to_text_no_newline(self, text_obj):
+        for text, is_pict in self._source:
+            text_obj.setFont(self._font_name(is_pict), self._font_size(is_pict))
+            text_obj.textOut(text)
+
+    def write_to_text_newline_before(self, text_obj):
+        try:
+            _, start_from_pict = self._source[0]
+        except IndexError:
+            start_from_pict = False
+        text_obj.setFont(self._font_name(start_from_pict), self._font_size(start_from_pict))
+        text_obj.textLine()
+
+        for text, is_pict in self._source:
+            if is_pict:
+                text_obj.setRise(-3)
+            text_obj.setFont(self._font_name(is_pict), self._font_size(is_pict))
+            text_obj.textOut(text)
+            if is_pict:
+                text_obj.setRise(0)
 
     def _font_name(self, is_pict):
         font_name = layout.Definitions.PICT_FONT_NAME if is_pict \
