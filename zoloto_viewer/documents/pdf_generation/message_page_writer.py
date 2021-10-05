@@ -1,59 +1,46 @@
 from . import layout
-from .message import calc_variable_metrics, MessagesArea, MessageBox
+from .message import MessagesAreaFreeBox, MessageElem
 
 
 class MessagePageWriter(layout.BasePageWriter):
     _marker_messages = None
-    _marker_sides = None
-    _layer_color = None
 
-    def __init__(self, canvas, title, super_title,
-                 marker_messages, marker_sides, layer_color):
+    def __init__(self, canvas, title, super_title, marker_messages):
         super().__init__(canvas, title, super_title)
-        self.set_params(marker_messages, marker_sides, layer_color)
+        self.set_params(marker_messages)
+
+    def write(self):
+        self.draw_header()
+        self.draw_footer()
+        try:
+            self.draw_content()
+        except layout.NotEnoughSpaceException:
+            self.canvas.showPage()
+            self.write()
 
     def draw_content(self):
-        def chunk(seq, n):
-            for i in range(0, len(seq), n):
-                yield seq[i:i + n]
-
-        # marker_messages: [ ( number, [(side, vars_list)] ), ]
-        var_lines, max_var_count = calc_variable_metrics(self._marker_messages)
-        message_box = MessageBox(self.canvas, var_lines, max_var_count, self._marker_sides)
-        box_size = message_box.get_size()
-
         area_width, area_height = layout.mess_area_size()
         area_left, area_bottom = layout.mess_area_position()
-        area = MessagesArea(area_width, area_height, message_box)
+        area = MessagesAreaFreeBox(area_width, area_height)
 
-        without_comment_lines = 0
-        batch_size = area.column_count()
-        for mess_chunk in chunk(self._marker_messages, batch_size):
-            positions = area.place_row(without_comment_lines)
-            if not positions:
-                self.canvas.showPage()
-                self.draw_header()
-                self.draw_footer()
+        while self._marker_messages:
+            message: MessageElem = self._marker_messages.pop(0)
+            message.set_canvas(self.canvas)
+            try:
+                offset_left, offset_bottom = area.place_message(message.get_width(), message.get_height())
+            except layout.TooLargeMessageException:
+                area.error_message(self.canvas, message)
+                continue
+            except layout.NotEnoughSpaceException:
+                self._marker_messages.insert(0, message)
+                raise
+            box_offset = area_left + offset_left, area_bottom + offset_bottom
+            message.draw(box_offset)
 
-                area.reset()
-                positions = area.place_row(without_comment_lines)
-            if not positions:
-                area.error_message(self.canvas, mess_chunk)
-
-            for (number, infoplan), (offset_x, offset_y) in zip(mess_chunk, positions):
-                box_offset = area_left + offset_x, area_bottom + offset_y
-                message_box.draw_message_v2(self.canvas, number, infoplan, box_offset, box_size, self._layer_color)
-
-    def set_params(self, marker_messages, marker_sides, layer_color):
+    def set_params(self, marker_messages):
         self._marker_messages = marker_messages
-        self._marker_sides = marker_sides
-        self._layer_color = layer_color
 
 
-def message_pages(canvas, marker_messages, marker_sides, layer_color, title, super_title):
-    writer = MessagePageWriter(canvas, title, super_title, marker_messages, marker_sides, layer_color)
+def message_pages(canvas, marker_messages, title, super_title):
+    writer = MessagePageWriter(canvas, title, super_title, marker_messages)
     writer.write()
-
-# place_row_or_raise
-# todo handle layout.NotEnoughSpaceException and continue from where left off
-# todo 2 повторная ошибка должна давать сообщение об ошибке

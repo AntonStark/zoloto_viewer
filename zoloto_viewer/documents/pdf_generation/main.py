@@ -41,14 +41,13 @@ def generate_pdf(project: Project, buffer, filename):
             f'Монтажная область {page.file_title}. {page.level_subtitle}',
             layer.title
         ]
-        marker_messages = collect_messages_data(page, layer)
+        marker_messages = make_messages_obj(page, layer)
 
         nonlocal file_canvas
         nonlocal at_canvas_beginning
         if not at_canvas_beginning:
             file_canvas.showPage()
-        message.message_pages(file_canvas, marker_messages, layer.kind.sides,
-                              color_adapter(layer.color.rgb_code), title, super_title)
+        message.message_pages(file_canvas, marker_messages, title, super_title)
         at_canvas_beginning = False
 
     for P in project.page_set.all():
@@ -104,6 +103,34 @@ def collect_messages_data(floor: Page, layer: Layer):
         (
             marker_numbers[marker_uid],
             marker_infoplan(vars_by_side, marker_uid, layer.kind.side_keys())
+        )
+        for marker_uid in marker_numbers.keys()
+    ]
+    return res
+
+
+def make_messages_obj(floor: Page, layer: Layer):
+    def marker_infoplan(vars_info_by_side, marker_uid, side_keys):
+        return [
+            (side_key, vars_info_by_side[marker_uid].get(side_key, []))
+            for side_key in side_keys
+        ]
+
+    filters = [
+        transformations.UnescapeHtml(),
+        transformations.HideMasterPageLine(),
+        transformations.UnescapeTabsText(),
+        transformations.ReplacePictCodes()
+    ]
+    vars_by_side, _ = MarkerVariable.objects.vars_page_layer_by_side(floor, layer, apply_transformations=filters)
+    marker_numbers = Marker.objects.get_numbers(floor, layer)
+
+    res = [
+        message.MessageElem(
+            marker_numbers[marker_uid],
+            marker_infoplan(vars_by_side, marker_uid, layer.kind.side_keys()),
+            layer.kind.sides,
+            color_adapter(layer.color.rgb_code)
         )
         for marker_uid in marker_numbers.keys()
     ]

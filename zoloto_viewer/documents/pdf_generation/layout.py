@@ -1,7 +1,7 @@
 import os
 from abc import abstractmethod, ABC
 from reportlab.lib.pagesizes import A3, landscape
-from reportlab.lib.units import mm
+from reportlab.lib.units import cm, mm
 from reportlab.pdfbase import pdfmetrics, ttfonts
 from reportlab.pdfgen.canvas import Canvas
 
@@ -63,6 +63,9 @@ class Definitions:
     MESSAGES_PADDING_LEFT = BOUND_LEFT
     # MESSAGES_PADDING_RIGHT = MESSAGES_PADDING_LEFT
     MESSAGES_PADDING_RIGHT = BOUND_RIGHT
+    MESSAGES_PADDING_ROW = 2 * cm
+    MESSAGES_PADDING_COL = 1 * cm
+    MESSAGES_PADDING_TOP = 2 * cm
 
     @classmethod
     def bottom_line_upper_bound(cls):
@@ -187,4 +190,8 @@ class BasePageWriter(AbstractPageWriter, ABC):
 
 
 class NotEnoughSpaceException(Exception):
+    pass
+
+
+class TooLargeMessageException(Exception):
     pass
