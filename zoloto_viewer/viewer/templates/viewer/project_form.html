@@ -41,10 +41,13 @@
                 <tr class="loaded_plan" id='{{ forloop.counter0 }}' draggable="true">
                 {% load byte_filter %}
                     <td><i class="fas fa-bars"></i></td>
-                    <td><input type="text" name="floor_caption_{{ filename|as_base64 }}" value="{{ p.floor_caption }}"></td>
+                    <td><input type="text" name="floor_caption_{{ filename|as_base64 }}" value="{{ p.floor_caption }}"
+                               style="display: none;"></td>
                     <td>{{ filename }}</td>
                     <td><a class="mark-delete"
                            onclick="deleteFileHandler('{{ filename }}', this.parentNode.parentNode)">&#x2A09</a></td>
+                    <td><input type="number" step="0.001" name="floor_level_{{ filename|as_base64 }}" value="{{ p.level|default_if_none:'' }}"
+                               placeholder="Отметка 0.000" required></td>
                     <td><input type="text" name="floor_offset_{{ filename|as_base64 }}"
                                class="plan-row-offset-input disabled" style="visibility: hidden;"
                                value="{{ p.document_offset|default_if_none:forloop.counter }}"></td>

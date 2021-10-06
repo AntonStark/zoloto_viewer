@@ -55,6 +55,7 @@ const cellInit = {
         let input = document.createElement('input');
         input.type = 'text';
         input.name = 'floor_caption_' + btoa(fileDesc.name);
+        input.setAttribute('style', 'display: none;');
         input.value = fileDesc.name.split('.').slice(0, -1).join('.');
         td.append(input);
         return td;
@@ -83,6 +84,17 @@ const cellInit = {
         return td;
     },
     5: function (fileDesc, extra) {
+        let td = document.createElement('td');
+        let input = document.createElement('input');
+        input.type = 'number';
+        input.step = '0.001';
+        input.name = 'floor_level_' + btoa(fileDesc.name);
+        input.placeholder = 'Отметка 0.000';
+        input.required = true;
+        td.append(input);
+        return td;
+    },
+    6: function (fileDesc, extra) {
         let td = document.createElement('td');
         let input = document.createElement('input');
         input.type = 'text';

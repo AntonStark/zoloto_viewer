@@ -95,6 +95,13 @@ class Project(models.Model):
                 p.document_offset = floor_offsets[caption]
                 p.save()
 
+    def alter_floor_levels(self, floor_levels):
+        for p in Page.objects.filter(project=self):
+            caption = p.floor_caption
+            if caption in floor_levels.keys():
+                p.level = floor_levels[caption]
+                p.save()
+
 
 # noinspection PyUnusedLocal
 @receiver(models.signals.post_delete, sender=Project)
