@@ -1,4 +1,6 @@
 import os
+import re
+
 from abc import abstractmethod, ABC
 from reportlab.lib.pagesizes import A3, landscape
 from reportlab.lib.units import cm, mm
@@ -188,6 +190,8 @@ class BasePageWriter(AbstractPageWriter, ABC):
     def draw_footer(self):
         draw_footer(self.canvas)
 
+    # def get_title
+
 
 class NotEnoughSpaceException(Exception):
     pass
@@ -195,3 +199,29 @@ class NotEnoughSpaceException(Exception):
 
 class TooLargeMessageException(Exception):
     pass
+
+
+# todo move
+def color_adapter(html_color):
+    """
+    Transform to inner package format
+    :param html_color: string like 'rgb(36,182,255)'
+    :return: {model, values} where model = 'CMYK' | 'RGB' and values: 3 or 4 int tuple
+    """
+    parse3 = re.match(r'^(?P<model>\w+)\((?P<values>\d+%?, ?\d+%?, ?\d+%?(?:, ?\d+%?)?)\)$', html_color)
+    model, values_string = parse3.groups()
+    return {
+        'model': model.upper(),
+        'values': [int(v.rstrip('%')) for v in values_string.split(',')]
+    }
+
+
+def set_colors(canvas, color):
+    model = color.get('model', None)
+    values = color.get('values', None)
+    if model == 'CMYK' and len(values) == 4:
+        canvas.setFillColorCMYK(*[v / 100. for v in values])
+        canvas.setStrokeColorCMYK(*[v / 100. for v in values])
+    elif model == 'RGB' and len(values) == 3:
+        canvas.setFillColorRGB(*[v / 255. for v in values])
+        canvas.setStrokeColorRGB(*[v / 255. for v in values])

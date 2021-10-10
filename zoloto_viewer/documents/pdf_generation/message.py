@@ -8,17 +8,6 @@ from typing import Any
 from . import layout
 
 
-def set_colors(canvas, color):
-    model = color.get('model', None)
-    values = color.get('values', None)
-    if model == 'CMYK' and len(values) == 4:
-        canvas.setFillColorCMYK(*[v / 100. for v in values])
-        canvas.setStrokeColorCMYK(*[v / 100. for v in values])
-    elif model == 'RGB' and len(values) == 3:
-        canvas.setFillColorRGB(*[v / 255. for v in values])
-        canvas.setStrokeColorRGB(*[v / 255. for v in values])
-
-
 @dataclass
 class MessageElem:
     FONT_NAME = layout.Definitions.DEFAULT_FONT_NAME
@@ -108,7 +97,7 @@ class MessageElem:
     def _draw_bounds(self, position):
         x_start, y_start = position
         box_width, box_height = self.get_width(), self.get_height()
-        set_colors(self.canvas, self.layer_color)
+        layout.set_colors(self.canvas, self.layer_color)
         self.canvas.rect(x_start, y_start, box_width, box_height, stroke=1, fill=0)
 
     def _draw_number(self, position):

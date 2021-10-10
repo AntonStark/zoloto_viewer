@@ -12,19 +12,22 @@ from . import layout, main, message_page_writer as message, plan_page_writer as 
 
 def test_plan():
     C = rc.Canvas(filename, pagesize=layout.Definitions.PAGE_SIZE)
-    marker_positions = main.collect_marker_positions(P, L)
-    layers_data = [plan.LayerData(L.id, L.title, L.desc, main.color_adapter(L.color.rgb_code), L.kind_id)]
+    marker_positions = main.make_marker_objects(P, L)
     title = [P.floor_caption, L.title]
-    plan.plan_page(C, P, marker_positions, layers_data, title, ['', ''])
+    plan.plan_page(C, P, marker_positions, [L], title, ['', ''])
     C.save()
 
 
 def test_mess():
     C = rc.Canvas(filename, pagesize=layout.Definitions.PAGE_SIZE)
-    marker_messages = main.collect_messages_data(P, L)
+    marker_messages = main.make_messages_obj(P, L)
+    super_title = [P.project.title, P.project.stage]
+    title = [
+        f'Монтажная область {P.file_title}. {P.level_subtitle}',
+        ''
+    ]
 
-    message.message_pages(C, marker_messages, L.kind.sides,
-                          main.color_adapter(L.color.rgb_code), title, ['', ''])
+    message.message_pages(C, marker_messages, title, super_title)
     C.save()
 
 

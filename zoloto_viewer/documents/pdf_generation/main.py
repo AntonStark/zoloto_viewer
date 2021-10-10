@@ -1,5 +1,6 @@
-import re
+import itertools
 from reportlab.pdfgen import canvas
+from typing import List
 
 from zoloto_viewer.viewer.models import Project, Page, Layer
 from zoloto_viewer.infoplan.models import Marker, MarkerVariable
@@ -19,20 +20,12 @@ def generate_pdf(project: Project, buffer, filename):
             f'Монтажная область {page.file_title}. {page.level_subtitle}',
             (layers[0].title if len(layers) == 1 else '')
         ]
-        layers_data = [
-            plan.LayerData(L.id, L.title, L.desc, color_adapter(L.color.rgb_code), L.kind_id)
-            for L in layers
-        ]
-        marker_positions = {
-            L.id: collect_marker_positions(page, L)
-            for L in layers
-        }
 
         nonlocal file_canvas
         nonlocal at_canvas_beginning
         if not at_canvas_beginning:
             file_canvas.showPage()
-        plan.plan_page(file_canvas, page, marker_positions, layers_data, title, super_title)
+        plan.plan_page(file_canvas, page, layers, marker_objects_many_layers, title, super_title)
         at_canvas_beginning = False
 
     def draw_messages(page, layer):
@@ -59,54 +52,26 @@ def generate_pdf(project: Project, buffer, filename):
     file_canvas.save()
 
 
-def color_adapter(html_color):
-    """
-    Transform to inner package format
-    :param html_color: string like 'rgb(36,182,255)'
-    :return: {model, values} where model = 'CMYK' | 'RGB' and values: 3 or 4 int tuple
-    """
-    parse3 = re.match(r'^(?P<model>\w+)\((?P<values>\d+%?, ?\d+%?, ?\d+%?(?:, ?\d+%?)?)\)$', html_color)
-    model, values_string = parse3.groups()
-    return {
-        'model': model.upper(),
-        'values': [int(v.rstrip('%')) for v in values_string.split(',')]
-    }
-
-
-def collect_marker_positions(floor: Page, layer: Layer):
+def make_marker_objects(floor: Page, layer: Layer):
     marker_positions = Marker.objects.get_positions(floor, layer)
     marker_numbers = Marker.objects.get_numbers(floor, layer)
     return [
-        (marker_numbers[marker_uid], marker_positions[marker_uid])
+        plan.Object(
+            *marker_positions[marker_uid],
+            number=marker_numbers[marker_uid],
+            layer=layer
+        )
         for marker_uid in marker_positions.keys()
         if marker_uid in marker_numbers.keys()
     ]
 
 
-def collect_messages_data(floor: Page, layer: Layer):
-    def marker_infoplan(vars_info_by_side, marker_uid, side_keys):
-        return [
-            (side_key, vars_info_by_side[marker_uid].get(side_key, []))
-            for side_key in side_keys
-        ]
-
-    filters = [
-        transformations.UnescapeHtml(),
-        transformations.HideMasterPageLine(),
-        transformations.UnescapeTabsText(),
-        transformations.ReplacePictCodes()
-    ]
-    vars_by_side, _ = MarkerVariable.objects.vars_page_layer_by_side(floor, layer, apply_transformations=filters)
-    marker_numbers = Marker.objects.get_numbers(floor, layer)
-
-    res = [
-        (
-            marker_numbers[marker_uid],
-            marker_infoplan(vars_by_side, marker_uid, layer.kind.side_keys())
-        )
-        for marker_uid in marker_numbers.keys()
-    ]
-    return res
+def marker_objects_many_layers(floor: Page, layers: List[Layer]):
+    marker_positions = list(itertools.chain.from_iterable(
+        make_marker_objects(floor, L)
+        for L in layers
+    ))
+    return marker_positions
 
 
 def make_messages_obj(floor: Page, layer: Layer):
@@ -130,7 +95,7 @@ def make_messages_obj(floor: Page, layer: Layer):
             marker_numbers[marker_uid],
             marker_infoplan(vars_by_side, marker_uid, layer.kind.side_keys()),
             layer.kind.sides,
-            color_adapter(layer.color.rgb_code)
+            layout.color_adapter(layer.color.rgb_code)
         )
         for marker_uid in marker_numbers.keys()
     ]
