@@ -78,8 +78,9 @@ def make_marker_objects_many_layers(floor: Page, layers: List[Layer]):
 
 def make_messages_obj(floor: Page, layer: Layer):
     def marker_infoplan(vars_info_by_side, marker_uid, side_keys):
+        infoplan = vars_info_by_side.get(marker_uid, {})
         return [
-            (side_key, vars_info_by_side[marker_uid].get(side_key, []))
+            (side_key, infoplan.get(side_key, []))
             for side_key in side_keys
         ]
 
