@@ -2,12 +2,12 @@ from . import layout
 from .message import MessagesAreaFreeBox, MessageElem
 
 
-class MessagePageWriter(layout.BasePageWriter):
-    def __init__(self, canvas, floor, layer, title, super_title, marker_messages_getter):
-        super().__init__(canvas, title, super_title)
+class MessagePageWriter(layout.BasePageWriterDeducingTitle):
+    def __init__(self, canvas, floor, layer, marker_messages_getter):
         self.floor = floor
         self.layer = layer
         self._marker_messages = marker_messages_getter(floor, layer)
+        super().__init__(canvas)
 
     def write(self):
         self.draw_header()
@@ -17,6 +17,18 @@ class MessagePageWriter(layout.BasePageWriter):
         except layout.NotEnoughSpaceException:
             self.canvas.showPage()
             self.write()
+
+    def make_page_title(self):
+        title = [
+            f'Монтажная область {self.floor.file_title}. {self.floor.level_subtitle}',
+            ''
+        ]
+        return title
+
+    def make_page_super_title(self):
+        super_title = [self.floor.project.title, self.floor.project.stage]
+        return super_title
+
 
     def draw_content(self):
         area_width, area_height = layout.mess_area_size()
@@ -36,8 +48,3 @@ class MessagePageWriter(layout.BasePageWriter):
                 raise
             box_offset = area_left + offset_left, area_bottom + offset_bottom
             message.draw(box_offset)
-
-
-def message_pages(canvas, floor, layer, marker_messages_getter, title, super_title):
-    writer = MessagePageWriter(canvas, floor, layer, title, super_title, marker_messages_getter)
-    writer.write()

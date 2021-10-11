@@ -1,20 +1,19 @@
 from typing import List
 
-from zoloto_viewer.viewer.models import Page
+from zoloto_viewer.viewer.models import Layer, Page
 
 from . import layout
 from .plan import PlanBox, PlanLegend, Object, MarkerCaption, BoundingRect
 
 
-class PlanPageWriter(layout.BasePageWriter):
+class PlanPageWriter(layout.BasePageWriterDeducingTitle):
     _content_box = None
 
-    def __init__(self, canvas, title, super_title,
-                 floor: Page, layers, marker_positions_getter):
-        super().__init__(canvas, title, super_title)
+    def __init__(self, canvas, floor: Page, layers: List[Layer], marker_positions_getter):
         self.floor = floor
         self.layers = layers
         self._marker_positions = marker_positions_getter(floor, layers)
+        super().__init__(canvas)
 
     @classmethod
     def place_legend(cls):
@@ -27,6 +26,17 @@ class PlanPageWriter(layout.BasePageWriter):
         self._draw_plan_markers()
         self._draw_legend()
 
+    def make_page_title(self):
+        title = [
+            f'Монтажная область {self.floor.file_title}. {self.floor.level_subtitle}',
+            (self.layers[0].title if len(self.layers) == 1 else '')
+        ]
+        return title
+
+    def make_page_super_title(self):
+        super_title = [self.floor.project.title, self.floor.project.stage]
+        return super_title
+
     def _draw_plan_markers(self):
         self._content_box = PlanBox(self.floor.plan_pil_obj,
                                     (self.floor.plan.width, self.floor.plan.height),
@@ -37,8 +47,3 @@ class PlanPageWriter(layout.BasePageWriter):
     def _draw_legend(self):
         legend = PlanLegend(self.place_legend(), layout.Definitions.BOTTOM_LINE, len(self.layers))
         legend.draw(self.canvas, self._content_box, self.layers)
-
-
-def plan_page(canvas, floor: Page, layers, marker_obj_getter, title, super_title):
-    writer = PlanPageWriter(canvas, title, super_title, floor, layers, marker_obj_getter)
-    writer.write()

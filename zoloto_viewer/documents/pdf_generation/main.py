@@ -15,31 +15,22 @@ def generate_pdf(project: Project, buffer, filename):
     at_canvas_beginning = True
 
     def draw_plan(page, layers):
-        super_title = [page.project.title, page.project.stage]
-        title = [
-            f'Монтажная область {page.file_title}. {page.level_subtitle}',
-            (layers[0].title if len(layers) == 1 else '')
-        ]
-
         nonlocal file_canvas
         nonlocal at_canvas_beginning
         if not at_canvas_beginning:
             file_canvas.showPage()
-        plan.plan_page(file_canvas, page, layers, marker_objects_many_layers, title, super_title)
+        writer = plan.PlanPageWriter(file_canvas, page, layers, make_marker_objects_many_layers)
+        writer.write()
         at_canvas_beginning = False
 
     def draw_messages(page, layer):
-        super_title = [page.project.title, page.project.stage]
-        title = [
-            f'Монтажная область {page.file_title}. {page.level_subtitle}',
-            ''
-        ]
-
         nonlocal file_canvas
         nonlocal at_canvas_beginning
         if not at_canvas_beginning:
             file_canvas.showPage()
-        message.message_pages(file_canvas, page, layer, make_messages_obj, title, super_title)
+
+        writer = message.MessagePageWriter(file_canvas, page, layer, make_messages_obj)
+        writer.write()
         at_canvas_beginning = False
 
     for P in project.page_set.all():
@@ -65,7 +56,7 @@ def make_marker_objects(floor: Page, layer: Layer):
     ]
 
 
-def marker_objects_many_layers(floor: Page, layers: List[Layer]):
+def make_marker_objects_many_layers(floor: Page, layers: List[Layer]):
     marker_positions = list(itertools.chain.from_iterable(
         make_marker_objects(floor, L)
         for L in layers
@@ -99,3 +90,11 @@ def make_messages_obj(floor: Page, layer: Layer):
         for marker_uid in marker_numbers.keys()
     ]
     return res
+
+
+def make_messages_obj_many_layers(floor: Page, layers: List[Layer]):
+    messages = list(itertools.chain.from_iterable(
+        make_messages_obj(floor, L)
+        for L in layers
+    ))
+    return messages

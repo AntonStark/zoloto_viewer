@@ -190,7 +190,20 @@ class BasePageWriter(AbstractPageWriter, ABC):
     def draw_footer(self):
         draw_footer(self.canvas)
 
-    # def get_title
+
+class BasePageWriterDeducingTitle(BasePageWriter, ABC):
+    def __init__(self, canvas):
+        title = self.make_page_title()
+        super_title = self.make_page_super_title()
+        super().__init__(canvas, title, super_title)
+
+    @abstractmethod
+    def make_page_title(self):
+        pass
+
+    @abstractmethod
+    def make_page_super_title(self):
+        pass
 
 
 class NotEnoughSpaceException(Exception):
