@@ -184,6 +184,16 @@ class Layer(models.Model):
 class LayerGroup(models.Model):
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
     layers = fields.ArrayField(models.IntegerField())
+    num = models.IntegerField(null=False, default=0)
+
+    class Meta:
+        unique_together = [['project', 'num']]
+        ordering = ['num']
+
+    def save(self, *args, **kwargs):
+        if not self.num and self.project:
+            self.num = LayerGroup.max_project_group_num(self.project) + 1
+        super(LayerGroup, self).save(*args, **kwargs)
 
     @classmethod
     def group_layers(cls, project, layers_ids):
@@ -196,6 +206,12 @@ class LayerGroup(models.Model):
         for layers in chunks(layers_ids, layers_per_group):
             groups.append(cls(project=project, layers=layers))
         cls.objects.bulk_create(groups)
+
+    @classmethod
+    def max_project_group_num(cls, project):
+        groups_same_project = LayerGroup.objects.filter(project=project)
+        max_num = groups_same_project.aggregate(value=models.Max('num'))['value']
+        return max_num if max_num else 0
 
 
 def plan_upload_path(obj: 'Page', filename):
