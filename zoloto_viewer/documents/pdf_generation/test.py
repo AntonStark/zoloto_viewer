@@ -27,7 +27,7 @@ def test_mess():
         ''
     ]
 
-    message.message_pages(C, marker_messages, title, super_title)
+    message.message_pages(C, P, L, marker_messages, title, super_title)
     C.save()
 
 

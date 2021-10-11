@@ -3,11 +3,11 @@ from .message import MessagesAreaFreeBox, MessageElem
 
 
 class MessagePageWriter(layout.BasePageWriter):
-    _marker_messages = None
-
-    def __init__(self, canvas, title, super_title, marker_messages):
+    def __init__(self, canvas, floor, layer, title, super_title, marker_messages_getter):
         super().__init__(canvas, title, super_title)
-        self.set_params(marker_messages)
+        self.floor = floor
+        self.layer = layer
+        self._marker_messages = marker_messages_getter(floor, layer)
 
     def write(self):
         self.draw_header()
@@ -37,10 +37,7 @@ class MessagePageWriter(layout.BasePageWriter):
             box_offset = area_left + offset_left, area_bottom + offset_bottom
             message.draw(box_offset)
 
-    def set_params(self, marker_messages):
-        self._marker_messages = marker_messages
 
-
-def message_pages(canvas, marker_messages, title, super_title):
-    writer = MessagePageWriter(canvas, title, super_title, marker_messages)
+def message_pages(canvas, floor, layer, marker_messages_getter, title, super_title):
+    writer = MessagePageWriter(canvas, floor, layer, title, super_title, marker_messages_getter)
     writer.write()

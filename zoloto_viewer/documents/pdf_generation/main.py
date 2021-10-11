@@ -34,13 +34,12 @@ def generate_pdf(project: Project, buffer, filename):
             f'Монтажная область {page.file_title}. {page.level_subtitle}',
             ''
         ]
-        marker_messages = make_messages_obj(page, layer)
 
         nonlocal file_canvas
         nonlocal at_canvas_beginning
         if not at_canvas_beginning:
             file_canvas.showPage()
-        message.message_pages(file_canvas, marker_messages, title, super_title)
+        message.message_pages(file_canvas, page, layer, make_messages_obj, title, super_title)
         at_canvas_beginning = False
 
     for P in project.page_set.all():

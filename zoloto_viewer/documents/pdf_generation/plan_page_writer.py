@@ -8,9 +8,6 @@ from .plan import PlanBox, PlanLegend, Object, MarkerCaption, BoundingRect
 
 class PlanPageWriter(layout.BasePageWriter):
     _content_box = None
-    _marker_positions = None
-    floor = None
-    layers = None
 
     def __init__(self, canvas, title, super_title,
                  floor: Page, layers, marker_positions_getter):
