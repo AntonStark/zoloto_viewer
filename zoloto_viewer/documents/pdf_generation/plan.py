@@ -76,7 +76,7 @@ class PlanBox:
         elif model == 'RGB' and len(values) == 3:
             canvas.setFillColorRGB(*[v / 255. for v in values])
 
-    def draw(self, canvas: rc.Canvas):
+    def draw(self, canvas: rc.Canvas, **options):
         # ведущее направеление считаем так: берём отношение ширина/высота
         # если оно больше или равно заданному тогда горизонталь ведущее направление, в противном случае вертикаль
         # если это горизонталь, обновляем self._box_height
@@ -94,8 +94,11 @@ class PlanBox:
                              height=self._box_height, preserveAspectRatio=True, anchor='sw')
 
         for mo in self._markers:   # type: Object
-            mo.draw(canvas, self)
-            mo.caption().draw(canvas, self)
+            mo.draw(canvas, self, **options)
+            draw_caption = options.get('draw_captions', True)
+            # todo поворачивать подписи
+            if draw_caption:
+                mo.caption().draw(canvas, self, **options)
 
     def get_marker_example(self, layer_id):
         original_marker: Object = [mo for mo in self._markers if mo.layer_id == layer_id][0]
@@ -184,7 +187,7 @@ class Object:
             self.marker = MarkerCaption(self.number, rotation=0, obj=self)
         return self.marker
 
-    def draw(self, canvas, box, convert_pos=True, font_size=None):
+    def draw(self, canvas, box, convert_pos=True, font_size=None, **options):
         MARKS = {
             1: '\uE901',
             2: '\uE902',
@@ -226,7 +229,7 @@ class MarkerCaption:
     def __repr__(self):
         return f'<{self.__class__.__name__} number={self.number}>'
 
-    def draw(self, canvas, box):
+    def draw(self, canvas, box, **_):
         x, y = box.calc_pos(self.obj.center)
         x, y = x + PlanBox.CAPTION_DELTA, y - PlanBox.CAPTION_DELTA
 

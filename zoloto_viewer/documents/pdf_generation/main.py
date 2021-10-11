@@ -1,8 +1,8 @@
 import itertools
-from reportlab.pdfgen import canvas
+from reportlab.pdfgen import canvas as reportlab_canvas
 from typing import List
 
-from zoloto_viewer.viewer.models import Project, Page, Layer
+from zoloto_viewer.viewer.models import Project, Page, Layer, LayerGroup
 from zoloto_viewer.infoplan.models import Marker, MarkerVariable
 from zoloto_viewer.infoplan.utils import variable_transformations as transformations
 
@@ -10,36 +10,48 @@ from . import layout, message_page_writer as message, plan_page_writer as plan
 
 
 def generate_pdf(project: Project, buffer, filename):
-    file_canvas = canvas.Canvas(buffer, pagesize=layout.Definitions.PAGE_SIZE)
-    file_canvas.setTitle(filename)
+    canvas = reportlab_canvas.Canvas(buffer, pagesize=layout.Definitions.PAGE_SIZE)
+    canvas.setTitle(filename)
     at_canvas_beginning = True
 
-    def draw_plan(page, layers):
-        nonlocal file_canvas
-        nonlocal at_canvas_beginning
-        if not at_canvas_beginning:
-            file_canvas.showPage()
-        writer = plan.PlanPageWriter(file_canvas, page, layers, make_marker_objects_many_layers)
+    def first_page_canvas_management(method):
+        def inner(*args, **kwargs):
+            nonlocal canvas
+            nonlocal at_canvas_beginning
+            if not at_canvas_beginning:
+                canvas.showPage()
+            at_canvas_beginning = False
+
+            method(*args, **kwargs)
+
+        return inner
+
+    @first_page_canvas_management
+    def draw_plan_no_captions(page, layers):
+        writer = plan.PlanPageWriterMinimal(canvas, page, layers, make_marker_objects_many_layers)
         writer.write()
-        at_canvas_beginning = False
 
-    def draw_messages(page, layer):
-        nonlocal file_canvas
-        nonlocal at_canvas_beginning
-        if not at_canvas_beginning:
-            file_canvas.showPage()
-
-        writer = message.MessagePageWriter(file_canvas, page, layer, make_messages_obj)
+    @first_page_canvas_management
+    def draw_plan_active_layers_group(page, layers, active_layers):
+        writer = plan.PlanPageWriterLayerGroups(canvas, page, layers, active_layers, make_marker_objects_many_layers)
         writer.write()
-        at_canvas_beginning = False
 
+    @first_page_canvas_management
+    def draw_messages(page, layers):
+        writer = message.MessagePageWriter(canvas, page, layers, make_messages_obj_many_layers)
+        writer.write()
+
+    layer_groups = LayerGroup.objects.filter(project=project)
     for P in project.page_set.all():
         page_layers = Layer.objects.filter(marker__floor=P).distinct()
-        draw_plan(P, page_layers)
-        for one_layer in page_layers:       # type: Layer
-            draw_plan(P, [one_layer])
-            draw_messages(P, one_layer)
-    file_canvas.save()
+        draw_plan_no_captions(P, page_layers)
+        for lg in layer_groups:     # type: LayerGroup
+            try:
+                draw_plan_active_layers_group(P, page_layers, lg.layers)
+            except plan.NoMarkersInActiveGroupException:
+                continue
+        draw_messages(P, page_layers)
+    canvas.save()
 
 
 def make_marker_objects(floor: Page, layer: Layer):

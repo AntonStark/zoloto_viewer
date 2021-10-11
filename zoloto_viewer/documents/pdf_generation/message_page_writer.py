@@ -3,10 +3,10 @@ from .message import MessagesAreaFreeBox, MessageElem
 
 
 class MessagePageWriter(layout.BasePageWriterDeducingTitle):
-    def __init__(self, canvas, floor, layer, marker_messages_getter):
+    def __init__(self, canvas, floor, layers, marker_messages_getter):
         self.floor = floor
-        self.layer = layer
-        self._marker_messages = marker_messages_getter(floor, layer)
+        self.layers = layers
+        self._marker_messages = marker_messages_getter(floor, layers)
         super().__init__(canvas)
 
     def write(self):
@@ -28,7 +28,6 @@ class MessagePageWriter(layout.BasePageWriterDeducingTitle):
     def make_page_super_title(self):
         super_title = [self.floor.project.title, self.floor.project.stage]
         return super_title
-
 
     def draw_content(self):
         area_width, area_height = layout.mess_area_size()

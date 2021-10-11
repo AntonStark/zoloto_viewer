@@ -12,7 +12,7 @@ from . import layout, main, message_page_writer as message, plan_page_writer as 
 
 def test_plan():
     C = rc.Canvas(filename, pagesize=layout.Definitions.PAGE_SIZE)
-    writer = plan.PlanPageWriter(C, P, [L], main.make_marker_objects)
+    writer = plan.PlanPageWriterMinimal(C, P, [L], main.make_marker_objects)
     writer.write()
     C.save()
 
