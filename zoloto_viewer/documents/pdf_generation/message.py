@@ -19,6 +19,7 @@ class MessageElem:
     PADDING_SIDES = PADDING_LEFT
     PADDING_BOTTOM = 0.5 * FONT_SIZE
     PADDING_TOP = 0.1 * FONT_SIZE
+    MIN_WIDTH = 30
 
     NUMBER_RECT_HEIGHT = 1.6 * FONT_SIZE
     MESSAGE_SIDE_MIN_WIDTH = 50
@@ -32,7 +33,7 @@ class MessageElem:
 
     canvas: Any = field(init=False)
     text_lines_per_side: dict = field(init=False)
-    max_var_width: int = field(init=False)
+    max_var_width: int = field(init=False, default=None)
     side_heights: dict = field(init=False)
 
     def __post_init__(self):
@@ -74,12 +75,14 @@ class MessageElem:
         return side_header
 
     def get_width(self):
-        if not self.max_var_width:
+        if self.max_var_width is None:
             raise ValueError('need to set canvas')
 
         width = self.PADDING_LEFT + self.side_count * self.max_var_width \
                 + (self.side_count - 1) * self.PADDING_SIDES \
                 + self.PADDING_RIGHT
+        if width < self.MIN_WIDTH:
+            width = self.MIN_WIDTH
         return width
 
     def set_canvas(self, canvas):
