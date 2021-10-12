@@ -95,7 +95,7 @@ class MessageElem:
             for lines in self.text_lines_per_side.values()
             for line in lines
         ]
-        self.max_var_width = max(width_list)
+        self.max_var_width = max(width_list) if width_list else 0
 
     def _draw_bounds(self, position):
         x_start, y_start = position
