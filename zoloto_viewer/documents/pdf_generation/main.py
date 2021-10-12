@@ -43,7 +43,7 @@ def generate_pdf(project: Project, buffer, filename):
 
     layer_groups = LayerGroup.objects.filter(project=project)
     for P in project.page_set.all():
-        page_layers = Layer.objects.filter(marker__floor=P).distinct().order_by('number')
+        page_layers = Layer.objects.filter(marker__floor=P).distinct()
         draw_plan_no_captions(P, page_layers)
         for lg in layer_groups:     # type: LayerGroup
             active_layers = Layer.objects.filter(id__in=lg.layers)

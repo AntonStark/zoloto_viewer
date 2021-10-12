@@ -150,7 +150,7 @@ class Layer(models.Model):
 
     class Meta:
         unique_together = [['project', 'title']]
-        ordering = ['-number']
+        ordering = ['number']
 
     def save(self, *args, **kwargs):
         if self.title:
