@@ -12,12 +12,6 @@ from . import layout
 class PlanBox:
     DECLARED_PLAN_ASPECT = 365 / 227
 
-    CAPTION_FONT_NAME = 'Helvetica'
-    CAPTION_FONT_SIZE = 6
-    CAPTION_DELTA = 8
-
-    CORRECT_CIRCLE_RADIUS = 10
-
     def __init__(self, image_pil, image_size, indd_bounds):
         self._img = ImageReader(image_pil)
         self._img_size = image_size
@@ -25,16 +19,6 @@ class PlanBox:
 
         self._box_width, self._box_height = layout.work_area_size()
         self._box_x, self._box_y = layout.plan_area_position()
-
-        self._markers = []
-
-    @property
-    def markers(self):
-        return self._markers
-
-    @markers.setter
-    def markers(self, value):
-        self._markers = value
 
     def left_top_corner(self):
         return self._box_x, self._box_y + self._box_height
@@ -55,27 +39,6 @@ class PlanBox:
         factor = self._box_height / (gb_bottom - gb_top)
         return (factor * point[0], factor * point[1])
 
-    def _draw_caption(self, canvas, marker_center, number):
-        x, y = self.calc_pos(marker_center)
-        x, y = x + PlanBox.CAPTION_DELTA, y - PlanBox.CAPTION_DELTA
-        canvas.setFont(self.CAPTION_FONT_NAME, self.CAPTION_FONT_SIZE)
-        width = canvas.stringWidth(number)
-        height = PlanBox.CAPTION_FONT_SIZE
-
-        canvas.rect(x, y - 1, width, height, stroke=0, fill=1)
-        canvas.saveState()
-        canvas.setFillColor(colors.white)
-        canvas.drawString(x, y, number)
-        canvas.restoreState()
-
-    def _set_color(self, canvas, color):
-        model = color.get('model', None)
-        values = color.get('values', None)
-        if model == 'CMYK' and len(values) == 4:
-            canvas.setFillColorCMYK(*[v / 100. for v in values])
-        elif model == 'RGB' and len(values) == 3:
-            canvas.setFillColorRGB(*[v / 255. for v in values])
-
     def draw_plan_image(self, canvas: rc.Canvas, **options):
         # ведущее направеление считаем так: берём отношение ширина/высота
         # если оно больше или равно заданному тогда горизонталь ведущее направление, в противном случае вертикаль
@@ -85,43 +48,15 @@ class PlanBox:
         if actual_aspect >= PlanBox.DECLARED_PLAN_ASPECT:
             self._box_height = self._box_width / actual_aspect
             canvas.drawImage(self._img, x=self._box_x, y=self._box_y,
-                             width=self._box_width, preserveAspectRatio=True, anchor='sw')
+                             width=self._box_width,
+                             preserveAspectRatio=True, anchor='sw')
         else:
             new_width = self._box_height * actual_aspect
             self._box_x += (self._box_width - new_width) / 2
             self._box_width = new_width
             canvas.drawImage(self._img, x=self._box_x, y=self._box_y,
-                             height=self._box_height, preserveAspectRatio=True, anchor='sw')
-
-    def draw(self, canvas: rc.Canvas, **options):
-        # ведущее направеление считаем так: берём отношение ширина/высота
-        # если оно больше или равно заданному тогда горизонталь ведущее направление, в противном случае вертикаль
-        # если это горизонталь, обновляем self._box_height
-        # если вертикаль, то нужно пересчитать ширину и сдвиг слева
-        actual_aspect = self._img_size[0] / self._img_size[1]
-        if actual_aspect >= PlanBox.DECLARED_PLAN_ASPECT:
-            self._box_height = self._box_width / actual_aspect
-            canvas.drawImage(self._img, x=self._box_x, y=self._box_y,
-                             width=self._box_width, preserveAspectRatio=True, anchor='sw')
-        else:
-            new_width = self._box_height * actual_aspect
-            self._box_x += (self._box_width - new_width) / 2
-            self._box_width = new_width
-            canvas.drawImage(self._img, x=self._box_x, y=self._box_y,
-                             height=self._box_height, preserveAspectRatio=True, anchor='sw')
-
-        for mo in self._markers:   # type: Object
-            mo.draw(canvas, self, **options)
-            draw_caption = options.get('draw_captions', True)
-            # todo поворачивать подписи
-            if draw_caption:
-                mo.caption().draw(canvas, self, **options)
-
-    def get_marker_example(self, layer_id):
-        original_marker: Object = [mo for mo in self._markers if mo.layer_id == layer_id][0]
-        marker_example = original_marker
-        marker_example.a = 0
-        return marker_example
+                             height=self._box_height,
+                             preserveAspectRatio=True, anchor='sw')
 
 
 class PlanLegend:
@@ -204,6 +139,11 @@ class Object:
             self.marker = MarkerCaption(self.number, rotation=0, obj=self)
         return self.marker
 
+    def get_default_caption_position(self, box):
+        x, y = box.calc_pos(self.center)
+        x, y = x + MarkerCaption.CAPTION_DELTA, y - MarkerCaption.CAPTION_DELTA
+        return x, y
+
     def draw(self, canvas, box, convert_pos=True, font_size=None, **options):
         MARKS = {
             1: '\uE901',
@@ -250,11 +190,11 @@ class MarkerCaption:
 
     def draw(self, canvas, box, **_):
         x, y = box.calc_pos(self.obj.center)
-        x, y = x + PlanBox.CAPTION_DELTA, y - PlanBox.CAPTION_DELTA
+        x, y = x + self.CAPTION_DELTA, y - self.CAPTION_DELTA
 
         canvas.setFont(self.CAPTION_FONT_NAME, self.CAPTION_FONT_SIZE)
         width = canvas.stringWidth(self.number)
-        height = PlanBox.CAPTION_FONT_SIZE
+        height = self.CAPTION_FONT_SIZE
 
         canvas.saveState()
         layout.set_colors(canvas, self.obj.layer_color)
