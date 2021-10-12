@@ -4,6 +4,7 @@ import re
 from abc import abstractmethod, ABC
 from reportlab.lib.pagesizes import A3, landscape
 from reportlab.lib.units import cm, mm
+from reportlab.lib.colors import Color, CMYKColor
 from reportlab.pdfbase import pdfmetrics, ttfonts
 from reportlab.pdfgen.canvas import Canvas
 
@@ -229,12 +230,14 @@ def color_adapter(html_color):
     }
 
 
-def set_colors(canvas, color):
+def set_colors(canvas, color, alpha=1):
     model = color.get('model', None)
     values = color.get('values', None)
     if model == 'CMYK' and len(values) == 4:
-        canvas.setFillColorCMYK(*[v / 100. for v in values])
-        canvas.setStrokeColorCMYK(*[v / 100. for v in values])
+        color = CMYKColor(*[v / 100. for v in values])
     elif model == 'RGB' and len(values) == 3:
-        canvas.setFillColorRGB(*[v / 255. for v in values])
-        canvas.setStrokeColorRGB(*[v / 255. for v in values])
+        color = Color(*[v / 255. for v in values])
+    else:
+        raise ValueError(f'Unknown color model: model={model}, values={values}')
+    canvas.setFillColor(color, alpha=alpha)
+    canvas.setStrokeColor(color, alpha=alpha)
