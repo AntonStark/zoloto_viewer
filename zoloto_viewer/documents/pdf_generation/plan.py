@@ -76,6 +76,23 @@ class PlanBox:
         elif model == 'RGB' and len(values) == 3:
             canvas.setFillColorRGB(*[v / 255. for v in values])
 
+    def draw_plan_image(self, canvas: rc.Canvas, **options):
+        # ведущее направеление считаем так: берём отношение ширина/высота
+        # если оно больше или равно заданному тогда горизонталь ведущее направление, в противном случае вертикаль
+        # если это горизонталь, обновляем self._box_height
+        # если вертикаль, то нужно пересчитать ширину и сдвиг слева
+        actual_aspect = self._img_size[0] / self._img_size[1]
+        if actual_aspect >= PlanBox.DECLARED_PLAN_ASPECT:
+            self._box_height = self._box_width / actual_aspect
+            canvas.drawImage(self._img, x=self._box_x, y=self._box_y,
+                             width=self._box_width, preserveAspectRatio=True, anchor='sw')
+        else:
+            new_width = self._box_height * actual_aspect
+            self._box_x += (self._box_width - new_width) / 2
+            self._box_width = new_width
+            canvas.drawImage(self._img, x=self._box_x, y=self._box_y,
+                             height=self._box_height, preserveAspectRatio=True, anchor='sw')
+
     def draw(self, canvas: rc.Canvas, **options):
         # ведущее направеление считаем так: берём отношение ширина/высота
         # если оно больше или равно заданному тогда горизонталь ведущее направление, в противном случае вертикаль
@@ -182,7 +199,7 @@ class Object:
     def position(self):
         return self.x, self.y, self.a
 
-    def caption(self):
+    def caption(self) -> 'MarkerCaption':
         if not self.marker:
             self.marker = MarkerCaption(self.number, rotation=0, obj=self)
         return self.marker
@@ -199,6 +216,8 @@ class Object:
         font = layout.Definitions.MARK_FONT_NAME
         size = font_size or layout.Definitions.MARK_FONT_SIZE
         _centralize = - size / 2
+        opacity = options.get('objects_opacity', 100)
+        alpha = opacity / 100
 
         if convert_pos:
             x, y = box.calc_pos(self.center)
@@ -207,7 +226,7 @@ class Object:
         rotation = self.a
 
         canvas.saveState()
-        layout.set_colors(canvas, self.layer_color)
+        layout.set_colors(canvas, self.layer_color, alpha=alpha)
         canvas.setFont(font, size)
         canvas.translate(x, y)
         canvas.rotate(-rotation)

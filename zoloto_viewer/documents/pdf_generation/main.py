@@ -43,12 +43,15 @@ def generate_pdf(project: Project, buffer, filename):
 
     layer_groups = LayerGroup.objects.filter(project=project)
     for P in project.page_set.all():
-        page_layers = Layer.objects.filter(marker__floor=P).distinct()
+        page_layers = Layer.objects.filter(marker__floor=P).distinct().order_by('number')
         draw_plan_no_captions(P, page_layers)
         for lg in layer_groups:     # type: LayerGroup
+            active_layers = Layer.objects.filter(id__in=lg.layers)
             try:
-                draw_plan_active_layers_group(P, page_layers, lg.layers)
+                draw_plan_active_layers_group(P, page_layers, active_layers)
             except plan.NoMarkersInActiveGroupException:
+                # handle that showPage already was called and need to skip next
+                at_canvas_beginning = True
                 continue
         draw_messages(P, page_layers)
     canvas.save()
