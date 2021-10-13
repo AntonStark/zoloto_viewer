@@ -52,7 +52,6 @@ class PlanPageWriterMinimal(layout.BasePageWriterDeducingTitle):
         for mo in markers:   # type: Object
             mo.draw(self.canvas, self._content_box, **options)
             draw_caption = options.get('draw_captions', True)
-            # todo поворачивать подписи
             if draw_caption:
                 mo.caption().draw(self.canvas, self._content_box, **options)
 
@@ -71,7 +70,7 @@ class PlanPageWriterLayerGroups(PlanPageWriterMinimal):
                                          if mo.layer in self._active_layers]
         if not self._marker_positions_active:
             # skip layer group where no markers
-            raise NoMarkersInActiveGroupException
+            raise layout.NoMarkersInActiveGroupException
         self._marker_positions_inactive = [mo for mo in self._marker_positions
                                            if mo.layer not in self._active_layers]
 
@@ -87,7 +86,3 @@ class PlanPageWriterLayerGroups(PlanPageWriterMinimal):
         self._draw_markers(self._marker_positions_active)
 
         self._draw_legend(self._active_layers)
-
-
-class NoMarkersInActiveGroupException(Exception):
-    pass

@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 from reportlab.lib import colors
 from reportlab.lib.utils import ImageReader
 from reportlab.pdfgen import canvas as rc
-from typing import Any
+from typing import Any, Union
 
 from zoloto_viewer.viewer.models import Layer
 
@@ -136,6 +136,7 @@ class Object:
 
     def caption(self) -> 'MarkerCaption':
         if not self.marker:
+            # todo поворачивать подписи
             self.marker = MarkerCaption(self.number, rotation=0, obj=self)
         return self.marker
 
@@ -189,8 +190,7 @@ class MarkerCaption:
         return f'<{self.__class__.__name__} number={self.number}>'
 
     def draw(self, canvas, box, **_):
-        x, y = box.calc_pos(self.obj.center)
-        x, y = x + self.CAPTION_DELTA, y - self.CAPTION_DELTA
+        x, y = self.obj.get_default_caption_position(box)
 
         canvas.setFont(self.CAPTION_FONT_NAME, self.CAPTION_FONT_SIZE)
         width = canvas.stringWidth(self.number)
@@ -205,11 +205,13 @@ class MarkerCaption:
 
 
 @dataclass
-class BoundingRect:
+class BoundingBox:
     x: int
     y: int
     w: int
     h: int
 
-    def intersect(self, other: 'BoundingRect'):
+    ref: Union[Object, MarkerCaption]
+
+    def intersect(self, other: 'BoundingBox'):
         pass    # todo

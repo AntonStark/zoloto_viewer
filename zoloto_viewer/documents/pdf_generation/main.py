@@ -49,8 +49,8 @@ def generate_pdf(project: Project, buffer, filename):
             active_layers = Layer.objects.filter(id__in=lg.layers)
             try:
                 draw_plan_active_layers_group(P, page_layers, active_layers)
-            except plan.NoMarkersInActiveGroupException:
-                # handle that showPage already was called and need to skip next
+            except layout.NoMarkersInActiveGroupException:
+                # handle that showPage already was called and need to skip next call
                 at_canvas_beginning = True
                 continue
         draw_messages(P, page_layers)
