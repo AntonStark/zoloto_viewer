@@ -58,3 +58,24 @@ DEFAULT_FILE_STORAGE = 'zoloto_viewer.config.settings.storage_backends.S3MediaSt
 
 SENTRY_DSN = os.getenv('SENTRY_DSN')
 sentry.init(SENTRY_DSN)
+
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'loggers': {
+        'zoloto_viewer.documents.pdf_generation.plan_page_writer': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+        },
+        'zoloto_viewer.documents.pdf_generation.plan': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+        }
+    }
+}
