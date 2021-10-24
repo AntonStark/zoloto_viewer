@@ -156,11 +156,20 @@ function ControllerMarkerCircles() {
         const marker = messageBoxManager.getMarker(markerUid);
         if (!marker)
             return;
+        function canonical_angle(a) {
+            while (a >= 360) {
+                a -= 360;
+            }
+            while (a < 0) {
+                a += 360;
+            }
+            return a;
+        }
 
         return {
             pos_x: marker.getAttribute('x'),
             pos_y: marker.getAttribute('y'),
-            rotation: marker.transform.animVal[0].angle,
+            rotation: canonical_angle(-marker.transform.animVal[0].angle),
         };
     }
     function _rotationHelper(markerUid, delta) {
@@ -171,7 +180,7 @@ function ControllerMarkerCircles() {
             return;
 
         const marker = messageBoxManager.getMarker(markerUid);
-        marker.setAttribute('transform', `rotate(${m.rotation + delta} ${m.pos_x} ${m.pos_y})`);
+        marker.setAttribute('transform', `rotate(-${m.rotation + delta} ${m.pos_x} ${m.pos_y})`);
         _addMarkersTouched([markerUid]);
     }
     function updateRotation(markerUidArray, delta) {

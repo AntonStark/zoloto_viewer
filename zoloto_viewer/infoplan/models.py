@@ -93,6 +93,10 @@ class Marker(models.Model):
         return f'{self.layer.title}/{self.floor.floor_caption}/{self.ordinal}'
 
     @property
+    def neg_rotation(self):
+        return -self.rotation
+
+    @property
     def position(self):
         return self.pos_x, self.pos_y, self.rotation
 
@@ -105,6 +109,7 @@ class Marker(models.Model):
             markers_same_series = Marker.objects.filter(layer=self.layer, floor=self.floor)
             max_ordinal = markers_same_series.aggregate(value=models.Max('ordinal'))['value']
             self.ordinal = max_ordinal + 1 if max_ordinal else 1
+        self._handle_rotation()
         super().save(*args, **kwargs)
 
     def copy(self, copy_variables=True, floor=None, pos_x=None, pos_y=None, rotation=None) -> 'Marker':
@@ -156,6 +161,14 @@ class Marker(models.Model):
         if page:
             j['page'] = self.floor.code
         return j
+
+    def _handle_rotation(self):
+        value = self.rotation
+        while value >= 360:
+            value -= 360
+        while value < 0:
+            value += 360
+        self.rotation = value
 
 
 class VariablesManager(models.Manager):
