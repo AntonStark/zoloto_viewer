@@ -264,3 +264,13 @@ def edit_project_layer(request, project_id, layer_title):
     if not (is_valid_code and same_project_page):
         return_to_page_code = project.first_page().code
     return redirect(to='project_page', page_code=return_to_page_code)
+
+
+@login_required
+@http.require_http_methods(['GET'])
+def setup_layer_groups(request, project_id):
+    project = get_object_or_404(Project, id=project_id)
+    context = {
+        'project': project,
+    }
+    return render(request, 'viewer/layer_grouping.html', context=context)

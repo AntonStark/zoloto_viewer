@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Group layers - {{ project.title }}</title>
+
+    {% load static %}
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.3/css/all.css"
+          integrity="sha384-SZXxX4whJ79/gErwcOYf+zWLeJdY/qpuqC4cAa9rOGUstPomtqpuNWT9wdPEn2fk" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="{% static 'global.css' %}">
+</head>
+<body>
+<h2>Группировка носителей</h2>
+<div class="group_setup_pdf_btn__wrapper"><label for="layer_grouping_1" class="group_setup_pdf_btn__btn fill-button">
+    <i class="fas fa-long-arrow-alt-down"></i>
+    PDF
+    <input id="layer_grouping_1" type="button" style="display: none;">
+</label></div>
+{# черновик шаблона #}
+<div class="group_setup_panel">
+    <div class="group_setup_panel__not_grouped">
+        Типы вне группы
+        <div class="group_setup_panel__group_container">
+            <ul>
+                <li>a</li>
+                <li>a</li>
+                <li>a</li>
+                <li>a</li>
+                <li>a</li>
+                <li>a</li>
+                <li>a</li>
+                <li>a</li>
+                <li>a</li>
+                <li>a</li>
+            </ul>
+        </div>
+    </div>
+    <div class="group_setup_panel__groups_list">
+        <div class="group_setup_panel__group_container">Группа 1</div>
+        <div class="group_setup_panel__group_container">Группа 2</div>
+        <a>+ Добавить группу</a>
+    </div>
+</div>
+</body>
+</html>

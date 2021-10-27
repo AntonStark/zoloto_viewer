@@ -515,3 +515,20 @@ g.layer_markers.enabled_layer {
     border: 2px solid black;
     padding: 2px;
 }
+
+
+.group_setup_pdf_btn__wrapper {
+    margin: 20px 0;
+}
+.group_setup_pdf_btn__btn {
+    font-size: x-large;
+    padding: 0 6px;
+}
+
+.group_setup_panel__not_grouped {
+    display: inline-block;
+}
+
+.group_setup_panel__groups_list {
+    display: inline-block;
+}

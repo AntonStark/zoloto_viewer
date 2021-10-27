@@ -21,6 +21,7 @@ urlpatterns = [
     path('project/<int:project_id>/add_layer', views.add_project_layer, name='add_project_layer'),
     path('project/<int:project_id>/edit_layer/<str:layer_title>', views.edit_project_layer,
          name='edit_project_layer'),
+    path('project/<int:project_id>/group_layers', views.setup_layer_groups, name='setup_layer_groups'),
 
     path('page/<str:page_code>/', views.project_page, name='project_page'),
     path('page/<str:page_code>/edit/', views.edit_project_page, name='edit_project_page'),

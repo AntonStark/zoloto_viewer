@@ -4,9 +4,9 @@
 <head>
     <meta charset="UTF-8">
     {% if layer.id is None %}
-        <title>Добавить тип</title>
+        <title>Create layer - {{ project.title }}</title>
     {% else %}
-        <title>Изменить тип</title>
+        <title>Change layer - {{ project.title }}</title>
     {% endif %}
     <link rel="stylesheet" type="text/css" href="{% static 'global.css' %}">
 </head>
