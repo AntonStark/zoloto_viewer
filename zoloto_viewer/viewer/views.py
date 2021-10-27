@@ -1,5 +1,7 @@
 import json
 import operator
+from functools import wraps
+
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db import IntegrityError
@@ -8,7 +10,7 @@ from django.shortcuts import get_object_or_404, render, redirect
 from django.views.decorators import csrf, http
 
 from zoloto_viewer.infoplan import views as infoplan_views
-from zoloto_viewer.viewer.models import Color, Project, Layer, MarkerKind, Page
+from zoloto_viewer.viewer.models import Color, Project, Layer, LayerGroup, MarkerKind, Page
 from zoloto_viewer.viewer.view_helpers import project_form, title_short_code
 
 
@@ -274,3 +276,19 @@ def setup_layer_groups(request, project_id):
         'project': project,
     }
     return render(request, 'viewer/layer_grouping.html', context=context)
+
+
+def with_layers_group_check(project_view):
+    @wraps(project_view)
+    def decorated(request, project_id):
+        project = get_object_or_404(Project, id=project_id)
+        all_grouped, remains = LayerGroup.all_layers_grouped(project)
+        if not all_grouped:
+            if not request.GET.get('autogroup_remains'):
+                return redirect(to='setup_layer_groups', project_id=project_id)
+            else:
+                LayerGroup.autogroup_layers(project, remains)
+        # all layers grouped now
+        return project_view(request, project_id)
+
+    return decorated

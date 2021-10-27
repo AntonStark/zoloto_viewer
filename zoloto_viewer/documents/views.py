@@ -7,6 +7,7 @@ from django.views.decorators import csrf, http
 from django.utils import timezone
 
 from zoloto_viewer.viewer.models import Project
+from zoloto_viewer.viewer.views import with_layers_group_check
 from zoloto_viewer.documents.models import ProjectFile
 
 
@@ -53,6 +54,7 @@ def get_infoplan_file(request, project_id):
 @login_required
 @csrf.csrf_exempt
 @http.require_http_methods(['GET', 'HEAD'])
+@with_layers_group_check
 def get_pdf_file(request, project_id):
     # with HEAD request not send file content if present
     project = get_object_or_404(Project, id=project_id)

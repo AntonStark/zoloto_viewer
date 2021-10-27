@@ -196,7 +196,7 @@ class LayerGroup(models.Model):
         super(LayerGroup, self).save(*args, **kwargs)
 
     @classmethod
-    def group_layers(cls, project, layers_ids):
+    def autogroup_layers(cls, project, layers_ids):
         def chunks(seq, n):
             for i in range(0, len(seq), n):
                 yield seq[i:i + n]
@@ -206,6 +206,17 @@ class LayerGroup(models.Model):
         for layers in chunks(layers_ids, layers_per_group):
             groups.append(cls(project=project, layers=layers))
         cls.objects.bulk_create(groups)
+
+    @classmethod
+    def all_layers_grouped(cls, project):
+        grouped_layers = []
+        for gr in cls.objects.filter(project=project).all():
+            grouped_layers.extend(gr.layers)
+
+        all_layers = [l.id for l in Layer.objects.filter(project=project).all()]
+        is_all = grouped_layers == all_layers
+        remains = [l_id for l_id in all_layers if l_id not in grouped_layers]
+        return is_all, remains
 
     @classmethod
     def max_project_group_num(cls, project):
