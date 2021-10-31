@@ -7,7 +7,9 @@ from django.contrib.auth.decorators import login_required
 from django.db import IntegrityError
 from django.http import Http404, JsonResponse
 from django.shortcuts import get_object_or_404, render, redirect
+from django.views import View
 from django.views.decorators import csrf, http
+from django.utils.decorators import method_decorator
 
 from zoloto_viewer.infoplan import views as infoplan_views
 from zoloto_viewer.viewer.models import Color, Project, Layer, LayerGroup, MarkerKind, Page
@@ -173,23 +175,24 @@ def edit_project_page(request, page_code):
     return JsonResponse({'status': 'success'}, status=200)
 
 
+def parse_return_to_page_queryparam(request, proj, param='return_to_page'):
+    fallback_option = proj.first_page().code
+    return_to_page_code = request.GET.get(param, fallback_option)
+    is_valid_code = Page.validate_code(return_to_page_code)
+    same_project = Page.by_code(return_to_page_code).project == proj
+    if not (is_valid_code and same_project):
+        return_to_page_code = fallback_option
+    return return_to_page_code
+
+
 @login_required
 @csrf.csrf_exempt
 def add_project_layer(request, project_id):
     project = get_object_or_404(Project, id=project_id)
+    return_to_page_code = parse_return_to_page_queryparam(request, project)
 
     last_color = Layer.max_color(project.layer_set)
     color = last_color.next() if last_color else Color.objects.first()
-
-    try:
-        return_to_page_code = request.GET['return']
-    except KeyError:
-        return_to_page_code = project.first_page().code
-    else:
-        is_valid_code = Page.validate_code(return_to_page_code)
-        same_project_page = Page.by_code(return_to_page_code).project == project
-        if not (is_valid_code and same_project_page):
-            return_to_page_code = project.first_page().code
 
     context = {
         'project': project,
@@ -268,22 +271,64 @@ def edit_project_layer(request, project_id, layer_title):
     return redirect(to='project_page', page_code=return_to_page_code)
 
 
-@login_required
-@http.require_http_methods(['GET'])
-def setup_layer_groups(request, project_id):
-    project = get_object_or_404(Project, id=project_id)
-    context = {
-        'project': project,
-    }
-    return render(request, 'viewer/layer_grouping.html', context=context)
+@method_decorator(csrf.csrf_exempt, name='dispatch')
+class LayerGroupsView(View):
+    def setup(self, request, *args, **kwargs):
+        super().setup(request, *args, **kwargs)
+        # project_id must be specified
+        project_id = kwargs['project_id']
+        self.project = get_object_or_404(Project, id=project_id)
+
+    @method_decorator(login_required)
+    def get(self, request, *args, **kwargs):
+        if request.GET.get('response_json'):
+            return self._all_groups_json_resp()
+
+        not_grouped_layer_ids = LayerGroup.not_grouped_layer_ids(self.project)
+        context = {
+            'project': self.project,
+            'groups': LayerGroup.objects.filter(project=self.project),
+            'not_grouped_layers': Layer.objects.filter(id__in=not_grouped_layer_ids),
+            'return_to_page_code': parse_return_to_page_queryparam(request, self.project),
+        }
+        return render(request, 'viewer/layer_grouping.html', context=context)
+
+    @method_decorator(login_required)
+    def patch(self, request, *args, **kwargs):
+        try:
+            req = json.loads(request.body)
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'request body must be json'}, status=400)
+        exclude = req.get('exclude', [])    # layers ids list
+        include = req.get('include', [])    # list of {layer, group} obj
+        # todo groups update
+        return self._all_groups_json_resp()
+
+    @method_decorator(login_required)
+    def put(self, request, *args, **kwargs):
+        try:
+            req = json.loads(request.body)
+            layers_ids_per_group = req['groups']
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'request body must be json'}, status=400)
+        except KeyError:
+            return JsonResponse({'error': 'json object must contain field groups'}, status=400)
+
+        LayerGroup.setup_groups_bulk(self.project, layers_ids_per_group)
+
+        return self._all_groups_json_resp()
+
+    def _all_groups_json_resp(self):
+        rep = LayerGroup.report_groups(self.project)
+        return JsonResponse(rep)
 
 
 def with_layers_group_check(project_view):
     @wraps(project_view)
     def decorated(request, project_id):
         project = get_object_or_404(Project, id=project_id)
-        all_grouped, remains = LayerGroup.all_layers_grouped(project)
-        if not all_grouped:
+        remains = LayerGroup.not_grouped_layer_ids(project)
+        if remains:
             if not request.GET.get('autogroup_remains'):
                 return redirect(to='setup_layer_groups', project_id=project_id)
             else:

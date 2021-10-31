@@ -9,6 +9,7 @@ from django.db import models
 from django.dispatch import receiver
 from os import path
 from PIL import Image
+from typing import List
 
 
 def additional_files_upload_path(obj: 'Project', filename):
@@ -157,6 +158,12 @@ class Layer(models.Model):
             self.number = Layer.extract_number(self.title)
         super(Layer, self).save(*args, **kwargs)
 
+    def to_json(self):
+        return {
+            'id': self.id,
+            'title': self.title,
+        }
+
     @staticmethod
     def test_title_free(project, title, except_=None):
         q = Layer.objects.filter(project=project, title=title)
@@ -180,11 +187,20 @@ class Layer(models.Model):
         color_id = layers.aggregate(value=models.aggregates.Max('color'))['value']
         return Color.objects.get(id=color_id) if color_id else None
 
+    @classmethod
+    def serialize_from_ids(cls, layer_ids):
+        return [
+            l.to_json()
+            for l in Layer.objects.filter(id__in=layer_ids)
+        ]
+
 
 class LayerGroup(models.Model):
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
     layers = fields.ArrayField(models.IntegerField())
     num = models.IntegerField(null=False, default=0)
+
+    layer_ids_list = List[int]
 
     class Meta:
         unique_together = [['project', 'num']]
@@ -195,8 +211,14 @@ class LayerGroup(models.Model):
             self.num = LayerGroup.max_project_group_num(self.project) + 1
         super(LayerGroup, self).save(*args, **kwargs)
 
+    def to_json(self):
+        return {
+            'num': self.num,
+            'layers': Layer.serialize_from_ids(self.layers),
+        }
+
     @classmethod
-    def autogroup_layers(cls, project, layers_ids):
+    def autogroup_layers(cls, project, layers_ids: layer_ids_list):
         def chunks(seq, n):
             for i in range(0, len(seq), n):
                 yield seq[i:i + n]
@@ -206,23 +228,53 @@ class LayerGroup(models.Model):
         for layers in chunks(layers_ids, layers_per_group):
             groups.append(cls(project=project, layers=layers))
         cls.objects.bulk_create(groups)
+        project.save()  # to refresh date_updated
 
     @classmethod
-    def all_layers_grouped(cls, project):
+    def not_grouped_layer_ids(cls, project):
+        all_layers = [l.id for l in Layer.objects.filter(project=project).all()]
         grouped_layers = []
         for gr in cls.objects.filter(project=project).all():
             grouped_layers.extend(gr.layers)
 
-        all_layers = [l.id for l in Layer.objects.filter(project=project).all()]
-        is_all = grouped_layers == all_layers
-        remains = [l_id for l_id in all_layers if l_id not in grouped_layers]
-        return is_all, remains
+        remain_layers_ids = [l_id for l_id in all_layers if l_id not in grouped_layers]
+        return remain_layers_ids
 
     @classmethod
     def max_project_group_num(cls, project):
         groups_same_project = LayerGroup.objects.filter(project=project)
         max_num = groups_same_project.aggregate(value=models.Max('num'))['value']
         return max_num if max_num else 0
+
+    @classmethod
+    def report_groups(cls, project):
+        not_grouped = cls.not_grouped_layer_ids(project)
+        report = {
+            'groups': [
+                group.to_json()
+                for group in LayerGroup.objects.filter(project=project).all()
+            ],
+            'not_grouped_layers': Layer.serialize_from_ids(not_grouped),
+        }
+        return report
+
+    @classmethod
+    def setup_groups_bulk(cls, project, layers_per_group: List[layer_ids_list]):
+        existing_groups = cls.objects.filter(project=project).all()
+        if len(existing_groups) < len(layers_per_group):    # need to create more
+            count_to_create = len(layers_per_group) - len(existing_groups)
+            for _ in range(count_to_create):
+                existing_groups.append(cls(project=project))
+
+        for group, layers_ids in zip(existing_groups, layers_per_group):
+            group.layers = layers_ids
+            group.save()
+
+        if len(existing_groups) > len(layers_per_group):    # need to remove excess
+            for group in existing_groups[len(layers_per_group):]:
+                group.delete()
+
+        project.save()  # just to update project.date_updated
 
 
 def plan_upload_path(obj: 'Page', filename):
