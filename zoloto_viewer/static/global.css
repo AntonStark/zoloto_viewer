@@ -525,10 +525,49 @@ g.layer_markers.enabled_layer {
     padding: 0 6px;
 }
 
+.height-limited {
+    max-height: 450px;
+}
+
 .group_setup_panel__not_grouped {
     display: inline-block;
 }
 
 .group_setup_panel__groups_list {
     display: inline-block;
+}
+
+.group_setup_panel__groups_list__bucket_wrapper {
+    overflow: scroll;
+}
+
+.layer_grouping_group_item_exclude {
+    margin: 0 6px;
+    font-size: larger;
+    color: gray;
+}
+
+
+.layers_bucket {
+    width: 130px;
+    min-height: 100px;
+    overflow: scroll;
+    border: 1px solid black;
+}
+
+.fixed-height {
+    height: 120px;
+}
+
+.layers_bucket input {
+    display: none;
+}
+/* label simple*/
+.layers_bucket label {
+
+}
+/* label checked*/
+.layers_bucket input[type="checkbox"]:checked + label {
+    color: white;
+    background: black;
 }

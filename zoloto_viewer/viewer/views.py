@@ -2,6 +2,7 @@ import json
 import operator
 from functools import wraps
 
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db import IntegrityError
@@ -290,6 +291,7 @@ class LayerGroupsView(View):
             'groups': LayerGroup.objects.filter(project=self.project),
             'not_grouped_layers': Layer.objects.filter(id__in=not_grouped_layer_ids),
             'return_to_page_code': parse_return_to_page_queryparam(request, self.project),
+            'base_url': settings.BASE_URL,
         }
         return render(request, 'viewer/layer_grouping.html', context=context)
 
@@ -299,10 +301,28 @@ class LayerGroupsView(View):
             req = json.loads(request.body)
         except json.JSONDecodeError:
             return JsonResponse({'error': 'request body must be json'}, status=400)
-        exclude = req.get('exclude', [])    # layers ids list
-        include = req.get('include', [])    # list of {layer, group} obj
-        # todo groups update
+
+        exclude = req.get('exclude', {})
+        exclude_layers_ids = exclude.get('layers', [])  # layers ids list
+        LayerGroup.exclude_from_groups(exclude_layers_ids)
+
+        include = req.get('include', [])    # list of {group, layers} obj
+        for group_change_obj in include:
+            group_num = group_change_obj['group']
+            layer_ids = group_change_obj['layers']
+            group = LayerGroup.objects.filter(project=self.project, num=group_num).first()
+            if not group:
+                raise ValueError(f'no group with project={self.project}, num={group_num}')
+
+            layer_ids = [int(v) for v in layer_ids]
+            group.append_layers(layer_ids)
+
         return self._all_groups_json_resp()
+
+    @method_decorator(login_required)
+    def post(self, request, *args, **kwargs):
+        LayerGroup.add_empty(self.project)
+        return self.get(request, *args, **kwargs)
 
     @method_decorator(login_required)
     def put(self, request, *args, **kwargs):

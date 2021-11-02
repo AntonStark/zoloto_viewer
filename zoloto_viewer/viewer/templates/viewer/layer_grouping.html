@@ -8,38 +8,47 @@
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.3/css/all.css"
           integrity="sha384-SZXxX4whJ79/gErwcOYf+zWLeJdY/qpuqC4cAa9rOGUstPomtqpuNWT9wdPEn2fk" crossorigin="anonymous">
     <link rel="stylesheet" type="text/css" href="{% static 'global.css' %}">
+
+    <script>
+        var BASE_URL = '{{ base_url }}';
+        var project_id = {{ project.id }};
+    </script>
+    <script src="{% static 'viewer/layer_grouping.js' %}" defer></script>
 </head>
 <body>
-<h2>Группировка носителей</h2>
-<div class="group_setup_pdf_btn__wrapper"><label for="layer_grouping_1" class="group_setup_pdf_btn__btn fill-button">
-    <i class="fas fa-long-arrow-alt-down"></i>
-    PDF
-    <input id="layer_grouping_1" type="button" style="display: none;">
-</label></div>
-{# черновик шаблона #}
-<div class="group_setup_panel">
-    <div class="group_setup_panel__not_grouped">
-        Типы вне группы
-        <div class="group_setup_panel__group_container">
-            <ul>
-                <li>a</li>
-                <li>a</li>
-                <li>a</li>
-                <li>a</li>
-                <li>a</li>
-                <li>a</li>
-                <li>a</li>
-                <li>a</li>
-                <li>a</li>
-                <li>a</li>
-            </ul>
+<form style="width: fit-content;">
+    <h2>Группировка носителей</h2>
+    <div class="group_setup_pdf_btn__wrapper">
+        <label for="layer_grouping_1" class="group_setup_pdf_btn__btn fill-button">
+            <i class="fas fa-long-arrow-alt-down"></i>
+            PDF
+            <input id="layer_grouping_1" type="button" style="display: none;">
+        </label>
+        <a href="{% url 'project_page' return_to_page_code %}" tabindex="-1"
+           class="fill-button-negative" style="float: right;">
+            Назад
+        </a>
+    </div>
+    <div class="group_setup_panel">
+        <div class="group_setup_panel__not_grouped" style="vertical-align: top;">
+            <p>Типы вне группы</p>
+            <div class="group_setup_panel__group_container layers_bucket height-limited"
+                 id="group_setup_panel__non_group_container" style="min-height: 296px;">
+            </div>
+        </div>
+        <div class="group_setup_panel__groups_list">
+            <div class="group_setup_panel__groups_list__bucket_wrapper height-limited">
+                {% for group in groups %}
+                    {% include 'viewer/layer_grouping__bucket.html' %}
+                {% endfor %}
+            </div>
+            <p style="text-align: center;">
+                <input type="submit" formmethod="post"
+                       class="group_setup_panel__groups_list__add-group fill-button"
+                       value="+ Добавить группу">
+            </p>
         </div>
     </div>
-    <div class="group_setup_panel__groups_list">
-        <div class="group_setup_panel__group_container">Группа 1</div>
-        <div class="group_setup_panel__group_container">Группа 2</div>
-        <a>+ Добавить группу</a>
-    </div>
-</div>
+</form>
 </body>
 </html>

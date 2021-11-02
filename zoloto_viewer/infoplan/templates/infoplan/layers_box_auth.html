@@ -1,7 +1,12 @@
 <div class="menu_header">типы носителей</div>
-<p>
-    <a href="{% url 'add_project_layer' project_id=project.id %}?return={{ page.code }}" class="fill-button">
-        Добавить тип носителей
+<p style="">
+    <a class="fill-button"
+       href="{% url 'add_project_layer' project_id=project.id %}?return_to_page={{ page.code }}">
+        Добавить
+    </a>
+    <a class="fill-button" style="margin: 6px 0 0 6px"
+       href="{% url 'setup_layer_groups' project_id=project.id %}?return_to_page={{ page.code }}">
+        Группировка
     </a>
 </p>
 <style>

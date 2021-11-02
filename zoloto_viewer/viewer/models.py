@@ -206,6 +206,10 @@ class LayerGroup(models.Model):
         unique_together = [['project', 'num']]
         ordering = ['num']
 
+    def append_layers(self, layers_id_list):
+        self.layers = list(set(self.layers) | set(layers_id_list))
+        self.save()
+
     def save(self, *args, **kwargs):
         if not self.num and self.project:
             self.num = LayerGroup.max_project_group_num(self.project) + 1
@@ -216,6 +220,11 @@ class LayerGroup(models.Model):
             'num': self.num,
             'layers': Layer.serialize_from_ids(self.layers),
         }
+
+    @classmethod
+    def add_empty(cls, project):
+        cls(project=project, layers=[]).save()
+        project.save()
 
     @classmethod
     def autogroup_layers(cls, project, layers_ids: layer_ids_list):
@@ -229,6 +238,13 @@ class LayerGroup(models.Model):
             groups.append(cls(project=project, layers=layers))
         cls.objects.bulk_create(groups)
         project.save()  # to refresh date_updated
+
+    @classmethod
+    def exclude_from_groups(cls, layer_id_list):
+        groups = cls.objects.filter(layers__contains=layer_id_list)
+        for gr in groups:
+            gr.layers = [l_id for l_id in gr.layers if l_id not in layer_id_list]
+            gr.save()
 
     @classmethod
     def not_grouped_layer_ids(cls, project):
