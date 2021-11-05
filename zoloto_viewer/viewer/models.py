@@ -210,6 +210,10 @@ class LayerGroup(models.Model):
         self.layers = list(set(self.layers) | set(layers_id_list))
         self.save()
 
+    def exclude_layers(self, layer_id_list):
+        self.layers = [l_id for l_id in self.layers if l_id not in layer_id_list]
+        self.save()
+
     def save(self, *args, **kwargs):
         if not self.num and self.project:
             self.num = LayerGroup.max_project_group_num(self.project) + 1
@@ -233,18 +237,16 @@ class LayerGroup(models.Model):
                 yield seq[i:i + n]
 
         layers_per_group = 5
-        groups = []
         for layers in chunks(layers_ids, layers_per_group):
-            groups.append(cls(project=project, layers=layers))
-        cls.objects.bulk_create(groups)
+            group = cls(project=project, layers=layers)
+            group.save()
         project.save()  # to refresh date_updated
 
     @classmethod
     def exclude_from_groups(cls, layer_id_list):
         groups = cls.objects.filter(layers__contains=layer_id_list)
         for gr in groups:
-            gr.layers = [l_id for l_id in gr.layers if l_id not in layer_id_list]
-            gr.save()
+            gr.exclude_layers(layer_id_list)
 
     @classmethod
     def not_grouped_layer_ids(cls, project):

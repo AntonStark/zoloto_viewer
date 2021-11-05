@@ -14,12 +14,14 @@
         var project_id = {{ project.id }};
     </script>
     <script src="{% static 'viewer/layer_grouping.js' %}" defer></script>
+    <script src="{% static 'infoplan/api.js' %}"></script>
 </head>
 <body>
 <form style="width: fit-content;">
     <h2>Группировка носителей</h2>
     <div class="group_setup_pdf_btn__wrapper">
-        <label for="layer_grouping_1" class="group_setup_pdf_btn__btn fill-button">
+        <label for="layer_grouping_1" class="group_setup_pdf_btn__btn fill-button"
+               onclick="handleFileDownloadWithRetryAfter('{% url 'get_pdf_file' project.id %}?autogroup_remains=true')">
             <i class="fas fa-long-arrow-alt-down"></i>
             PDF
             <input id="layer_grouping_1" type="button" style="display: none;">
