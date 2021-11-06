@@ -44,6 +44,9 @@ function ControllerMarkerCircles() {
         _setMessShown(elem.parentNode, isShown);
         // console.debug('setShownStatus', markerUid, isShown);
     }
+    function _extendActiveLayers(layerTitle) {
+        enabledLayersController.addActive(layerTitle);
+    }
     function _updateMarkerPosition(markerUid, offset) {
         const marker = messageBoxManager.getMarker(markerUid);
         const origin = [Number(marker.dataset.originX), Number(marker.dataset.originY)];
@@ -225,6 +228,11 @@ function ControllerMarkerCircles() {
         _clearMarkersTouched();
     }
 
+    function getLayerTitle(markerUid) {
+        const circleElement = markerCorrCircles[markerUid];
+        return circleElement.dataset['layerTitle'];
+    }
+
     // регистрируем все circleElement при создании контроллера
     function init() {
         const svgElem = document.getElementById('project-page-plan-svg');
@@ -236,9 +244,13 @@ function ControllerMarkerCircles() {
         }
     }
     function renderSelection(isInSelectionMethod, toggleSelected=undefined) {
+        enabledLayersController.dropActive();
         for (const markerUid in markerCorrCircles) {
             const isIn = isInSelectionMethod(markerUid);
             _setShownStatus(markerUid, isIn);
+            if (isIn) {
+                _extendActiveLayers(getLayerTitle(markerUid));
+            }
             if (toggleSelected) {
                 toggleSelected(markerUid, isIn);
             }
@@ -258,5 +270,7 @@ function ControllerMarkerCircles() {
         updateRotation  : updateRotation,
         updateMarkerPosition  : updatePosition,
         finishMovement  : finishMovement,
+
+        getLayerTitle: getLayerTitle,
     }
 }

@@ -9,7 +9,7 @@ function ControllerEnabledLayers() {
     let layersLiElemIndex = {};
     let positionsIndex = {};
 
-    let activeLayerTitle = '';
+    const activeLayerTitles = new Set();
 
     function _toggleLayerUrlParam(actualUrl, title) {
         const paramValue = actualUrl.searchParams.get(HIDDEN_LAYERS_PARAM);
@@ -38,6 +38,12 @@ function ControllerEnabledLayers() {
         const elements = document.getElementsByClassName('side-box-list__item__marks-box');
         for (const el of elements) {
             el.addEventListener('click', handleClickLayerListItemCircle);
+        }
+    }
+    function _syncActiveClasses() {
+        for (let title in layersLiElemIndex) {
+            const layerLiTag = layersLiElemIndex[title];
+            layerLiTag.classList.toggle('active', activeLayerTitles.has(title));
         }
     }
 
@@ -88,24 +94,25 @@ function ControllerEnabledLayers() {
     }
 
     function setActiveLayer(layerTitle) {
-        activeLayerTitle = layerTitle;
-        for (let title in layersLiElemIndex) {
-            const layerLiTag = layersLiElemIndex[title];
-            layerLiTag.classList.toggle('active', title === layerTitle);
-        }
+        activeLayerTitles.clear()
+        activeLayerTitles.add(layerTitle);
+        _syncActiveClasses();
     }
+    function addActive(layerTitle) {
+        activeLayerTitles.add(layerTitle);
+        _syncActiveClasses();
+    }
+
     function resetActiveLayer() {
-        activeLayerTitle = '';
-        for (let title in layersLiElemIndex) {
-            const layerLiTag = layersLiElemIndex[title];
-            layerLiTag.classList.toggle('active', false);
-        }
+        activeLayerTitles.clear()
+        _syncActiveClasses();
     }
     function getActiveLayer() {
-        return activeLayerTitle;
+        function withMinimalNumber(one, two) {return ( Number.parseInt(one) < Number.parseInt(two) ? one : two ); }
+        return Array.from(activeLayerTitles.values()).reduce(withMinimalNumber)
     }
     function isActive(layerTitle) {
-        return activeLayerTitle === layerTitle;
+        return activeLayerTitles.has(layerTitle);
     }
     function nextTitle(layerTitle) {
         const curIndex = positionsIndex[layerTitle];
@@ -135,6 +142,7 @@ function ControllerEnabledLayers() {
         isEnabled: isEnabled,
 
         setActive: setActiveLayer,
+        addActive: addActive,
         getActive: getActiveLayer,
         dropActive: resetActiveLayer,
         isActive : isActive,
