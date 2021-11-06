@@ -34,6 +34,12 @@ function ControllerEnabledLayers() {
         }
         return actualUrl;
     }
+    function _setupEnabledLayersMarksListeners() {
+        const elements = document.getElementsByClassName('side-box-list__item__marks-box');
+        for (const el of elements) {
+            el.addEventListener('click', handleClickLayerListItemCircle);
+        }
+    }
 
     function init() {
         const container = document.getElementsByClassName('layers-box side_box_list')[0];
@@ -49,10 +55,12 @@ function ControllerEnabledLayers() {
             // console.log(layerLiTag);
         }
 
-        if (positionsIndex[0]) {
+        if (positionsIndex[0] && UI_AUTH) {
             setActiveLayer(positionsIndex[0]);
             shiftActiveLayerToVisible();
         }
+
+        _setupEnabledLayersMarksListeners();
     }
 
     function toggleLayer(layerTitle) {
@@ -84,6 +92,13 @@ function ControllerEnabledLayers() {
         for (let title in layersLiElemIndex) {
             const layerLiTag = layersLiElemIndex[title];
             layerLiTag.classList.toggle('active', title === layerTitle);
+        }
+    }
+    function resetActiveLayer() {
+        activeLayerTitle = '';
+        for (let title in layersLiElemIndex) {
+            const layerLiTag = layersLiElemIndex[title];
+            layerLiTag.classList.toggle('active', false);
         }
     }
     function getActiveLayer() {
@@ -121,6 +136,7 @@ function ControllerEnabledLayers() {
 
         setActive: setActiveLayer,
         getActive: getActiveLayer,
+        dropActive: resetActiveLayer,
         isActive : isActive,
 
         shift: shiftActiveLayerToVisible,

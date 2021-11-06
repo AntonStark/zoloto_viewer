@@ -292,11 +292,15 @@ li.active .icon {
     visibility: visible;
 }
 
-ul.side_box_list li {
-    margin: 4px 0;
+.side-box-list__item {
+    padding: 2px 0;
 }
 
-ul.side_box_list li.active{
+.side-box-list__item__marks-box {
+    padding: 2px 0;
+}
+
+.side-box-list__item.active {
     background-color: lightgray;
 }
 
@@ -328,6 +332,25 @@ ul.side_box_list li.active{
 ul.layers-box li {
     color: var(--layer-color);
 }
+.side_box_list {
+    list-style-type: none;
+    padding: 0;
+}
+
+
+.side-box-list__item__mark.mark-active {
+     display: none;
+}
+.side-box-list__item__mark.mark-inactive {
+    display: inherit;
+}
+
+li.enabled_layer .side-box-list__item__mark.mark-active {
+    display: inherit;
+}
+li.enabled_layer .side-box-list__item__mark.mark-inactive {
+    display: none;
+}
 
 #projects-table {
     border-collapse: collapse;
@@ -352,13 +375,12 @@ ul.layers-box li {
 
 
 .page-table-column-block ul {
-    padding-left: 18px;
+    /*padding-left: 18px;*/
     height: calc(100% - var(--column-vertical-margins) - var(--right-deleted-height));
     overflow: auto;
 }
 
 .page-table-column-block li {
-    list-style-type: circle;
     cursor: pointer;
     /* to prevent selection on click */
     -webkit-touch-callout: none;
@@ -368,12 +390,8 @@ ul.layers-box li {
     -ms-user-select: none;
     user-select: none;
 }
-.page-table-column-block li.enabled_layer {
-    list-style-type: disc;
-}
 
 #project-page-areas-box li {
-    list-style-type: none;
     padding: 2px 0;
 }
 

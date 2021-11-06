@@ -70,8 +70,7 @@ function toggleLayerHandler(title)
 { enabledLayersController.toggle(title); }
 function handleClickLayerListItem(layerLiTag) {
     /*  клик по выключенному включает и делает активным,
-        клик по включённому делает активным,
-        и, наконец, клик по активному выключает (и делает активным следующий - пока нет).
+        клик по включённому делает активным
     * */
     const layerTitle = layerLiTag.getElementsByClassName('layer-title-span')[0].textContent;
     // console.log('isEnabled', enabledLayersController.isEnabled(layerClassTitle));
@@ -82,11 +81,30 @@ function handleClickLayerListItem(layerLiTag) {
     } else if (!enabledLayersController.isActive(layerTitle)) {
         enabledLayersController.setActive(layerTitle);
     } else {
-        enabledLayersController.toggle(layerTitle);
-        mapInteractionsController.toggleSelectMode();
+        // enabledLayersController.toggle(layerTitle);
+        // mapInteractionsController.toggleSelectMode();
+
         // const nextLayerTag = layerLiTag.nextElementSibling || layerLiTag.parentElement.firstElementChild;
         // setActiveLayer(nextLayerTag);
     }
+}
+function handleClickLayerListItemCircle(event) {
+    /*  клик по выключенному только включает, но не делает активным,
+        клик по включённому выключает (и если он был активен, то сбрасывает активность)
+    * */
+    const layerLiTagMarksBox = event.currentTarget;
+    const layerLiTag = layerLiTagMarksBox.parentElement;
+    const layerTitle = layerLiTag.getElementsByClassName('layer-title-span')[0].textContent;
+    if (!enabledLayersController.isEnabled(layerTitle)) {
+        enabledLayersController.toggle(layerTitle);
+    }
+    else {
+        enabledLayersController.toggle(layerTitle);
+        if (enabledLayersController.isActive(layerTitle)) {
+            enabledLayersController.dropActive();
+        }
+    }
+    event.stopPropagation();
 }
 
 window.addEventListener('load', function () {
