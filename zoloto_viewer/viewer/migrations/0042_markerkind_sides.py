@@ -14,7 +14,7 @@ MARKER_KINDS_SIDES = {
 
 def set_sides(apps, schema_editor):
     MarkerKind = apps.get_model('viewer', 'MarkerKind')
-    for mk in MarkerKind.objects.all():
+    for mk in MarkerKind.bucket_bounds.all():
         mk.sides = MARKER_KINDS_SIDES[mk.id] if mk.id in MARKER_KINDS_SIDES else 1
         mk.save()
 

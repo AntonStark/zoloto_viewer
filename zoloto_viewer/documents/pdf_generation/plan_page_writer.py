@@ -1,13 +1,14 @@
 import logging
 
 from reportlab.lib import colors
-from typing import Iterator, List
+from typing import Dict, ItemsView, Iterator, List, Set, Tuple
 
 from zoloto_viewer.viewer.models import Layer, Page
 
 from . import layout
-from .plan import PlanBox, PlanLegend, Object, MarkerCaption, NearObjectsGroup, \
-    BoundingBox, BoundsIndex, MarkerNoPlaceException, MakerPlacementAllDone
+from .plan import get_objects_distance
+from .plan import PlanBox, PlanLegend, Object, ObjectBoundsBucket, ObjectsConfiguration, MarkerCaption, NearObjectsGroup, \
+    BoundingBox, BoundingCircle, BoundsIndex, MarkerNoPlaceException, MakerPlacementAllDone
 
 logger = logging.getLogger(__name__)
 
@@ -54,41 +55,9 @@ class PlanPageWriterMinimal(layout.BasePageWriterDeducingTitle):
         for mo in objects:   # type: Object
             mo.draw(self.canvas, self._content_box, **options)
 
-    def _draw_marker_captions(self, captions):
-        options = self.draw_options
-        for mc in captions:   # type: MarkerCaption
-            mc.draw(self.canvas, self._content_box, **options)
-
     def _draw_legend(self, layers):
         legend = PlanLegend(self.place_legend(), layout.Definitions.BOTTOM_LINE, len(layers))
         legend.draw(self.canvas, self._content_box, layers)
-
-    def _draw_box_test_marks(self):
-        canvas = self.canvas
-        box = self._content_box
-
-        canvas.saveState()
-        canvas.setFillColor(colors.red)
-        canvas.setStrokeColor(colors.red)
-
-        lb = (0, 0)
-        rb = (box.max_x, 0)
-        lt = (0, box.max_y)
-        rt = (box.max_x, box.max_y)
-
-        x, y = box.calc_pos(lb)
-        canvas.rect(x, y, 2, 2, stroke=1, fill=1)
-
-        x, y = box.calc_pos(rb)
-        canvas.rect(x, y, 2, 2, stroke=1, fill=1)
-
-        x, y = box.calc_pos(lt)
-        canvas.rect(x, y, 2, 2, stroke=1, fill=1)
-
-        x, y = box.calc_pos(rt)
-        canvas.rect(x, y, 2, 2, stroke=1, fill=1)
-
-        canvas.restoreState()
 
 
 class PlanPageWriterLayerGroups(PlanPageWriterMinimal):
@@ -112,7 +81,7 @@ class PlanPageWriterLayerGroups(PlanPageWriterMinimal):
         logger.debug('start draw_content')
         self._content_box.draw_plan_image(self.canvas, **self.draw_options)
 
-        self.draw_options['objects_opacity'] = 20
+        self.draw_options['objects_opacity'] = 40
         self._draw_markers(self._marker_positions_inactive)
 
         self.draw_options['objects_opacity'] = 100
@@ -129,12 +98,49 @@ class PlanPageWriterLayerGroups(PlanPageWriterMinimal):
 
     def place_captions(self, marker_objects: List[Object]) -> List[MarkerCaption]:
         bb_index = BoundsIndex(self.canvas, self._content_box, marker_objects)
+        object_clusters = self._detect_clusters(bb_index)
+        for cluster in object_clusters:
+            partial_bb_index = self._place_captions_cluster(list(cluster))
+            # update bb_index
+            for marker in partial_bb_index.markers_bounds:
+                bb_index.write(marker)
 
-        obj_groups = bb_index.determine_obj_groups()
-        bb_index.obj_groups_append_neighbours(obj_groups)
-        objects_placement_queue = self._build_placement_queue(obj_groups, marker_objects)
+        captions_right_places = [bb.ref for bb in bb_index.markers_bounds]
+        return captions_right_places
+
+    def _detect_clusters(self, bb_index: BoundsIndex) -> List[Set[Object]]:
+        buckets: List[ObjectBoundsBucket] = []
+        for obj_bounds in bb_index.objects_bounds:
+            near_buckets = [bucket for bucket in buckets if bucket.is_near(obj_bounds)]
+            if len(near_buckets) > 1:
+                replace_bucket = ObjectBoundsBucket.merge(near_buckets).add(obj_bounds)
+                for nb in near_buckets:
+                    buckets.remove(nb)
+                buckets.append(replace_bucket)
+            elif len(near_buckets) == 1:
+                near_buckets[0].add(obj_bounds)
+            else:
+                new_bucket = ObjectBoundsBucket({obj_bounds})
+                buckets.append(new_bucket)
+        return [
+            set(obj_bounds.ref for obj_bounds in bucket.bucket_bounds)
+            for bucket in buckets
+        ]
+
+    def _place_captions_cluster(self, marker_objects: List[Object]) -> BoundsIndex:
+        bb_index = BoundsIndex(self.canvas, self._content_box, marker_objects)
+        # obj_groups = bb_index.determine_obj_groups()
+        # bb_index.obj_groups_append_neighbours(obj_groups)
+        obj_configuration = ObjectsConfiguration(bb_index.objects_bounds)
+        # objects_placement_queue = self._build_placement_queue(obj_groups, marker_objects)
+        objects_placement_queue = self._infer_placement_queue_from_configuration(obj_configuration)
+        # if len(objects_placement_queue) > 10:
+        #     print(objects_placement_queue)
+
         markers_queue = [obj.caption() for obj in objects_placement_queue]
-
+        # todo rethink during
+        #  refresh queue from conflicts
+        #  and define error report behaviour (last page like infoplan, but black and one-side infoplan per page
         try:
             self.place_next(bb_index, markers_queue)
         except MakerPlacementAllDone:
@@ -153,14 +159,59 @@ class PlanPageWriterLayerGroups(PlanPageWriterMinimal):
                 except MakerPlacementAllDone:
                     pass        # done, go forward
 
-        captions_right_places = [bb.ref for bb in bb_index.markers_bounds]
-        return captions_right_places
+        return bb_index
 
-    def _build_placement_queue(self, obj_group_list, marker_objects) -> List[Object]:
+    def _infer_placement_queue_from_configuration(
+            self, configuration: ObjectsConfiguration
+    ) -> List[Object]:
+        ""
+        """
+        принимаем конфигурацию объектов ObjectsConfiguration
+        берём из конфигурации очередной центр плотности (с фильтрацией по индексу что ещё не размещён)
+        смотрим в очереди, которую строим, последний размещённый
+        если последнего нет, используем центр плотности 
+        если есть, то итерируемся по списку соседей (с фильтрацией по индексу что ещё не размещён)
+        если "сосед" дальше двух длин подписи, всё равно используем центр плотности
+        """
+        _placement_queue = []
+        density_centers_gen = iter(configuration.density_rank)
+
+        def _select_next():
+            while True:
+                last_placed = _placement_queue[-1] if _placement_queue else None
+                if last_placed:
+                    neighbours_gen = configuration.neighbours_gen(last_placed)
+                    try:
+                        neighbour, distance = next(neighbours_gen)
+                        while neighbour in _placement_queue:
+                            neighbour, distance = next(neighbours_gen)
+                    except StopIteration:
+                        return
+                    not_too_far = distance < 2 * MarkerCaption.USUAL_WIDTH
+                    if not_too_far:
+                        yield neighbour
+                        continue
+
+                try:
+                    density_center = next(density_centers_gen)
+                    while density_center in _placement_queue:
+                        density_center = next(density_centers_gen)
+                except StopIteration:
+                    return
+                yield density_center
+
+        for obj in _select_next():
+            _placement_queue.append(obj)
+
+        return _placement_queue
+
+    def _build_placement_queue(self, obj_group_list, marker_objects: List[Object]) -> List[Object]:
         """
         Сначала группы, затем их соседи. Затем проверить, что нет повторов.
         В конце добавить все оставшиеся
         """
+        # todo обновблять порядок на основе информации о конфликта
+        #  сдвигать конфликтующие в начало очереди
         queue = []
         for group in obj_group_list:    # type: NearObjectsGroup
             queue.extend(group.objects)
@@ -173,6 +224,11 @@ class PlanPageWriterLayerGroups(PlanPageWriterMinimal):
         queue.extend(objects_left)
 
         return queue
+
+    def _draw_marker_captions(self, captions):
+        options = self.draw_options
+        for mc in captions:   # type: MarkerCaption
+            mc.draw(self.canvas, self._content_box, **options)
 
     def make_marker_placements(self, bb_index: BoundsIndex, current_marker: MarkerCaption)\
             -> Iterator[BoundingBox]:
@@ -194,31 +250,32 @@ class PlanPageWriterLayerGroups(PlanPageWriterMinimal):
         не конфликтуют с другими объектов и маркеров на основании bb_index
         """
         object_ = current_marker.obj
-        delta = MarkerCaption.CAPTION_FONT_SIZE
+        h = MarkerCaption.CAPTION_FONT_SIZE
+        h2 = 2 * h
         placement_tuning_options = [
             # (increase_a, cross_delta, comment)
             (None, None, 'default place'),
 
             (180, None, 'a + 180 place'),
-            (90, None, 'a + 90 place'),
+            (90,  None, 'a + 90 place'),
             (270, None, 'a + 270 place'),
 
-            (None, -delta, 'default:-h'),
-            (None, -2 * delta, 'default:-2h'),
-            (None, delta, 'default:+h'),
-            (None, 2 * delta, 'default:+2h'),
-            (180, -delta, 'a + 180:-h'),
-            (180, -2 * delta, 'a + 180:-2h'),
-            (180, delta, 'a + 180:+h'),
-            (180, 2 * delta, 'a + 180:+2h'),
-            (90, -delta, 'a + 90:-h'),
-            (90, -2 * delta, 'a + 90:-2h'),
-            (90, delta, 'a + 90:+h'),
-            (90, 2 * delta, 'a + 90:+2h'),
-            (270, -delta, 'a + 270:-h'),
-            (270, -2 * delta, 'a + 270:-2h'),
-            (270, delta, 'a + 270:+h'),
-            (270, 2 * delta, 'a + 270:+2h'),
+            (None, -h,  'default:-h'),
+            (None, -h2, 'default:-2h'),
+            (None, h,   'default:+h'),
+            (None, h2,  'default:+2h'),
+            (180,  -h,  'a + 180:-h'),
+            (180,  -h2, 'a + 180:-2h'),
+            (180,  h,   'a + 180:+h'),
+            (180,  h2,  'a + 180:+2h'),
+            (90,   -h,  'a + 90:-h'),
+            (90,   -h2, 'a + 90:-2h'),
+            (90,   h,   'a + 90:+h'),
+            (90,   h2,  'a + 90:+2h'),
+            (270,  -h,  'a + 270:-h'),
+            (270,  -h2, 'a + 270:-2h'),
+            (270,  h,   'a + 270:+h'),
+            (270,  h2,  'a + 270:+2h'),
         ]
 
         for increase_a, cross_delta, comment in placement_tuning_options:
@@ -257,6 +314,33 @@ class PlanPageWriterLayerGroups(PlanPageWriterMinimal):
                 # and we go upper and upper
                 bb_index.cancel_last_marker()
                 place_current()
+
+    def _draw_box_test_marks(self):
+        canvas = self.canvas
+        box = self._content_box
+
+        canvas.saveState()
+        canvas.setFillColor(colors.red)
+        canvas.setStrokeColor(colors.red)
+
+        lb = (0, 0)
+        rb = (box.max_x, 0)
+        lt = (0, box.max_y)
+        rt = (box.max_x, box.max_y)
+
+        x, y = box.calc_pos(lb)
+        canvas.rect(x, y, 2, 2, stroke=1, fill=1)
+
+        x, y = box.calc_pos(rb)
+        canvas.rect(x, y, 2, 2, stroke=1, fill=1)
+
+        x, y = box.calc_pos(lt)
+        canvas.rect(x, y, 2, 2, stroke=1, fill=1)
+
+        x, y = box.calc_pos(rt)
+        canvas.rect(x, y, 2, 2, stroke=1, fill=1)
+
+        canvas.restoreState()
 
 
 """

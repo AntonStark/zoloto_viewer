@@ -82,7 +82,7 @@ def set_new_colors(apps, schema_editor):
     Color = apps.get_model('viewer', 'Color')
     data = iter(NEW_COLORS)
 
-    for c, data_tuple in zip(Color.objects.all(), data):
+    for c, data_tuple in zip(Color.bucket_bounds.all(), data):
         c.hex_code, c.rgb_code = data_tuple
         c.save()
 

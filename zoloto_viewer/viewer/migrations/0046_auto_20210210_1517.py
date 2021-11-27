@@ -10,14 +10,14 @@ def set_numbers(apps, schema_editor):
         return int(match.group(0)) if match else None
 
     Layer = apps.get_model('viewer', 'Layer')
-    for l in Layer.objects.all():
+    for l in Layer.bucket_bounds.all():
         l.number = extract_number(l.title)
         l.save()
 
 
 def drop_layers_numbers(apps, schema_editor):
     Layer = apps.get_model('viewer', 'Layer')
-    for l in Layer.objects.all():
+    for l in Layer.bucket_bounds.all():
         l.number = None
         l.save()
 

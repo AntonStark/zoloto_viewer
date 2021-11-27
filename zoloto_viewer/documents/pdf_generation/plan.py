@@ -1,11 +1,12 @@
 import logging
+import math
 
 from abc import abstractmethod, ABC
 from dataclasses import dataclass, field
 from reportlab.lib import colors
 from reportlab.lib.utils import ImageReader
 from reportlab.pdfgen import canvas as rc
-from typing import Any, List, Union
+from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 from zoloto_viewer.viewer.models import Layer
 
@@ -150,6 +151,9 @@ class Object:
         RIGHT = 10
         TOP = 10
         BOTTOM = -10
+
+    def __hash__(self):
+        return hash((self.x, self.y, self.a, self.number))
 
     def __post_init__(self):
         while self.a < 0:
@@ -360,6 +364,7 @@ class Object:
 class MarkerCaption:
     CAPTION_FONT_NAME = 'Helvetica'
     CAPTION_FONT_SIZE = 6
+    USUAL_WIDTH = 6 * CAPTION_FONT_SIZE
 
     number: str
     rotation: int
@@ -455,7 +460,7 @@ class Bounds(ABC):
         pass
 
 
-@dataclass
+@dataclass(frozen=True)
 class BoundingCircle(Bounds):
     cx: int
     cy: int
@@ -547,8 +552,18 @@ class BoundsIndex:
             yield mc_bb
 
     @property
+    def last_placed_obj(self) -> Optional[Object]:
+        if self._markers:
+            last_marker = self._markers[-1].ref
+            return last_marker.obj
+
+    @property
+    def objects_bounds(self) -> List[BoundingCircle]:
+        return self._objects.copy()
+
+    @property
     def markers_bounds(self) -> List[Bounds]:
-        return self._markers
+        return self._markers.copy()
 
     def cancel_last_marker(self):
         self._markers.pop()
@@ -591,6 +606,12 @@ class BoundsIndex:
                         return True
         return False
 
+    def is_object_placed(self, obj: Object):
+        for m in self._markers:
+            if m.ref == obj:
+                return True
+        return False
+
     def obj_groups_append_neighbours(self, obj_group_list):
         for group in obj_group_list:    # type: NearObjectsGroup
             group.find_neighbours(self)
@@ -598,6 +619,102 @@ class BoundsIndex:
     def write(self, place: Bounds):
         self._markers.append(place)
 
+
+def is_objects_one_cluster(obj1: BoundingCircle, obj2: BoundingCircle) -> bool:
+    caption_width = MarkerCaption.USUAL_WIDTH
+    caption_height = MarkerCaption.CAPTION_FONT_SIZE
+
+    dx = abs(obj1.cx - obj2.cx)
+    dy = abs(obj1.cy - obj2.cy)
+
+    near_horizontal = (dx < 2 * caption_width) and (dy < 3 * caption_height)
+    near_vertical = (dx < 3 * caption_height) and (dy < 2 * caption_width)
+    return near_horizontal or near_vertical
+
+
+def get_objects_distance(obj1: BoundingCircle, obj2: BoundingCircle) -> float:
+    dx = abs(obj1.cx - obj2.cx)
+    dy = abs(obj1.cy - obj2.cy)
+    return math.sqrt(math.pow(dx, 2)  + math.pow(dy, 2))
+
+
+@dataclass
+class ObjectBoundsBucket:
+    bucket_bounds: Set[BoundingCircle] = field(default_factory=set)
+
+    def is_near(self, other):
+        for bound in self.bucket_bounds:
+            if self.near_predicate(other, bound):
+                return True
+        return False
+
+    def add(self, elem):
+        self.bucket_bounds.add(elem)
+        return self
+
+    @classmethod
+    def near_predicate(cls, obj1, obj2):
+        return is_objects_one_cluster(obj1, obj2)
+
+    @classmethod
+    def merge(cls, buckets: List['ObjectBoundsBucket']):
+        merged = set.union(*[bucket.bucket_bounds for bucket in buckets])
+        return cls(bucket_bounds=merged)
+
+
+class ObjectsConfiguration:
+    def __init__(self, object_circles: List[BoundingCircle]):
+        self._obj_circles: List[BoundingCircle] = object_circles
+        self._obj_index: List[Object] = [obj.ref for obj in self._obj_circles]
+        self._distance_list: List[Tuple[int, int, float]] = self._calc_distances_list()
+
+        self.neighbours_index: Dict[Object, List[Tuple[Object, float]]] = self._make_neighbours_index()
+        self.density_rank: List[Object] = self._make_density_rank()
+
+    def neighbours_gen(self, obj: Object) -> Tuple[Object, float]:
+        for neighbour, distance in self.neighbours_index[obj]:
+            yield neighbour, distance
+
+    def _calc_distances_list(self) -> List[Tuple[int, int, float]]:
+        return [
+            (i, j, get_objects_distance(obj1, obj2) )
+            for i, obj1 in enumerate(self._obj_circles)
+            for j, obj2 in enumerate(self._obj_circles)
+            if obj2 != obj1
+        ]
+
+    def _make_density_rank(self) -> List[Object]:
+        def density(selected: int) -> float:
+            if self._distance_list:
+                return 1. / sum(d for i, j, d in self._distance_list if i == selected)
+            else:
+                return 1.
+
+        def tuple_to_density(index_obj_tuple):
+            return density(index_obj_tuple[0])
+
+        return [
+            obj
+            for i, obj in sorted(
+                enumerate(self._obj_index), key=tuple_to_density, reverse=True
+            )
+        ]
+
+    def _make_neighbours_index(self) -> Dict[Object, List[Tuple[Object, float]]]:
+        def neighbours(selected: int) -> List[Tuple[Object, float]]:
+            # итерируемся по списку обращая внимание только на кортежи где на первом месте selected
+            def by_distance(ind_distance_tuple): return ind_distance_tuple[0]
+
+            slice = [(j, d) for i, j, d in self._distance_list if i == selected]
+            return [
+                (self._obj_index[j], d)
+                for j, d in sorted(slice, key=by_distance)
+            ]
+
+        return {
+            obj1: neighbours(i)
+            for i, obj1 in enumerate(self._obj_index)
+        }
 
 @dataclass
 class NearObjectsGroup:
