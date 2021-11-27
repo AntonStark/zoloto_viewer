@@ -120,7 +120,7 @@ STATICFILES_DIRS = [
 ]
 
 # background_task app settings
-MAX_RUN_TIME = 600
+MAX_RUN_TIME = 3600
 
 
 def heroku_database_url_adapter(url: str):
