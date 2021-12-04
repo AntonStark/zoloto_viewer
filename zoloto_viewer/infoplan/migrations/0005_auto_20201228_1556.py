@@ -19,7 +19,7 @@ def set_position_from_path_points(apps, schema_editor):
         points = [p for p in map(multipoint_mid, m.points) if p is not None]
         return sum([p[0] for p in points]) / len(points), sum([p[1] for p in points]) / len(points)
 
-    for m in Marker.bucket_bounds.all():
+    for m in Marker.objects.all():
         m.pos_x, m.pos_y = center_position(m)
         m.save()
 

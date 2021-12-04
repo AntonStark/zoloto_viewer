@@ -44,7 +44,7 @@ MARKERKIND_SVG_FIGURE = {
 
 def setup_svg_mark_array(apps, schema_editor):
     MarkerKind = apps.get_model('viewer', 'MarkerKind')
-    for mk in MarkerKind.bucket_bounds.all():
+    for mk in MarkerKind.objects.all():
         if mk.name in MARKERKIND_SVG_FIGURE:
             mk.svg_figures = MARKERKIND_SVG_FIGURE[mk.name]
             mk.save()
@@ -52,7 +52,7 @@ def setup_svg_mark_array(apps, schema_editor):
 
 def clear_svg_mark_array(apps, schema_editor):
     MarkerKind = apps.get_model('viewer', 'MarkerKind')
-    for mk in MarkerKind.bucket_bounds.all():
+    for mk in MarkerKind.objects.all():
         if mk.name in MARKERKIND_SVG_FIGURE:
             mk.svg_figures = ''
             mk.save()
