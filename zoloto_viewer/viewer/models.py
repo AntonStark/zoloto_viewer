@@ -117,6 +117,7 @@ class MarkerKind(models.Model):
     name = models.CharField(max_length=16, blank=False)
     sides = models.IntegerField(default=1)
     svg_figures = models.TextField()
+    unicode_symbol = models.CharField(max_length=1, blank=False, default=' ')
 
     class Meta:
         ordering = ['id']

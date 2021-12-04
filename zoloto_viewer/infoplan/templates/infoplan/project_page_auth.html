@@ -30,6 +30,12 @@
 
     <link rel="stylesheet" type="text/css" href="{% static 'global.css' %}">
     <style type="text/css">
+        @font-face {
+            font-family: "Zoloto Web Elements v1";
+            src: url("{% static 'z_web_elements.ttf' %}") format("truetype");
+        }
+    </style>
+    <style type="text/css">
         {% for l in layers %}
             .layer-{{ l.title }} .variables_container {
                 background: white;

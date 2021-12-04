@@ -490,7 +490,7 @@ g.layer_markers.enabled_layer {
 .variables_container ul li {
     white-space: nowrap;
     font-size: 12px;
-    font-family: "Zoloto Picts v1", serif;
+    font-family: "Zoloto Picts v2", serif;
     /*cursor: pointer;*/
     /* to prevent selection on click */
     -webkit-touch-callout: none;
@@ -502,7 +502,7 @@ g.layer_markers.enabled_layer {
 }
 .variables_container pre {
     font-size: 12px;
-    font-family: "Zoloto Picts v1", serif;
+    font-family: "Zoloto Picts v2", serif;
     margin: 0;
 }
 
