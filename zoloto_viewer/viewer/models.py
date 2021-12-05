@@ -119,12 +119,18 @@ class MarkerKind(models.Model):
     svg_figures = models.TextField()
     unicode_symbol = models.CharField(max_length=1, blank=False, default=' ')
 
+    FINGERPOST = 'фингерпост'
+
     class Meta:
         ordering = ['id']
 
     def side_keys(self):
         def key(n): return n + 1
         return [key(s) for s in range(self.sides)]
+
+    @property
+    def is_fingerpost(self):
+        return self.name == self.FINGERPOST
 
 
 class Color(models.Model):

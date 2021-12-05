@@ -11,7 +11,7 @@ from django.views import View
 from django.views.decorators import csrf, http
 from django.utils.decorators import method_decorator
 
-from zoloto_viewer.infoplan.models import Marker, MarkerVariable, MarkerComment
+from zoloto_viewer.infoplan.models import Marker, MarkerComment, MarkerFingerpost, MarkerVariable
 from zoloto_viewer.infoplan.utils import variable_transformations as transformations
 from zoloto_viewer.viewer.models import Layer, Page, Project
 
@@ -99,19 +99,7 @@ class MarkerView(View):
             transformations.ReplacePictCodes()
         ] if is_pretty else []
 
-        rep = marker.to_json()
-        rep.update({
-            'comments': marker.comments_json,
-            'infoplan': MarkerVariable.objects.vars_of_marker_by_side(marker, apply_transformations=filters),
-        })
-        rep.update({
-            'layer': {
-                'title': marker.layer.title,
-                'color': marker.layer.color.hex_code,
-                'kind': {'name': marker.layer.kind.name, 'sides': marker.layer.kind.sides}
-            }
-        })
-        return JsonResponse(rep)
+        return JsonResponse(marker.serialize(filters))
 
     @method_decorator(login_required)
     @method_decorator(marker_api)
@@ -214,19 +202,7 @@ class MarkerView(View):
 
         MarkerVariable.objects.reset_values(marker, vars_by_side)
 
-        rep = marker.to_json()
-        rep.update({
-            'comments': marker.comments_json,
-            'infoplan': MarkerVariable.objects.vars_of_marker_by_side(marker),
-        })
-        rep.update({
-            'layer': {
-                'title': marker.layer.title,
-                'color': marker.layer.color.hex_code,
-                'kind': {'name': marker.layer.kind.name, 'sides': marker.layer.kind.sides}
-            }
-        })
-        return JsonResponse(rep)
+        return JsonResponse(marker.serialize())
 
     @method_decorator(login_required)
     @method_decorator(marker_api)
@@ -326,6 +302,10 @@ def project_page(request, **more_context):
     markers_by_layer = collections.defaultdict(list)
     for m in markers_that_page:
         markers_by_layer[m.layer_id].append(m)
+    fingerpost_data = {
+        mf.marker.uid: mf
+        for mf in MarkerFingerpost.objects.filter(marker__floor=page_obj)
+    }    # MarkerFingerpost of that page
 
     hidden_layers = request.GET['hide_layers'].split(' ') if 'hide_layers' in request.GET else []
 
@@ -338,6 +318,7 @@ def project_page(request, **more_context):
         'layers_with_comments_by_page': layers_with_comments_by_page,
         'markers_that_page': markers_that_page,
         'markers_by_layer': markers_by_layer,
+        'fingerpost_data': fingerpost_data,
 
         'state_data': {
             'hidden_layers': hidden_layers,

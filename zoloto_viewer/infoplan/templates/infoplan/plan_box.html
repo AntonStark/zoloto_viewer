@@ -9,6 +9,7 @@
                 </image>
                 <rect id="project-page-svg-selection-rect"></rect>
                 {% load layers_visibility %}
+                {% load fingerpost_css_labels %}
                 {% for layer in layers %}
                     <g class="layer_markers layer-{{ layer.title }} {{ layer.title|is_not_disabled:state_data.hidden_layers }}">
                         <symbol id="marker_layer-{{ layer.title }}" overflow="visible">
@@ -20,7 +21,9 @@
                             <use href="#marker_layer-{{ layer.title }}"
                                  x="{{ marker.pos_x }}" y="{{ marker.pos_y }}"
                                  transform="rotate({{ marker.neg_rotation }} {{ marker.pos_x }} {{ marker.pos_y }})"
-                                 class="plan_marker"
+                                 class="plan_marker {% if layer.kind.is_fingerpost %}
+                                    {{ fingerpost_data|get_item:marker.uid|fingerpost_css_labels }}
+                                 {% endif %}"
                                  data-marker-uid="{{ marker.uid }}" data-layer-title="{{ layer.title }}"
                                  data-origin-x="{{ marker.pos_x }}" data-origin-y="{{ marker.pos_y }}"></use>
                             <g class="marker_group">

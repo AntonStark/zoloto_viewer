@@ -1,6 +1,7 @@
 import collections
 import typing as t
 import uuid
+
 from django.db import models, transaction
 
 
@@ -105,12 +106,15 @@ class Marker(models.Model):
         return ['pos_x', 'pos_y', 'rotation']
 
     def save(self, *args, **kwargs):
+        need_create_fingerpost_entry = not self.ordinal and self.layer.kind.is_fingerpost
         if self.ordinal is None and self.layer and self.floor:
             markers_same_series = Marker.objects.filter(layer=self.layer, floor=self.floor)
             max_ordinal = markers_same_series.aggregate(value=models.Max('ordinal'))['value']
             self.ordinal = max_ordinal + 1 if max_ordinal else 1
         self._handle_rotation()
         super().save(*args, **kwargs)
+        if need_create_fingerpost_entry:
+            self._create_fingerpost_entry()
 
     def copy(self, copy_variables=True, floor=None, pos_x=None, pos_y=None, rotation=None) -> 'Marker':
         mc = self.__class__(
@@ -143,6 +147,29 @@ class Marker(models.Model):
             MarkerVariable.objects.bulk_create(variables)
         return mc
 
+    def serialize(self, transformations=None):
+        if not transformations:
+            transformations = []
+        rep = self.to_json()
+
+        rep.update({
+            'comments': self.comments_json,
+            'infoplan': MarkerVariable.objects.vars_of_marker_by_side(self, apply_transformations=transformations),
+        })
+        if self.layer.kind.is_fingerpost:
+            rep.update({
+                'fingerpost_data': self.markerfingerpost_set.first().to_json()
+            })
+
+        rep.update({
+            'layer': {
+                'title': self.layer.title,
+                'color': self.layer.color.hex_code,
+                'kind': {'name': self.layer.kind.name, 'sides': self.layer.kind.sides}
+            }
+        })
+        return rep
+
     def to_json(self, layer=False, page=False):
         j = {
             'marker': self.uid,
@@ -169,6 +196,49 @@ class Marker(models.Model):
         while value < 0:
             value += 360
         self.rotation = value
+
+    def _create_fingerpost_entry(self):
+        MarkerFingerpost(marker=self).save()
+
+
+class MarkerFingerpost(models.Model):
+    """
+    Содержит информацию об использовании лопастей маркера типа фингерпост
+    """
+    marker = models.ForeignKey(Marker, on_delete=models.CASCADE)
+    side1_enabled = models.BooleanField(default=True)
+    side2_enabled = models.BooleanField(default=False)
+    side3_enabled = models.BooleanField(default=False)
+    side4_enabled = models.BooleanField(default=False)
+    side5_enabled = models.BooleanField(default=False)
+    side6_enabled = models.BooleanField(default=False)
+    side7_enabled = models.BooleanField(default=False)
+    side8_enabled = models.BooleanField(default=False)
+
+    def make_css_labels_string(self):
+        css_classes_mapping = {
+            'pane-1': self.side1_enabled,
+            'pane-2': self.side2_enabled,
+            'pane-3': self.side3_enabled,
+            'pane-4': self.side4_enabled,
+            'pane-5': self.side5_enabled,
+            'pane-6': self.side6_enabled,
+            'pane-7': self.side7_enabled,
+            'pane-8': self.side8_enabled,
+        }
+        return ' '.join(klass for klass, enabled in css_classes_mapping.items() if enabled)
+
+    def to_json(self):
+        return {
+            'pane-1': self.side1_enabled,
+            'pane-2': self.side2_enabled,
+            'pane-3': self.side3_enabled,
+            'pane-4': self.side4_enabled,
+            'pane-5': self.side5_enabled,
+            'pane-6': self.side6_enabled,
+            'pane-7': self.side7_enabled,
+            'pane-8': self.side8_enabled,
+        }
 
 
 class VariablesManager(models.Manager):
