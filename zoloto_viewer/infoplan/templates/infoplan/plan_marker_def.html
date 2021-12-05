@@ -1,0 +1,35 @@
+{% if layer.kind.name == 'фингерпост' %}
+    <g class="plan_marker_fingerpost">
+        <text class="plan_marker_fingerpost__base">
+            {{ layer.kind.unicode_symbol }}
+        </text>
+        <text class="plan_marker_fingerpost__pane pane-1">
+            &#xE907;
+        </text>
+        <text class="plan_marker_fingerpost__pane pane-2">
+            &#xE908;
+        </text>
+        <text class="plan_marker_fingerpost__pane pane-3">
+            &#xE909;
+        </text>
+        <text class="plan_marker_fingerpost__pane pane-4">
+            &#xE90A;
+        </text>
+        <text class="plan_marker_fingerpost__pane pane-5">
+            &#xE90B;
+        </text>
+        <text class="plan_marker_fingerpost__pane pane-6">
+            &#xE90C;
+        </text>
+        <text class="plan_marker_fingerpost__pane pane-7">
+            &#xE90D;
+        </text>
+        <text class="plan_marker_fingerpost__pane pane-8">
+            &#xE90E;
+        </text>
+    </g>
+{% else %}
+    <text font-family="Zoloto Web Elements v1" font-size="30">
+        {{ layer.kind.unicode_symbol }}
+    </text>
+{% endif %}

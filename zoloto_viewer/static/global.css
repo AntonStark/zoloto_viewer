@@ -102,6 +102,15 @@ input.disabled {
     --right-deleted-height: 18px;
     --button-back-color: black;
     --button-font-color: white;
+
+    --pane_1_visibility: hidden;
+    --pane_2_visibility: hidden;
+    --pane_3_visibility: hidden;
+    --pane_4_visibility: hidden;
+    --pane_5_visibility: hidden;
+    --pane_6_visibility: hidden;
+    --pane_7_visibility: hidden;
+    --pane_8_visibility: hidden;
 }
 
 #project-page-table {
@@ -508,6 +517,71 @@ g.layer_markers.enabled_layer {
 
 .variables_container ul li.wrong_variable {
     text-decoration: line-through;
+}
+
+#project-page-plan-svg text {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+
+.plan_marker_fingerpost text {
+    font-family: "Zoloto Web Elements v1";
+    font-size: 30px;
+}
+
+.plan_marker_fingerpost text.pane-1 {
+    visibility: var(--pane_1_visibility)
+}
+use.pane-1 {
+    --pane_1_visibility: visible;
+}
+.plan_marker_fingerpost text.pane-2 {
+    visibility: var(--pane_2_visibility)
+}
+use.pane-2 {
+    --pane_2_visibility: visible;
+}
+
+.plan_marker_fingerpost text.pane-3 {
+    visibility: var(--pane_3_visibility)
+}
+use.pane-3 {
+    --pane_3_visibility: visible;
+}
+.plan_marker_fingerpost text.pane-4 {
+    visibility: var(--pane_4_visibility)
+}
+use.pane-4 {
+    --pane_4_visibility: visible;
+}
+
+.plan_marker_fingerpost text.pane-5 {
+    visibility: var(--pane_5_visibility)
+}
+use.pane-5 {
+    --pane_5_visibility: visible;
+}
+.plan_marker_fingerpost text.pane-6 {
+    visibility: var(--pane_6_visibility)
+}
+use.pane-6 {
+    --pane_6_visibility: visible;
+}
+
+.plan_marker_fingerpost text.pane-7 {
+    visibility: var(--pane_7_visibility)
+}
+use.pane-7 {
+    --pane_7_visibility: visible;
+}
+.plan_marker_fingerpost text.pane-8 {
+    visibility: var(--pane_8_visibility)
+}
+use.pane-8 {
+    --pane_8_visibility: visible;
 }
 
 /*noinspection CssInvalidPropertyValue*/

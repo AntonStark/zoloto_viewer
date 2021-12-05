@@ -4,7 +4,7 @@ from django.db import migrations
 
 MARKERKIND_UNICODE_SYMBOL = {
     'напольный': (1, '\uE905'),
-    'фингерпост': (8, ' '),
+    'фингерпост': (8, '\uE906'),
 }
 
 

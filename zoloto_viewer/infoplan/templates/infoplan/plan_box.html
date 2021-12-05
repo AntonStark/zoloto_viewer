@@ -12,8 +12,8 @@
                 {% for layer in layers %}
                     <g class="layer_markers layer-{{ layer.title }} {{ layer.title|is_not_disabled:state_data.hidden_layers }}">
                         <symbol id="marker_layer-{{ layer.title }}" overflow="visible">
-                            <g transform="scale({{ marker_display_config.marker_scale }})">
-                                {{ layer.kind.svg_figures|safe }}
+                            <g transform="scale({{ marker_display_config.marker_scale }}) translate(-15, 15)">
+                                {% include 'infoplan/plan_marker_def.html' %}
                             </g>
                         </symbol>
                         {% for marker in markers_by_layer|get_item:layer.id %}
@@ -75,11 +75,15 @@
         <div {% if layer.id not in markers_by_layer %} style="display: none;" {% endif %} >
             <svg width="30" height="30" style="vertical-align: top;">
                 <symbol id="legend_marker_layer-{{ layer.title }}" overflow="visible">
-                    {{ layer.kind.svg_figures|safe }}
+                    <g transform="translate(-15, 15)">
+                        {% include 'infoplan/plan_marker_def.html' %}
+                    </g>
                 </symbol>
                 <use href="#legend_marker_layer-{{ layer.title }}"
                      x="15" y="15"
-                     class="plan_marker layer_markers layer-{{ layer.title }}"></use>
+                     class="plan_marker layer_markers layer-{{ layer.title }}
+                     pane-1 pane-2 pane-3 pane-4 pane-5 pane-6 pane-7 pane-8"
+                ></use>
             </svg>
             <div class="map_legend_caption">
                 {{ layer.title }}<br>
