@@ -1,7 +1,7 @@
 from background_task import background
 from background_task.models import Task
 from django.contrib.auth.decorators import login_required
-from django.http import FileResponse, HttpResponse
+from django.http import FileResponse, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404
 from django.views.decorators import csrf, http
 from django.utils import timezone
@@ -91,3 +91,18 @@ def is_generate_pdf_task_queued(project_uid):
         task_name=PDF_GENERATE_TASK_NAME,
         args=[str(project_uid)]
     ).exists()
+
+
+@login_required
+@http.require_GET
+def names_edit_view(request, project_id):
+    from zoloto_viewer.documents.generators.vars_index import VarsIndexFileBuilder
+    project = get_object_or_404(Project, id=project_id)
+    vars_collector = VarsIndexFileBuilder(project)
+    # [ (number, var_count[lang_pair], lang_pair[0], lang_pair[1]) ]
+    names = vars_collector.make_rows()
+
+    context = {
+        'names': names,
+    }
+    return ''
