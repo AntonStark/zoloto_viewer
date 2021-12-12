@@ -663,3 +663,18 @@ use.pane-8 {
     color: white;
     background: black;
 }
+
+.alternate_color tr:nth-child(odd) td{
+    background: lightgrey;
+}
+.alternate_color tr:nth-child(even) td{
+}
+
+.cell_extra_space {
+    padding-right: 40px;
+}
+
+.no_spacing {
+    border-collapse: collapse;
+    border-spacing: 0;
+}

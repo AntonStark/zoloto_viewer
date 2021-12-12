@@ -1,13 +1,13 @@
 from background_task import background
 from background_task.models import Task
+from django.conf import settings
 from django.contrib.auth.decorators import login_required
-from django.http import FileResponse, HttpResponse, JsonResponse
-from django.shortcuts import get_object_or_404
+from django.http import FileResponse, HttpResponse
+from django.shortcuts import get_object_or_404, render
 from django.views.decorators import csrf, http
-from django.utils import timezone
 
 from zoloto_viewer.viewer.models import Project
-from zoloto_viewer.viewer.views import with_layers_group_check
+from zoloto_viewer.viewer.views import parse_return_to_page_queryparam, with_layers_group_check
 from zoloto_viewer.documents.models import ProjectFile
 
 
@@ -104,5 +104,9 @@ def names_edit_view(request, project_id):
 
     context = {
         'names': names,
+        'project': project,
+        'return_to_page_code': parse_return_to_page_queryparam(request, project),
+        'base_url': settings.BASE_URL,
     }
-    return ''
+    template = 'documents/names_edit_page.html'
+    return render(request, template, context=context)

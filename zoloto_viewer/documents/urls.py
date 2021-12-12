@@ -9,5 +9,5 @@ urlpatterns = [
     path('count/', views.get_counts_file, name='get_counts_file'),
     path('picts/', views.get_picts_file, name='get_picts_file'),
     path('infoplan/', views.get_infoplan_file, name='get_infoplan_file'),
-    path('names/', views.names_edit_view, name='names_edit_view')
+    path('edit_names/', views.names_edit_view, name='names_edit_view')
 ]

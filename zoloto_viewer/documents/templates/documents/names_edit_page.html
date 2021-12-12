@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Редактирование словаря</title>
+    {% load static %}
+    <link rel="stylesheet" type="text/css" href="{% static 'global.css' %}">
+</head>
+<body style="margin-left: 40px">
+    <a>Вернуться к расстановке</a>
+    <h1>{{ project.title }}</h1>
+    <h3>Изменение словаря</h3>
+    <a>Словарь</a>
+
+    <table class="no_spacing">
+        <thead>
+            <tr>
+                <td>RU</td>
+                <td>EN</td>
+            </tr>
+        </thead>
+        <tbody class="alternate_color">
+            {% for number, use_count, name_ru, name_en in names %}
+                <tr>
+                    <td class="cell_extra_space">{{ name_ru }}</td>
+                    <td class="cell_extra_space">{{ name_en }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>
