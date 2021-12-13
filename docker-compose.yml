@@ -32,6 +32,10 @@ services:
       - 1335:80
     depends_on:
       - zoloto_viewer
+  redis:
+    image: redis:4.0.14-alpine
+    ports:
+      - 6379:6379
 
 volumes:
   postgres_data:
