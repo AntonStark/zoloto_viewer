@@ -13,14 +13,69 @@ function makeDataRequest(markerUid, onResponse, onError=undefined) {
 
 // RENDER
 
+const INFOPLAN_SIDE_LABELS_USUAL = {
+    1: 'Сторона A',
+    2: 'Сторона B',
+    3: 'Сторона C',
+    4: 'Сторона D',
+}
+
+const INFOPLAN_SIDE_LABELS_FINGERPOST = {
+    1: 'Лопасть 1',
+    2: 'Лопасть 2',
+    3: 'Лопасть 3',
+    4: 'Лопасть 4',
+    5: 'Лопасть 5',
+    6: 'Лопасть 6',
+    7: 'Лопасть 7',
+    8: 'Лопасть 8',
+}
+
 function buildMessBox(data) {
     function buildInfoplanBlock(data) {
+        const isFingerPostMarker = data.layer.kind.name === 'фингерпост';
+        const markerElem = messageBoxManager.getMarker(data.marker);
+        if (!markerElem) {
+            alert('Ошибка при отображении инфоплана.\n' +
+                'Поробуйте обновить страницу или обратитесь к администратору.');
+        }
+        const markerClassList = markerElem.classList;
+        function paneEnabled(paneN)
+        { return markerClassList.contains(`pane-${paneN}`); }
+
         function buildSideNBlock(nSide, totalSideCount) {
-            const sideLabels = {
-                1: 'Сторона A',
-                2: 'Сторона B',
-                3: 'Сторона C',
-                4: 'Сторона D',
+            function buildSideHeaderUsual(data) {
+                const sideLabels = INFOPLAN_SIDE_LABELS_USUAL;
+
+                let sideLabel = document.createElement('div');
+
+                let span = document.createElement('span');
+                span.setAttribute('style', 'font-size: 10px;');
+                if (totalSideCount !== 1) {
+                    span.textContent = sideLabels[nSide];
+                }
+
+                sideLabel.append(span);
+                return sideLabel;
+            }
+            function buildSideHeaderFingerpost(data) {
+                const sideLabels = INFOPLAN_SIDE_LABELS_FINGERPOST;
+
+                let sideLabel = document.createElement('div');
+
+                let span = document.createElement('span');
+                span.setAttribute('style', 'font-size: 12px;');
+                if (totalSideCount !== 1) {
+                    span.textContent = sideLabels[nSide];
+                }
+
+                let checkbox = document.createElement('input');
+                checkbox.setAttribute('type', 'checkbox');
+                checkbox.setAttribute('class', 'side_label__checkbox');
+                checkbox.checked = paneEnabled(nSide);
+
+                sideLabel.append(checkbox, span);
+                return sideLabel;
             }
             function buildSideBlock(data) {
                 const infoplanBySide = Object.fromEntries(
@@ -31,11 +86,8 @@ function buildMessBox(data) {
                 let sideBlock = document.createElement('div');
                 sideBlock.setAttribute('class', 'variables-container-side-block')
 
-                let sideLabel = document.createElement('div');
-                sideLabel.setAttribute('style', 'font-size: 10px;');
-                if (totalSideCount !== 1) {
-                    sideLabel.textContent = sideLabels[nSide];
-                }
+                let sideHeader = ( isFingerPostMarker
+                    ? buildSideHeaderFingerpost(data) : buildSideHeaderUsual(data));
 
                 let sideInput = document.createElement('textarea');
                 sideInput.setAttribute('class', 'variables-container-side-input')
@@ -52,7 +104,7 @@ function buildMessBox(data) {
                 sideInput.value = htmlDecode(inputValue);
                 sideInput.addEventListener('blur', variablesContainerBlur);
 
-                sideBlock.append(sideLabel, sideInput);
+                sideBlock.append(sideHeader, sideInput);
                 return sideBlock;
             }
             return buildSideBlock;
@@ -74,7 +126,10 @@ function buildMessBox(data) {
 
         let variablesDiv  = document.createElement('div');
         variablesDiv.setAttribute('class', `variables_container`);
-        variablesDiv.style.gridTemplateColumns = `repeat(${sides}, 1fr)`;
+        variablesDiv.style.gridTemplateColumns = ( isFingerPostMarker
+            ? `repeat(4, 1fr)`
+            : `repeat(${sides}, 1fr)`
+        );
 
         const sideNumbers = Array.from(Array(sides));
         variablesDiv.append(...sideNumbers.map((e, i) => buildSideNBlock(i + 1, sides)(data)));

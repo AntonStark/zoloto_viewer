@@ -45,9 +45,67 @@ const MessBuilder = () => {
             () => handlerConfirmBtnClick(data.marker));
         return btnLink;
     }
-
     function buildInfoplanBlock(data) {
+        function buildSideNBlock(nSide) {
+            const sideLabels = {
+                1: 'Сторона A',
+                2: 'Сторона B',
+                3: 'Сторона C',
+                4: 'Сторона D',
+            }
+            function buildSideBlock(data) {
+                const infoplanBySide = Object.fromEntries(
+                    data.infoplan.map(sideObj => [sideObj.side, sideObj.variables])
+                )
+                const sideVars = infoplanBySide[nSide];
 
+                let sideBlock = document.createElement('div');
+                sideBlock.setAttribute('class', 'variables-container-side-block')
+
+                let sideLabel = document.createElement('div');
+                sideLabel.setAttribute('style', 'font-size: 10px;');
+                sideLabel.textContent = sideLabels[nSide];
+
+                let sideList = document.createElement('ul');
+                sideList.setAttribute('data-number', nSide);
+
+                sideList.append(...sideVars.map(varData => {
+                    let variableItem = document.createElement('li');
+                    variableItem.innerHTML = varData;
+                    // variableItem.addEventListener('click', () => handleToggleWrong(data.marker, varData.key));
+                    // varWrongnessManager.register(data.marker, varData.key, variableItem, varData.wrong);
+                    return variableItem;
+                }));
+
+                sideBlock.append(sideLabel, sideList);
+                return sideBlock;
+            }
+            return buildSideBlock;
+        }
+
+        const sides = data.layer.kind.sides;
+        const isInfoplanSet = (data.infoplan
+                .map(sideObj => sideObj.variables.length)
+                .reduce((a, b) => a + b, 0)
+            > 0);
+
+        let variablesLabel = document.createElement('span');
+        variablesLabel.setAttribute('style', 'font-size: 10px;');
+        variablesLabel.textContent = (isInfoplanSet ? 'Инфоплан' : 'У объекта не заполнен инфоплан');
+
+        let variablesDiv  = document.createElement('div');
+        variablesDiv.setAttribute('class', `variables_container`);
+        variablesDiv.style.gridTemplateColumns = `repeat(${sides}, 1fr)`;
+
+        if (isInfoplanSet) {
+            const sideNumbers = Array.from(Array(sides));
+            variablesDiv.append(...sideNumbers.map((e, i) => buildSideNBlock(i + 1)(data)));
+        }
+
+        let infoplanDiv  = document.createElement('div');
+        infoplanDiv.append(variablesLabel, variablesDiv);
+
+        return infoplanDiv;
     }
 
     function render(data) {
@@ -70,4 +128,14 @@ const MessBuilder = () => {
         _buildInfoplanBlock: buildInfoplanBlock,
         render: render,
     }
+}
+
+const MessAuthBuilder = () => {
+    let builderBase = MessBuilder()
+
+    builderBase._buildConfirmBtn = function () {
+
+    }
+
+    return builderBase
 }

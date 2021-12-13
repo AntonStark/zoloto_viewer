@@ -528,6 +528,11 @@ g.layer_markers.enabled_layer {
     text-decoration: line-through;
 }
 
+.side_label__checkbox {
+    width: 10px;
+    vertical-align: bottom;
+}
+
 #project-page-plan-svg text {
     -webkit-user-select: none;
     -moz-user-select: none;
