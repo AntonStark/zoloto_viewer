@@ -5,9 +5,13 @@
     <title>Group layers - {{ project.title }}</title>
 
     {% load static %}
-    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.3/css/all.css"
-          integrity="sha384-SZXxX4whJ79/gErwcOYf+zWLeJdY/qpuqC4cAa9rOGUstPomtqpuNWT9wdPEn2fk" crossorigin="anonymous">
     <link rel="stylesheet" type="text/css" href="{% static 'global.css' %}">
+    <style type="text/css">
+        @font-face {
+            font-family: "Zoloto Web Elements v1";
+            src: url("{% static 'z_web_elements.ttf' %}") format("truetype");
+        }
+    </style>
 
     <script>
         var BASE_URL = '{{ base_url }}';
@@ -22,7 +26,7 @@
     <div class="group_setup_pdf_btn__wrapper">
         <label for="layer_grouping_1" class="group_setup_pdf_btn__btn fill-button"
                onclick="handleFileDownloadWithRetryAfter('{% url 'get_pdf_file' project.id %}?autogroup_remains=true')">
-            <i class="fas fa-long-arrow-alt-down"></i>
+            <span class="z_pict pict_pos_middle">&#xE916;</span>
             PDF
             <input id="layer_grouping_1" type="button" style="display: none;">
         </label>

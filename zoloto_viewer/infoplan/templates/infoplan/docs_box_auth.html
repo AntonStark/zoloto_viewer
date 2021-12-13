@@ -5,32 +5,32 @@
         <tbody>
         <tr>
             <td>
-                <i class="fas fa-long-arrow-alt-down"></i>
+                <span class="z_pict pict_pos_middle small">&nbsp;&nbsp;</span>
                 <a href="{% url 'names_edit_view' project.id %}?return_to_page={{ page.code }}">Словарь</a>
             </td>
         </tr>
         <tr>
             <td>
-                <i class="fas fa-long-arrow-alt-down"></i>
+                <span class="z_pict pict_pos_middle small">&#xE916;</span>
                 <a href="{% url 'get_infoplan_file' project.id %}">Инфоплан</a>
             </td>
         </tr>
         <tr>
             <td>
-                <i class="fas fa-long-arrow-alt-down"></i>
+                <span class="z_pict pict_pos_middle small">&#xE916;</span>
                 <a href="{% url 'get_counts_file' project.id %}">Количество</a>
             </td>
         </tr>
         <tr>
             <td>
-                <i class="fas fa-long-arrow-alt-down"></i>
+                <span class="z_pict pict_pos_middle small">&#xE916;</span>
                 <a href="{% url 'get_picts_file' project.id %}">Пикты</a>
             </td>
         </tr>
         <tr>
             <td>
-                <i class="fas fa-long-arrow-alt-down"></i>
-{#                <a href="{% url 'get_pdf_file' project.id %}">PDF</a>#}
+                <span class="z_pict pict_pos_middle small">&nbsp;&nbsp;</span>
+                {#                <a href="{% url 'get_pdf_file' project.id %}">PDF</a>#}
                 <span onclick="handleFileDownloadWithRetryAfter('{% url 'get_pdf_file' project.id %}')">PDF</span>
             </td>
         </tr>
