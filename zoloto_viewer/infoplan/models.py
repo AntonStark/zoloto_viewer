@@ -170,7 +170,7 @@ class Marker(models.Model):
         })
         return rep
 
-    def to_json(self, layer=False, page=False):
+    def to_json(self, layer=False, layer_kind=False, page=False):
         j = {
             'marker': self.uid,
             'number': self.number,
@@ -185,6 +185,8 @@ class Marker(models.Model):
         }
         if layer:
             j['layer'] = self.layer.title
+            if layer_kind:
+                j['layer_kind_name'] = self.layer.kind.name
         if page:
             j['page'] = self.floor.code
         return j

@@ -118,6 +118,7 @@ function renderMarkerElement(data) {
     function buildMark(data) {
         const markerUid = data.marker;
         const layerTitle = data.layer;
+        const layerKindName = data.layer_kind_name || null;
         const pos = data.position;
 
         let use = document.createElementNS('http://www.w3.org/2000/svg', 'use');
@@ -133,6 +134,11 @@ function renderMarkerElement(data) {
         use.setAttributeNS(null, 'data-layer-title', layerTitle);
         use.setAttributeNS(null, 'data-origin-x', pos.center_x);
         use.setAttributeNS(null, 'data-origin-y', pos.center_y);
+
+        // fingerpost fix
+        if (layerKindName && layerKindName === 'фингерпост') {
+            use.classList.add('pane-1')
+        }
 
         return use;
     }

@@ -50,7 +50,7 @@ def create_marker(request):
                     pos_x=center_x, pos_y=center_y, rotation=rotation)
 
     marker.save()
-    rep = marker.to_json(layer=True, page=True)
+    rep = marker.to_json(layer=True, layer_kind=True, page=True)
     return JsonResponse(rep)
 
 
@@ -80,7 +80,7 @@ def create_marker_clipboard(request):
         markers_created.append(mc)
 
     rep = {
-        'created': [m.to_json(layer=True, page=True) for m in markers_created]
+        'created': [m.to_json(layer=True, layer_kind=True, page=True) for m in markers_created]
     }
     return JsonResponse(rep)
 
