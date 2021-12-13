@@ -83,7 +83,7 @@ function buildMessBox(data) {
         return infoplanDiv;
     }
     function buildCommentBlock(data) {
-        function buildCommentBlock(cObj) {
+        function buildCommentElem(cObj) {
             const comment = cObj.content;
             let commentBlock = document.createElement('div');
             commentBlock.textContent = comment;
@@ -99,7 +99,7 @@ function buildMessBox(data) {
         commentLabel.textContent = label;
 
         let commentsBlock = document.createElement('div');
-        commentsBlock.append(...comments.map(c => buildCommentBlock(c)))
+        commentsBlock.append(...comments.map(c => buildCommentElem(c)))
 
         let commentInput = document.createElement('textarea');
         commentInput.setAttribute('class', 'comment_field');
