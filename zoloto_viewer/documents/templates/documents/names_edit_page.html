@@ -5,12 +5,21 @@
     <title>Редактирование словаря</title>
     {% load static %}
     <link rel="stylesheet" type="text/css" href="{% static 'global.css' %}">
+    <style type="text/css">
+        @font-face {
+            font-family: "Zoloto Web Elements v1";
+            src: url("{% static 'z_web_elements.ttf' %}") format("truetype");
+        }
+    </style>
 </head>
 <body style="margin-left: 40px">
-    <a>Вернуться к расстановке</a>
-    <h1>{{ project.title }}</h1>
-    <h3>Изменение словаря</h3>
-    <a>Словарь</a>
+    <a href="{% url 'project_page' return_to_page_code %}">Вернуться к расстановке</a>
+    <h1>
+        «{{ project.title }}». Изменение словаря
+        <a class="fill-button" style="padding-right: 12px;" href="{% url 'get_vars_file' project.id %}">
+            <span class="z_pict" style="vertical-align: middle">&#xE916;</span>Словарь
+        </a>
+    </h1>
 
     <table class="no_spacing">
         <thead>
