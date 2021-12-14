@@ -219,28 +219,28 @@ class MarkerFingerpost(models.Model):
 
     def make_css_labels_string(self):
         css_classes_mapping = {
-            'pane-1': self.side1_enabled,
-            'pane-2': self.side2_enabled,
-            'pane-3': self.side3_enabled,
-            'pane-4': self.side4_enabled,
-            'pane-5': self.side5_enabled,
-            'pane-6': self.side6_enabled,
-            'pane-7': self.side7_enabled,
-            'pane-8': self.side8_enabled,
+            f'pane-{i}': getattr(self, f'side{i}_enabled')
+            for i in range(1, 9)
         }
         return ' '.join(klass for klass, enabled in css_classes_mapping.items() if enabled)
 
     def to_json(self):
         return {
-            'pane-1': self.side1_enabled,
-            'pane-2': self.side2_enabled,
-            'pane-3': self.side3_enabled,
-            'pane-4': self.side4_enabled,
-            'pane-5': self.side5_enabled,
-            'pane-6': self.side6_enabled,
-            'pane-7': self.side7_enabled,
-            'pane-8': self.side8_enabled,
+            f'pane-{i}': getattr(self, f'side{i}_enabled')
+            for i in range(1, 9)
         }
+
+    def update_from_obj(self, fingerpost_obj):
+        # fingerpost_obj: {
+        #   panes: [{pane_number, enabled}]
+        # }
+        panes_data = fingerpost_obj.get('panes', None)
+        if panes_data:
+            for pane_obj in panes_data:
+                number = pane_obj['pane_number']
+                enabled = bool(pane_obj['enabled'])
+                setattr(self, f'side{number}_enabled', enabled)
+        self.save()
 
 
 class VariablesManager(models.Manager):

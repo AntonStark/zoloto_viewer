@@ -150,13 +150,17 @@ class MarkerView(View):
         #   infoplan: [
         #       {side: 1, variables: ['a', 'b']},
         #       {side: 2, variables: []}
-        #   ]
+        #   ],
+        #   fingerpost_metadata: {
+        #       panes: [{pane_number, enabled}]
+        #   } || null,
         # }
         marker = get_object_or_404(Marker, uid=marker_uid)
 
         try:
             req = json.loads(request.body)
             infoplan = req['infoplan']
+            fingerpost_metadata = req.get('fingerpost_metadata', None)
         except json.JSONDecodeError:
             return JsonResponse({'error': 'request body must be json'}, status=400)
         except KeyError:
@@ -201,6 +205,10 @@ class MarkerView(View):
         vars_by_side = transformations.html_escape_incoming(vars_by_side)
 
         MarkerVariable.objects.reset_values(marker, vars_by_side)
+
+        if fingerpost_metadata:
+            mf = MarkerFingerpost.objects.filter(marker=marker).first()
+            mf.update_from_obj(fingerpost_metadata)
 
         return JsonResponse(marker.serialize())
 

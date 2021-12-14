@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 
 // STARTER
 
@@ -63,18 +63,20 @@ function buildMessBox(data) {
 
                 let sideLabel = document.createElement('div');
 
-                let span = document.createElement('span');
-                span.setAttribute('style', 'font-size: 12px;');
-                if (totalSideCount !== 1) {
-                    span.textContent = sideLabels[nSide];
-                }
-
                 let checkbox = document.createElement('input');
                 checkbox.setAttribute('type', 'checkbox');
                 checkbox.setAttribute('class', 'side_label__checkbox');
+                checkbox.dataset['pane_number'] = nSide;
+                checkbox.dataset['marker'] = data.marker;
                 checkbox.checked = paneEnabled(nSide);
+                checkbox.addEventListener('change', fingerpostPaneCheckboxChange);
 
-                sideLabel.append(checkbox, span);
+                const text = document.createTextNode(sideLabels[nSide]);
+
+                let label = document.createElement('label');
+                label.setAttribute('style', 'font-size: 12px;');
+                label.append(checkbox, text);
+                sideLabel.append(label);
                 return sideLabel;
             }
             function buildSideBlock(data) {
@@ -95,7 +97,7 @@ function buildMessBox(data) {
                 sideInput.setAttribute('rows', 8);
 
                 function htmlDecode(input) {
-                    var doc = new DOMParser().parseFromString(input, "text/html");
+                    var doc = new DOMParser().parseFromString(input, 'text/html');
                     return doc.documentElement.textContent;
                 }
 
@@ -208,6 +210,16 @@ function variablesContainerBlur(e) {
     }
 }
 
+function fingerpostPaneCheckboxChange(e) {
+    const {marker, pane_number} = e.currentTarget.dataset
+    const checked = e.currentTarget.checked
+
+    const markerElem = messageBoxManager.getMarker(marker);
+    if (markerElem) {
+        markerElem.classList.toggle(`pane-${pane_number}`, checked);
+    }
+}
+
 function handlerResolveCommentsBtnClick(marker_uid) {
     doApiCall(
         'POST',
@@ -235,6 +247,22 @@ function handlerConfirmBtnClick(marker_uid) {
         const sideVars = sideInputValue.split(';\n');
         return sideVars;
     }
+    function parseFingerpostMetadata(messContainer) {
+        if (!messContainer) {
+            return null;
+        }
+        const paneCheckboxElements = messContainer.getElementsByClassName('side_label__checkbox');
+        if (paneCheckboxElements.length === 0) {
+            return null;
+        }
+
+        return {
+            'panes': Array.from(paneCheckboxElements).map((elem) => ({
+                'pane_number': elem.dataset['pane_number'],
+                'enabled': elem.checked,
+            }))
+        }
+    }
 
     const box = messageBoxManager.get(marker_uid);
     if (!box) return;
@@ -246,9 +274,14 @@ function handlerConfirmBtnClick(marker_uid) {
         sideObjects.push({side: Number(s.dataset.number), variables: parseSideVariables(s.value)})
     }
 
-    doApiCall('PUT', API_MARKER_PUT_VARS(marker_uid), {
-        infoplan: sideObjects
-    }, function onSuccessLoadReview(markerData) {
+    const payload = {
+        infoplan: sideObjects,
+        fingerpost_metadata: parseFingerpostMetadata(box)
+    }
+    doApiCall('PUT',
+        API_MARKER_PUT_VARS(marker_uid),
+        payload,
+        function onSuccessLoadReview(markerData) {
         const markerUid = markerData.marker;
         messageBoxManager.hide(markerUid);
         refreshMarkerElement(markerData);
