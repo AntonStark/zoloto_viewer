@@ -19,7 +19,7 @@ def make_tar_archive(files: t.Tuple[t.Union[str,
                 target, name = f
                 if isinstance(target, io.BytesIO):
                     tarinfo = tarfile.TarInfo(name=name)
-                    tarinfo.size = len(target.getvalue().decode('utf-8'))
+                    tarinfo.size = len(target.getvalue())
                     archive.addfile(tarinfo, target)
                 else:
                     archive.add(target, arcname=name)
