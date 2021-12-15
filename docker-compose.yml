@@ -14,14 +14,16 @@ services:
     env_file:
       - docker/.env.prod
     depends_on:
-      - postgres
-  postgres:
+      - db
+  db:
     image: postgres:12.1-alpine
     restart: unless-stopped
     volumes:
       - postgres_data:/var/lib/postgresql/data/
     env_file:
       - docker/.env.prod
+    ports:
+      - 5432:5432
   nginx:
     build: ./docker/nginx
     restart: unless-stopped
