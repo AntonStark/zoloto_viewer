@@ -11,6 +11,7 @@
             src: url("{% static 'z_web_elements.ttf' %}") format("truetype");
         }
     </style>
+    <script defer src="{% static 'documents/names_edit.js' %}"></script>
 </head>
 <body style="margin-left: 40px">
     <a href="{% url 'project_page' return_to_page_code %}">Вернуться к расстановке</a>
@@ -31,8 +32,14 @@
         <tbody class="alternate_color">
             {% for number, use_count, name_ru, name_en in names %}
                 <tr>
-                    <td class="cell_extra_space">{{ name_ru }}</td>
-                    <td class="cell_extra_space">{{ name_en }}</td>
+                    <td class="cell_extra_space">
+                        <input class="name-edit-input name-ru no_background no_outline" type="text"
+                               value="{{ name_ru }}" data-name="{{ name_ru }}">
+                    </td>
+                    <td class="cell_extra_space">
+                        <input class="name-edit-input name-en no_background no_outline" type="text"
+                               value="{{ name_en }}" data-name="{{ name_en }}">
+                    </td>
                 </tr>
             {% endfor %}
         </tbody>

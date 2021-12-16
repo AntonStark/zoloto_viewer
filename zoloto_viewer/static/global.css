@@ -709,3 +709,11 @@ use.pane-8 {
     border-spacing: 0;
 }
 
+.no_background {
+    background: inherit;
+}
+
+.no_outline {
+    border: none;
+    outline: none;
+}
