@@ -9,6 +9,7 @@ const varWrongnessManager = ControllerVariableWrongness();
 const mapScaleController = ControllerMapScale();
 const enabledLayersController = ControllerEnabledLayers();
 const mapInteractionsController = ControllerMapInteractions();
+const areasListController = ControllerAreasList();
 
 
 let SVG_VIEWPORT_BOUNDS = undefined;
@@ -37,6 +38,7 @@ function init() {
     mapScaleController.setup();
     markerCirclesManager.init();
     enabledLayersController.init();
+    areasListController.init();
 
     document.getElementById('map_control_plus').addEventListener('click', handleClickMapPlus);
     document.getElementById('map_control_minus').addEventListener('click', handleClickMapMinus);

@@ -17,6 +17,10 @@ function ControllerMapInteractions() {
         if (!control) return true;
         return control.checked;
     }
+    function toggleInsertMode() {
+        const control = document.getElementById('menu_actions_option1');
+        control.checked = true;
+    }
     function toggleSelectMode() {
         const control = document.getElementById('menu_actions_option2');
         control.checked = true;
@@ -100,6 +104,16 @@ function ControllerMapInteractions() {
             markerCirclesManager.render(mapInteractionsController.isInSelection);
         } else if (e.code === 'KeyI') {
             messageBoxManager.showSelected(mapInteractionsController.isInSelection);
+        } else if (e.code === 'KeyX') {
+            mapInteractionsController.toggleInsertMode();
+        } else if (e.code === 'KeyV') {
+            mapInteractionsController.toggleSelectMode();
+        } else if (e.code === 'ArrowUp' && e.shiftKey) {
+            // upper area
+            areasListController.toUpperArea(pageCode);
+        } else if (e.code === 'ArrowDown' && e.shiftKey) {
+            // lower area
+            areasListController.toLowerArea(pageCode);
         }
     }
     function handleKeyPress(e) {
@@ -108,12 +122,29 @@ function ControllerMapInteractions() {
         if (e.target.classList.contains('variables-container-side-input'))
             return;     // skip if in infoplan text block
 
+        const keyToOffset = {
+            'KeyW': [0, -1],
+            'KeyA': [-1, 0],
+            'KeyS': [0, 1],
+            'KeyD': [1, 0],
+            'ArrowUp': [0, -1],
+            'ArrowLeft': [-1, 0],
+            'ArrowDown': [0, 1],
+            'ArrowRight': [1, 0],
+        }
+        const acceleration = e.shiftKey;
         if (e.code === 'KeyQ') {
-            const acceleration = e.shiftKey;
             handleRotationNegative(acceleration);
         } else if (e.code === 'KeyE') {
-            const acceleration = e.shiftKey;
             handleRotationPositive(acceleration);
+        } else if (keyToOffset.hasOwnProperty(e.code)) {
+            let offset = keyToOffset[e.code];
+            if (acceleration) {
+                offset[0] = 10 * offset[0];
+                offset[1] = 10 * offset[1];
+            }
+            _updateMarkersVisiblePositions(offset);
+            markerCirclesManager.finishMovement(getSelection());
         }
     }
     function handleClickMap(e) {
@@ -300,6 +331,7 @@ function ControllerMapInteractions() {
     return {
         isInsertMode: isInsertMode,
         isSelectMode: isSelectMode,
+        toggleInsertMode : toggleInsertMode,
         toggleSelectMode : toggleSelectMode,
 
         getProjectUid   : getProjectUid,
