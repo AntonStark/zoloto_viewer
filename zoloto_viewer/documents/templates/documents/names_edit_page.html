@@ -11,6 +11,10 @@
             src: url("{% static 'z_web_elements.ttf' %}") format("truetype");
         }
     </style>
+    <script>
+        var BASE_URL = '{{ base_url }}';
+        var projectId = '{{ project.id }}';
+    </script>
     <script defer src="{% static 'documents/names_edit.js' %}"></script>
 </head>
 <body style="margin-left: 40px">
@@ -31,7 +35,7 @@
         </thead>
         <tbody class="alternate_color">
             {% for number, use_count, name_ru, name_en in names %}
-                <tr>
+                <tr class="name-edit-input-row">
                     <td class="cell_extra_space">
                         <input class="name-edit-input name-ru no_background no_outline" type="text"
                                value="{{ name_ru }}" data-name="{{ name_ru }}">

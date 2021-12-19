@@ -1,6 +1,7 @@
 import collections
 import typing as t
 import uuid
+import re
 
 from django.db import models, transaction
 
@@ -303,6 +304,32 @@ class VariablesManager(models.Manager):
         variables = self.filter(marker__floor=page, marker__layer=layer)
         vars_by_side, markers = self.vars_by_side(variables, apply_transformations)
         return vars_by_side, markers
+
+    def filter_var_containing(self, project, lang_ru: str, lang_en: str):
+        # lang_ru_regex = lang_ru.replace(' ', '[\t ]+')
+        # lang_en_regex = lang_en.replace(' ', '[\t ]+')
+        containing = self.filter(marker__floor__project=project)\
+            .filter(value__regex=lang_ru).filter(value__regex=lang_en)
+        return containing.values_list('id', flat=True)
+
+    def var_replace_helper(self, project, name_old, name_new, filter_ids_in=None):
+        if not name_old and not name_new:
+            return []
+        if not name_old and not filter_ids_in:
+            raise ValueError('unbound call no allowed')
+        if name_old == name_new:
+            return filter_ids_in or []
+
+        name_regex = name_old.replace(' ', '[\t ]+')
+        to_replace = self.filter(marker__floor__project=project) \
+            .filter(value__regex=name_regex)
+        if filter_ids_in:
+            to_replace = to_replace.filter(id__in=filter_ids_in)
+        changed_vars_ids = to_replace.values_list('id', flat=True)
+        for v in to_replace:
+            v.value = re.sub(name_regex, name_new, v.value)
+            v.save()
+        return changed_vars_ids
 
 
 class MarkerVariable(models.Model):
