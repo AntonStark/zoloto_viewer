@@ -7,9 +7,12 @@ from django.conf import settings
 from django.contrib.postgres import fields
 from django.db import models
 from django.dispatch import receiver
+
 from os import path
 from PIL import Image
 from typing import List
+
+from zoloto_viewer.documents.utils import placement_redis_cache
 
 
 def additional_files_upload_path(obj: 'Project', filename):
@@ -225,6 +228,7 @@ class LayerGroup(models.Model):
         if not self.num and self.project:
             self.num = LayerGroup.max_project_group_num(self.project) + 1
         super(LayerGroup, self).save(*args, **kwargs)
+        placement_redis_cache.drop_group_caches(self)
 
     def to_json(self):
         return {

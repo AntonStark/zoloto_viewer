@@ -3,7 +3,8 @@ import logging
 from reportlab.lib import colors
 from typing import Dict, ItemsView, Iterator, List, Set, Tuple
 
-from zoloto_viewer.viewer.models import Layer, Page
+from zoloto_viewer.documents.utils import placement_redis_cache
+from zoloto_viewer.viewer.models import Layer, LayerGroup, Page
 
 from . import layout
 from .plan import get_objects_distance
@@ -63,9 +64,11 @@ class PlanPageWriterMinimal(layout.BasePageWriterDeducingTitle):
 
 class PlanPageWriterLayerGroups(PlanPageWriterMinimal):
     def __init__(self, canvas,
-                 floor: Page, layers: List[Layer], active_layers: List[Layer],
+                 floor: Page, layers: List[Layer], layers_group: LayerGroup,
                  marker_positions_getter):
         super().__init__(canvas, floor, layers, marker_positions_getter)
+        self.layers_group = layers_group
+        active_layers = Layer.objects.filter(id__in=layers_group.layers)
         self._active_layers = [l for l in layers if l in active_layers]
         self._marker_positions_active = [mo for mo in self._marker_positions
                                          if mo.layer in self._active_layers]
@@ -88,7 +91,18 @@ class PlanPageWriterLayerGroups(PlanPageWriterMinimal):
         self.draw_options['objects_opacity'] = 100
         self._draw_markers(self._marker_positions_active)
 
-        self._active_marker_captions = self.place_captions(self._marker_positions_active)
+        from_cache = False
+        placement_cache = placement_redis_cache.check_for_cache(self.floor, self.layers_group)
+        if placement_cache:
+            placement, timestamp = placement_cache
+            if placement_redis_cache.is_cache_fresh(self.floor, self._active_layers, timestamp):
+                self._active_marker_captions = placement
+                from_cache = True
+        if not from_cache:
+            placement = self.place_captions(self._marker_positions_active)
+            placement_redis_cache.store_in_cache(self.floor, self.layers_group, placement)
+            self._active_marker_captions = placement
+        logger.debug(f'placement_cache: floor={self.floor.uid}, group={self.layers_group.id}, from_cache={from_cache}')
 
         logger.debug('start _draw_marker_captions')
         self._draw_marker_captions(self._active_marker_captions)

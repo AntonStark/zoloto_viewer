@@ -18,6 +18,8 @@ DATABASES = {
     'default': heroku_database_url_adapter(os.getenv('DATABASE_URL')),
 }
 
+REDIS_URL = os.getenv('REDIS_URL')
+
 MEDIA_ROOT = os.path.join(BASE_DIR, 'mediafiles')
 MEDIA_URL = '/viewer/media/'
 

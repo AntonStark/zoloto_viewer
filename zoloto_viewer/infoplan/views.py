@@ -50,6 +50,7 @@ def create_marker(request):
                     pos_x=center_x, pos_y=center_y, rotation=rotation)
 
     marker.save()
+    marker.layer.save()     # to update layer date_updated
     rep = marker.to_json(layer=True, layer_kind=True, page=True)
     return JsonResponse(rep)
 
@@ -77,6 +78,7 @@ def create_marker_clipboard(request):
         except Marker.DoesNotExist:     # just skip bad uuid
             continue
         mc = m.copy(floor=page)
+        mc.layer.save()     # to update layer date_updated
         markers_created.append(mc)
 
     rep = {
