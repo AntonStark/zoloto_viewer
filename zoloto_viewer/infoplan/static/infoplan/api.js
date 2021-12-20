@@ -78,6 +78,11 @@ function clipMarkers(args, onSuccess) {
 }
 
 function handleFileDownloadWithRetryAfter(uri, firstTry=true) {
+    // hack to prevent listener double run
+    if (event.currentTarget !== event.target) {
+        return;
+    }
+
     const method = 'HEAD';
     let req = new XMLHttpRequest();
     req.open(method, uri);
