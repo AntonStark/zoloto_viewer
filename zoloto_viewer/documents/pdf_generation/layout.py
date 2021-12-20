@@ -38,10 +38,9 @@ class Definitions:
     PICT_FONT_NAME = 'Picts_v1'
     PICT_FONT_FILE = os.path.join(zoloto_viewer, 'static/picts_v2.ttf')
 
-    # todo determine font size according to floor.marker_size_factor
-    MARK_FONT_SIZE = 22
+    MARK_FONT_SIZE = 16
     MARK_FONT_NAME = 'Elements_font'
-    MARK_FONT_FILE = os.path.join(zoloto_viewer__documents__pdf_generation, 'fonts/elements_font.ttf')
+    MARK_FONT_FILE = os.path.join(zoloto_viewer__documents__pdf_generation, 'fonts/z_web_elements.ttf')
 
     HEADER_FONT_SIZE = 30
     HEADER_FONT_NAME = 'Aeroport'

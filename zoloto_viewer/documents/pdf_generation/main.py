@@ -3,7 +3,7 @@ from reportlab.pdfgen import canvas as reportlab_canvas
 from typing import List
 
 from zoloto_viewer.viewer.models import Project, Page, Layer, LayerGroup
-from zoloto_viewer.infoplan.models import Marker, MarkerVariable
+from zoloto_viewer.infoplan.models import Marker, MarkerFingerpost, MarkerVariable
 from zoloto_viewer.infoplan.utils import variable_transformations as transformations
 
 from . import layout, message_page_writer as message, plan_page_writer as plan
@@ -60,11 +60,13 @@ def generate_pdf(project: Project, buffer, filename):
 def make_marker_objects(floor: Page, layer: Layer):
     marker_positions = Marker.objects.get_positions(floor, layer)
     marker_numbers = Marker.objects.get_numbers(floor, layer)
+    fingerpost_data = MarkerFingerpost.bulk_serialize(marker_numbers.keys()) if layer.kind.is_fingerpost else {}
     return [
         plan.Object(
             *marker_positions[marker_uid],
             number=marker_numbers[marker_uid],
-            layer=layer
+            layer=layer,
+            fingerpost_meta=fingerpost_data.get(marker_uid, {}),
         )
         for marker_uid in marker_positions.keys()
         if marker_uid in marker_numbers.keys()

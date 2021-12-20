@@ -2,10 +2,10 @@
 <div class="scrollable">
     <div id="plan-page-map-container" style="position: relative; height: inherit;">
         <svg id="project-page-plan-svg"
-             viewBox="0 0 1200 800">
+             viewBox="0 0 {{ page.plan.width }} {{ page.plan.height }}">
             <g id="project-page-svg-origin">
-                <image id="project-page-svg-plan-image" href=""
-                       width="1200" height="800">
+                <image id="project-page-svg-plan-image" href="{{ page.plan.url }}"
+                       width="{{ page.plan.width }}" height="{{ page.plan.height }}">
                 </image>
                 <rect id="project-page-svg-selection-rect"></rect>
                 {% load layers_visibility %}

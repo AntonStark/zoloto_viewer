@@ -21,6 +21,7 @@ class PlanPageWriterMinimal(layout.BasePageWriterDeducingTitle):
         self.layers = layers
         self._marker_positions = marker_positions_getter(floor, layers)
         self.draw_options = {
+            'marker_size_factor': floor.marker_size_factor,
         }
         self._content_box = PlanBox(self.floor.plan_pil_obj,
                                     (self.floor.plan.width, self.floor.plan.height),

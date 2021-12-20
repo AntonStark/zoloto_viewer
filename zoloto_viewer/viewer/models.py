@@ -205,7 +205,7 @@ class Layer(models.Model):
 class LayerGroup(models.Model):
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
     layers = fields.ArrayField(models.IntegerField())
-    num = models.IntegerField(null=False, default=0)
+    num = models.IntegerField(null=False, default=None)
 
     layer_ids_list = List[int]
 

@@ -218,19 +218,27 @@ class MarkerFingerpost(models.Model):
     side7_enabled = models.BooleanField(default=False)
     side8_enabled = models.BooleanField(default=False)
 
+    @classmethod
+    def bulk_serialize(cls, marker_uid_list):
+        query = cls.objects.filter(marker_id__in=marker_uid_list)
+        return {
+            mf.marker.uid: mf.to_json()
+            for mf in query.all()
+        }
+
     def is_enabled(self, side_num: int) -> bool:
         return getattr(self, f'side{side_num}_enabled')
 
     def make_css_labels_string(self):
         css_classes_mapping = {
-            f'pane-{i}': getattr(self, f'side{i}_enabled')
+            f'pane-{i}': self.is_enabled(i)
             for i in range(1, 9)
         }
         return ' '.join(klass for klass, enabled in css_classes_mapping.items() if enabled)
 
     def to_json(self):
         return {
-            f'pane-{i}': getattr(self, f'side{i}_enabled')
+            f'pane-{i}': self.is_enabled(i)
             for i in range(1, 9)
         }
 

@@ -106,7 +106,8 @@ class PlanLegend:
             y_top_line = y_top_line - self.legend_inter
             y_next_line = y_top_line - 1.5 * text_font_size
 
-            object_example = Object(x=x_mark, y=y_top_line, a=0, number='', layer=l)
+            fp_example = {pane_key: True for pane_key in (f'pane-{i}' for i in range(1, 9))}
+            object_example = Object(x=x_mark, y=y_top_line, a=0, number='', layer=l, fingerpost_meta=fp_example)
             object_example.draw(canvas, box, convert_pos=False, font_size=marker_font_size)
 
             canvas.setFont(self.font_name, text_font_size)
@@ -137,10 +138,12 @@ class Object:
     a: int
     number: str
 
+    fingerpost_meta: dict
     layer: Layer
     layer_id: int = field(init=False)
     layer_color: dict = field(init=False)
     layer_kind: int = field(init=False)
+    is_fingerpost: bool = field(init=False)
 
     marker: Any = field(default=None, init=False)
     bounding_box: 'BoundingBox' = field(init=False, default=None)
@@ -165,6 +168,7 @@ class Object:
         self.layer_id = l.id
         self.layer_color = layout.color_adapter(l.color.rgb_code)
         self.layer_kind = l.kind.id
+        self.is_fingerpost = l.kind.is_fingerpost
 
     def __repr__(self):
         return f'<{self.__class__.__name__} number={self.number}>'
@@ -179,15 +183,29 @@ class Object:
 
     @property
     def _symbol(self):
-        MARKS = {
-            1: '\uE901',
-            2: '\uE902',
-            3: '\uE903',
-            4: '\uE904',
-            5: '\uE900',
-        }
-        symbol = MARKS[self.layer_kind]
+        # MARKS = {
+        #     1: '\uE901',
+        #     2: '\uE902',
+        #     3: '\uE903',
+        #     4: '\uE904',
+        #     5: '\uE900',
+        # }
+        # symbol = MARKS[self.layer_kind]
+        symbol = self.layer.kind.unicode_symbol
         return symbol
+
+    @property
+    def fingerpost_symbols(self):
+        return {
+            'pane-1': '\uE907',
+            'pane-2': '\uE908',
+            'pane-3': '\uE909',
+            'pane-4': '\uE90A',
+            'pane-5': '\uE90B',
+            'pane-6': '\uE90C',
+            'pane-7': '\uE90D',
+            'pane-8': '\uE90E',
+        }
 
     @classmethod
     def caption_offset(cls, object_rotation, object_kind):
@@ -307,7 +325,9 @@ class Object:
     def draw(self, canvas, box, convert_pos=True, font_size=None, **options):
         self.get_bounding_box(canvas, box)  # for attr cache
 
+        marker_size_factor = options.get('marker_size_factor', 100)
         font, size = self._font_options(font_size)
+        size *= marker_size_factor / 100
         _centralize_height = - size / 2
         opacity = options.get('objects_opacity', 100)
         alpha = opacity / 100
@@ -323,7 +343,10 @@ class Object:
         canvas.setFont(font, size)
         canvas.translate(x, y)
         canvas.rotate(rotation)
-        canvas.drawCentredString(0, _centralize_height, self._symbol)
+        if self.is_fingerpost:
+            self._draw_fingerpost(canvas, 0, _centralize_height)
+        else:
+            canvas.drawCentredString(0, _centralize_height, self._symbol)
         canvas.restoreState()
 
         # debug only
@@ -346,6 +369,13 @@ class Object:
             canvas.setStrokeColor(colors.red)
             canvas.circle(0, 0, bc.r)
             canvas.restoreState()
+
+    def _draw_fingerpost(self, canvas, x, y):
+        canvas.drawCentredString(x, y, self._symbol)
+        for pane_key, is_enabled in self.fingerpost_meta.items():
+            if is_enabled:
+                pane_symbol = self.fingerpost_symbols[pane_key]
+                canvas.drawCentredString(x, y, pane_symbol)
 
     def get_caption_offset(self, increase_a=None, cross_delta=None):
         a_ = self.a
