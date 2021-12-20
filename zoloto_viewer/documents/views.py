@@ -156,6 +156,14 @@ def edit_names_pair(request, project_id):
     def confirmation(mode):
         return mode in confirmations_obj and bool(confirmations_obj[mode])
 
+    # disable api for now
+    rep = {
+        'status': 'success',
+        'mode': 'replace',
+    }
+    return JsonResponse(rep)
+
+
     if not ru_new and not en_new:
         if not confirmation('delete'):
             return JsonResponse({'status': 'error', 'error': 'Confirmation missing'}, status=400)

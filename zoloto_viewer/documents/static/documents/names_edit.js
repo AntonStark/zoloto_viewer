@@ -62,9 +62,9 @@ function nameEditHandler(e) {
     const rowsSameRu = Array.from(document.getElementsByClassName('name-edit-input-row'))
         .filter((row) => isRowSameRu(row));
 
-    inputElem.disabled = true;
+    otherLangElem.disabled = inputElem.disabled = true;
     function withRelease() {
-        inputElem.disabled = false;
+        otherLangElem.disabled = inputElem.disabled = false;
     }
 
     function onSuccess(rep) {
