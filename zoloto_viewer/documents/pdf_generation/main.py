@@ -84,7 +84,7 @@ def make_messages_obj(floor: Page, layer: Layer):
     def marker_infoplan(vars_info_by_side, marker_uid, side_keys):
         infoplan = vars_info_by_side.get(marker_uid, {})
         return [
-            (side_key, infoplan.get(side_key, []))
+            (side_key, [v.value for v in infoplan.get(side_key, [])])
             for side_key in side_keys
         ]
 

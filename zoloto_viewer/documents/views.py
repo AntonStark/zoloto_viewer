@@ -103,8 +103,8 @@ def names_edit_view(request, project_id):
     from zoloto_viewer.documents.generators.vars_index import VarsIndexFileBuilder
     project = get_object_or_404(Project, id=project_id)
     vars_collector = VarsIndexFileBuilder(project)
-    # [ (number, var_count[lang_pair], lang_pair[0], lang_pair[1]) ]
-    names = vars_collector.make_rows()
+    # [ (var_ids[lang_pair], lang_pair[1], lang_pair[0]) ]
+    names = vars_collector.make_rows(target='web')
 
     context = {
         'names': names,
@@ -157,12 +157,15 @@ def edit_names_pair(request, project_id):
         return mode in confirmations_obj and bool(confirmations_obj[mode])
 
     # disable api for now
-    rep = {
-        'status': 'success',
-        'mode': 'replace',
-    }
-    return JsonResponse(rep)
-
+    # rep = {
+    #     'status': 'success',
+    #     'mode': 'replace',
+    # }
+    # return JsonResponse(rep)
+    from zoloto_viewer.documents.generators.vars_index import VarsIndexFileBuilder
+    vars_collector = VarsIndexFileBuilder(project)
+    # [ (var_ids[lang_pair], lang_pair[1], lang_pair[0]) ]
+    names = vars_collector.make_rows(target='web')
 
     if not ru_new and not en_new:
         if not confirmation('delete'):
@@ -204,6 +207,8 @@ def edit_names_pair(request, project_id):
 
     # todo попытка замены с пустой строки на новое имя приводит к избыточным заменам
     #  нужен список использований пары переменных вида (var_id, index_ru, index_en)
+    #  см zoloto_viewer/documents/views.py:107
+
     # в случае успешной замены нужны новые имена (в подтверждение), а в остальных только подтверждение режима
     rep = {
         'status': 'success',

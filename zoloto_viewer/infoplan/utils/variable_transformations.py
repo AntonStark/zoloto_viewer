@@ -2,22 +2,27 @@ import abc
 import html
 import re
 
+from collections import namedtuple
+from typing import List
+
 from zoloto_viewer.infoplan.models import MarkerVariable
+
+Variable = namedtuple('Variable', 'value variable_id')
 
 
 class Transformation(abc.ABC):
     @abc.abstractmethod
-    def apply(self, variables_list, **kwargs):
+    def apply(self, variables_list: List[Variable], **kwargs) -> List[Variable]:
         pass
 
 
 class PerOneTransformation(Transformation):
     @abc.abstractmethod
-    def per_variable(self, var, **kwargs):
+    def transform_variable(self, var: Variable, **kwargs) -> Variable:
         pass
 
-    def apply(self, variables_list, **kwargs):
-        return [self.per_variable(var, **kwargs) for var in variables_list]
+    def apply(self, variables_list: List[Variable], **kwargs) -> List[Variable]:
+        return [self.transform_variable(var, **kwargs) for var in variables_list]
 
 
 def tag_wrap(content, tag, **attrs):
@@ -27,36 +32,45 @@ def tag_wrap(content, tag, **attrs):
 
 
 class HideMasterPageLine(Transformation):
-    def apply(self, variables_list, **kwargs):
-        return [var for var in variables_list if not var.startswith('mp:')]
+    def apply(self, variables_list: List[Variable], **kwargs) -> List[Variable]:
+        return [var for var in variables_list if not var.value.startswith('mp:')]
 
 
-class UnescapeTabs(PerOneTransformation):
-    def per_variable(self, var, **kwargs):
-        return tag_wrap(var.replace('&amp;tab', '\t'), 'pre')
+class VarValueTransformation(PerOneTransformation):
+    @abc.abstractmethod
+    def transform_value(self, value: str, **kwargs) -> str:
+        pass
+
+    def transform_variable(self, var: Variable, **kwargs) -> Variable:
+        return Variable(value=self.transform_value(var.value), variable_id=var.variable_id)
 
 
-class UnescapeTabsText(PerOneTransformation):
-    def per_variable(self, var, **kwargs):
-        return var.replace('&tab', '\t')
+class UnescapeTabs(VarValueTransformation):
+    def transform_value(self, value: str, **kwargs) -> str:
+        return tag_wrap(value.replace('&amp;tab', '\t'), 'pre')
 
 
-class EliminateTabs(PerOneTransformation):
-    def per_variable(self, var, **kwargs):
-        return var.replace('&tab', '')
+class UnescapeTabsText(VarValueTransformation):
+    def transform_value(self, value: str, **kwargs) -> str:
+        return value.replace('&tab', '\t')
 
 
-class NewlinesToBr(PerOneTransformation):
-    def per_variable(self, var, **kwargs):
-        return var.replace('\n', '<br>')
+class EliminateTabs(VarValueTransformation):
+    def transform_value(self, value: str, **kwargs) -> str:
+        return value.replace('&tab', '')
 
 
-class UnescapeHtml(PerOneTransformation):
-    def per_variable(self, var, **kwargs):
-        return html.unescape(var)
+class NewlinesToBr(VarValueTransformation):
+    def transform_value(self, value: str, **kwargs) -> str:
+        return value.replace('\n', '<br>')
 
 
-class ReplacePictCodes(PerOneTransformation):
+class UnescapeHtml(VarValueTransformation):
+    def transform_value(self, value: str, **kwargs) -> str:
+        return html.unescape(value)
+
+
+class ReplacePictCodes(VarValueTransformation):
     REPLACE_TABLE = [
         ('@WC@', '\ue900'),
         ('@MAN@', '\ue901'),
@@ -279,29 +293,29 @@ class ReplacePictCodes(PerOneTransformation):
             var = var.replace(code, tag_wrap(pict, 'span', class_='infoplan_icon'))
         return var
 
-    def per_variable(self, var, **kwargs):
-        return self.substitute_pict_codes(var)
+    def transform_value(self, value: str, **kwargs) -> str:
+        return self.substitute_pict_codes(value)
 
 
-class EliminatePictCodes(PerOneTransformation):
+class EliminatePictCodes(VarValueTransformation):
     PICT_REGEX = re.compile(MarkerVariable.PICT_PATTERN)
 
-    def per_variable(self, var, **kwargs):
-        return re.sub(self.PICT_REGEX, '', var)
+    def transform_value(self, value: str, **kwargs) -> str:
+        return re.sub(self.PICT_REGEX, '', value)
 
 
-class EliminateNumbers(PerOneTransformation):
+class EliminateNumbers(VarValueTransformation):
     NUMBER_PERIODS_REGEX = r'\d+…\d+|\d+\.\.\.?\d+|\d+'
 
-    def per_variable(self, var, **kwargs):
-        return re.sub(self.NUMBER_PERIODS_REGEX, '', var)
+    def transform_value(self, value: str, **kwargs) -> str:
+        return re.sub(self.NUMBER_PERIODS_REGEX, '', value)
 
 
-class EliminateArrows(PerOneTransformation):
+class EliminateArrows(VarValueTransformation):
     ARROWS_REGEX = r'[\u2190-\u2199]+'
 
-    def per_variable(self, var, **kwargs):
-        return re.sub(self.ARROWS_REGEX, '', var)
+    def transform_value(self, value: str, **kwargs) -> str:
+        return re.sub(self.ARROWS_REGEX, '', value)
 
 
 def html_escape_incoming(vars_by_side):

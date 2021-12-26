@@ -1,5 +1,4 @@
 import collections
-import html
 import itertools
 import re
 
@@ -10,13 +9,29 @@ from zoloto_viewer.infoplan.utils import variable_transformations
 from zoloto_viewer.viewer.models import Project
 
 
+def detect_languages(text):
+    ru = 'ru'
+    en = 'en'
+
+    contains_cyrillic = re.search(r'[А-ЯА-яё]', text)
+    contains_english = re.search(r'[A-Za-z]', text)
+    if contains_cyrillic and contains_english:
+        return (ru, en)
+    elif contains_cyrillic:
+        return (ru,)
+    elif contains_english:
+        return (en,)
+    else:
+        return tuple()
+
+
 class VarsIndexFileBuilder(_base.AbstractCsvFileBuilder):
     def __init__(self, project: 'Project'):
         super().__init__()
         self.csv_header = ('Номер первого носителя', 'Кол-во употреблений', 'Первая строка', 'Вторая строка')
         self.project = project
 
-    def make_rows(self):
+    def make_rows(self, target='csv'):
 
         def process_var(variable: str):
             # filter empty
@@ -34,22 +49,10 @@ class VarsIndexFileBuilder(_base.AbstractCsvFileBuilder):
             lines = without_empty
             # print(lines)
 
-            def detect_languages(text):
-                languages = []
-
-                contains_cyrillic = re.search(r'[А-ЯА-яё]', text)
-                if contains_cyrillic:
-                    languages += ['ru']
-
-                contains_english = re.search(r'[A-Za-z]', text)
-                if contains_english:
-                    languages += ['en']
-                return languages
-
             rus = eng = []
             lang = detect_languages(variable)
             if 'ru' in lang and 'en' in lang:
-                # чётные строчки должны содержать русский текст, а нечётные перевод
+                # нечётные строчки должны содержать русский текст, а чётные перевод
                 rus, eng = lines[::2], lines[1::2]
             elif 'ru' in lang:
                 rus = lines
@@ -75,19 +78,21 @@ class VarsIndexFileBuilder(_base.AbstractCsvFileBuilder):
         marker_numbers = Marker.objects.get_numbers_list(markers)
         var_first_use = {}
         var_count = collections.defaultdict(int)
+        var_ids = collections.defaultdict(list)
 
+        # vars_by_side это словарь marker_uid -> infoplan, где infoplan это словарь side -> side_vars_list
+        # и apply_transformations действуют на side_vars_list ожидая
+        # список типа variable_transformations.Variable (namedtuple)
         for m in vars_by_side.keys():
             marker_infoplan = vars_by_side[m]
+            marker_number = marker_numbers[m]
             for s in marker_infoplan.keys():
                 marker_vars = marker_infoplan[s]
-                for v in marker_vars:
-                    # debug = list(process_var(v))
-                    # print(debug)
-                    # ————————————
-                    # d = ''
-                    for lang_pair in process_var(v):
-                        var_first_use.setdefault(lang_pair, marker_numbers[m])
+                for v in marker_vars:   # type: variable_transformations.Variable
+                    for lang_pair in process_var(v.value):
+                        var_first_use.setdefault(lang_pair, marker_number)
                         var_count[lang_pair] += 1
+                        var_ids[lang_pair].append(v.variable_id)
 
         def by_rus(row):
             target: str = row[2]
@@ -95,7 +100,18 @@ class VarsIndexFileBuilder(_base.AbstractCsvFileBuilder):
             startswith_letter = target[0].isalnum() if target else True
             return not startswith_letter, target
 
+        def render_number_count_ru_en(number, lang_pair):
+            return number, var_count[lang_pair], lang_pair[0], lang_pair[1]
+
+        def render_ru_en_var_ids(number, lang_pair):
+            return var_ids[lang_pair], lang_pair[1], lang_pair[0]
+
+        if target == 'web':
+            render_method = render_ru_en_var_ids
+        else:
+            render_method = render_number_count_ru_en
+
         return sorted([
-            (number, var_count[lang_pair], lang_pair[0], lang_pair[1])
+            render_method(number, lang_pair)
             for lang_pair, number in var_first_use.items()
         ], key=by_rus)

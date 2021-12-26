@@ -269,11 +269,12 @@ class VariablesManager(models.Manager):
             marker.save()   # to update marker.last_modified
 
     def vars_by_side(self, queryset: models.QuerySet, apply_transformations=None):
+        from zoloto_viewer.infoplan.utils.variable_transformations import Variable
         markers = set()
         vars_by_side = collections.defaultdict(lambda: collections.defaultdict(list))
-        marker_vars = queryset.values_list('marker', 'side', 'key', 'value')
-        for mu, s, _, v in marker_vars:
-            vars_by_side[mu][s].append(v)
+        marker_vars = queryset.values_list('marker', 'id', 'side', 'key', 'value')
+        for mu, var_id, s, _, v in marker_vars:
+            vars_by_side[mu][s].append(Variable(v, var_id))
             markers.add(mu)
 
         if apply_transformations:
@@ -301,7 +302,7 @@ class VariablesManager(models.Manager):
         res = [
             {
                 'side': side_key,
-                'variables': vars_by_side[marker_uid].get(side_key, []),
+                'variables': [v.value for v in vars_by_side[marker_uid].get(side_key, [])],
             }
             for marker_uid in markers
             for side_key in marker.layer.kind.side_keys()

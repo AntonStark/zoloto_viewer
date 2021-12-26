@@ -34,8 +34,8 @@
             </tr>
         </thead>
         <tbody class="alternate_color">
-            {% for number, use_count, name_ru, name_en in names %}
-                <tr class="name-edit-input-row">
+            {% for var_ids_list, name_en, name_ru in names %}
+                <tr class="name-edit-input-row" data-var-ids="{{ var_ids_list }}">
                     <td class="cell_extra_space">
                         <input class="name-edit-input name-ru no_background no_outline" type="text"
                                value="{{ name_ru }}" data-name="{{ name_ru }}">
