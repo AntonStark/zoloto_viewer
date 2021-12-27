@@ -159,10 +159,14 @@ def edit_names_pair(request, project_id):
     def confirmation(mode):
         return mode in confirmations_obj and bool(confirmations_obj[mode])
 
-    # from zoloto_viewer.documents.generators.vars_index import VarsIndexFileBuilder
-    # vars_collector = VarsIndexFileBuilder(project)
-    # # [ (var_ids[lang_pair], lang_pair[1], lang_pair[0]) ]
-    # names = vars_collector.make_rows(target='web')
+    from zoloto_viewer.documents.generators.vars_index import VarsIndexFileBuilder
+    vars_collector = VarsIndexFileBuilder(project)
+    # [ (var_ids[lang_pair], lang_pair[1], lang_pair[0]) ]
+    names = vars_collector.make_rows(target='web')
+    ru_names_index = {
+        name_ru: (var_ids, name_en)
+        for var_ids, name_en, name_ru in names
+    }
 
     if not ru_new and not en_new:
         if not confirmation('delete'):
@@ -175,15 +179,15 @@ def edit_names_pair(request, project_id):
     else:
         change_ru = ru_new != ru_old
 
-        ru_regex = ru_new.replace(' ', '[\t \r\n]+')
-        that_ru_already = MarkerVariable.objects \
-            .filter(marker__floor__project=project, value__regex=ru_regex)
+        that_ru_already_exists = ru_new in ru_names_index
         # надо различать: требуется объединения или обычная замена
         # объединение, когда такой русский (на который меняем, ru_new) уже встречается
-        if change_ru and that_ru_already.exists():
+        if change_ru and that_ru_already_exists:
             if not confirmation('union'):
                 return JsonResponse({'status': 'error', 'error': 'Confirmation missing'}, status=400)
             mode = 'union'
+            # брать en_new из ru_names_index
+            en_new = ru_names_index[ru_new][1]
 
             # prefilter_var_ids = MarkerVariable.objects.filter_var_containing(project, ru_old, en_old)
             # # apply replace ru_old -> ru_new and keep var_id

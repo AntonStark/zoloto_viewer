@@ -76,7 +76,7 @@ function nameEditHandler(e) {
                 const resultName = ( isRussianName ? rep.result.ru : rep.result.en );
                 inputElem.dataset.name = resultName;
                 inputElem.value = resultName;
-                inputElem.disabled = false;
+                return withRelease();
             }
         // в случая объединения и удаления оставляем строку disabled
         }

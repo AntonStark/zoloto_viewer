@@ -359,7 +359,6 @@ class VariablesManager(models.Manager):
             v.save()
         return changed_vars_ids
 
-    # todo в случае объединения второй язык изначально не совпадает
     def per_line_replace(
             self, project, var_ids_list,
             value_ru_old, value_ru_new,
@@ -388,6 +387,7 @@ class VariablesManager(models.Manager):
                 variable_id=variable.id,
             )).value
             for n_pair, (ru_value, en_value) in enumerate(MarkerVariable.to_lang_pairs(var_with_tr)):
+                # todo в случае объединения второй язык изначально не совпадает
                 if ru_value == value_ru_old and en_value == value_en_old:
                     ind_lines_to_replace_ru.append(2 * n_pair)
                     ind_lines_to_replace_en.append(2 * n_pair + 1)
