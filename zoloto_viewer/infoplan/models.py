@@ -1,9 +1,12 @@
 import collections
+import itertools
 import typing as t
 import uuid
 import re
 
 from django.db import models, transaction
+
+from zoloto_viewer.infoplan.utils import variable_transformations
 
 
 class MarkersManager(models.Manager):
@@ -255,6 +258,22 @@ class MarkerFingerpost(models.Model):
         self.save()
 
 
+def detect_languages(text):
+    ru = 'ru'
+    en = 'en'
+
+    contains_cyrillic = re.search(r'[А-ЯА-яё]', text)
+    contains_english = re.search(r'[A-Za-z]', text)
+    if contains_cyrillic and contains_english:
+        return (ru, en)
+    elif contains_cyrillic:
+        return (ru,)
+    elif contains_english:
+        return (en,)
+    else:
+        return tuple()
+
+
 class VariablesManager(models.Manager):
     def reset_values(self, marker, vars_by_side):
         with transaction.atomic():
@@ -325,7 +344,7 @@ class VariablesManager(models.Manager):
         if not name_old and not name_new:
             return []
         if not name_old and not filter_ids_in:
-            raise ValueError('unbound call no allowed')
+            raise ValueError('unbound call not allowed')
         if name_old == name_new:
             return filter_ids_in or []
 
@@ -339,6 +358,56 @@ class VariablesManager(models.Manager):
             v.value = re.sub(name_regex, name_new, v.value)
             v.save()
         return changed_vars_ids
+
+    # todo в случае объединения второй язык изначально не совпадает
+    def per_line_replace(
+            self, project, var_ids_list,
+            value_ru_old, value_ru_new,
+            value_en_old, value_en_new,
+    ):
+        transformations = [
+            variable_transformations.UnescapeHtml(),
+            variable_transformations.HideMasterPageLine(),
+            variable_transformations.EliminateTabs(),
+            variable_transformations.EliminatePictCodes(),
+            variable_transformations.EliminateNumbers(),
+            variable_transformations.EliminateArrows(),
+        ]
+
+        def after_var_index_transformations(variable: variable_transformations.Variable):
+            vars_list = [variable]
+            for tr in transformations:
+                vars_list = tr.apply(vars_list)
+            return vars_list[0]
+
+        def find_lines_to_replace(variable):
+            ind_lines_to_replace_ru = []
+            ind_lines_to_replace_en = []
+            var_with_tr = after_var_index_transformations(variable_transformations.Variable(
+                value=variable.value,
+                variable_id=variable.id,
+            )).value
+            for n_pair, (ru_value, en_value) in enumerate(MarkerVariable.to_lang_pairs(var_with_tr)):
+                if ru_value == value_ru_old and en_value == value_en_old:
+                    ind_lines_to_replace_ru.append(2 * n_pair)
+                    ind_lines_to_replace_en.append(2 * n_pair + 1)
+            return ind_lines_to_replace_ru, ind_lines_to_replace_en
+
+        variables_queryset = self.filter(marker__floor__project=project, id__in=var_ids_list)
+        for v in variables_queryset:
+            lines_to_replace_ru, lines_to_replace_en = find_lines_to_replace(v)
+            lines = v.value.split('\n')
+
+            max_ind = max(max(lines_to_replace_ru), max(lines_to_replace_en))
+            while not len(lines) > max_ind:
+                lines.append('')
+            for ru_ind, en_ind in zip(lines_to_replace_ru, lines_to_replace_en):
+                lines[ru_ind] = value_ru_new
+                lines[en_ind] = value_en_new
+
+            new_variable_value = '\n'.join(lines)
+            v.value = new_variable_value
+            v.save()
 
 
 class MarkerVariable(models.Model):
@@ -373,6 +442,34 @@ class MarkerVariable(models.Model):
         if save:
             mv.save()
         return mv
+
+    @classmethod
+    def to_lang_pairs(cls, value: str) -> t.Iterable[t.Tuple[str, str]]:
+        # filter empty
+        if not value:
+            return []
+
+        lines = value.split('\n')
+
+        def is_relevant(var):
+            irrelevant_chars = [' ', ',', '-', '—']
+            relevant = [c for c in set(var) if c not in irrelevant_chars]
+            return bool(relevant)
+
+        without_empty = [line for line in lines if is_relevant(line)]
+        lines = without_empty
+        # print(lines)
+
+        rus = eng = []
+        lang = detect_languages(value)
+        if 'ru' in lang and 'en' in lang:
+            # нечётные строчки должны содержать русский текст, а чётные перевод
+            rus, eng = lines[::2], lines[1::2]
+        elif 'ru' in lang:
+            rus = lines
+        elif 'en' in lang:
+            eng = lines
+        return itertools.zip_longest(rus, eng, fillvalue='')
 
 
 class MarkerComment(models.Model):

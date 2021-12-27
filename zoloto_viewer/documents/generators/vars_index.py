@@ -1,28 +1,10 @@
 import collections
-import itertools
-import re
 
 from . import _base
 
 from zoloto_viewer.infoplan.models import Marker, MarkerVariable
 from zoloto_viewer.infoplan.utils import variable_transformations
 from zoloto_viewer.viewer.models import Project
-
-
-def detect_languages(text):
-    ru = 'ru'
-    en = 'en'
-
-    contains_cyrillic = re.search(r'[А-ЯА-яё]', text)
-    contains_english = re.search(r'[A-Za-z]', text)
-    if contains_cyrillic and contains_english:
-        return (ru, en)
-    elif contains_cyrillic:
-        return (ru,)
-    elif contains_english:
-        return (en,)
-    else:
-        return tuple()
 
 
 class VarsIndexFileBuilder(_base.AbstractCsvFileBuilder):
@@ -32,34 +14,6 @@ class VarsIndexFileBuilder(_base.AbstractCsvFileBuilder):
         self.project = project
 
     def make_rows(self, target='csv'):
-
-        def process_var(variable: str):
-            # filter empty
-            if not variable:
-                return []
-
-            lines = variable.split('\n')
-
-            def is_relevant(var):
-                irrelevant_chars = [' ', ',', '-', '—']
-                relevant = [c for c in set(var) if c not in irrelevant_chars]
-                return bool(relevant)
-
-            without_empty = [line for line in lines if is_relevant(line)]
-            lines = without_empty
-            # print(lines)
-
-            rus = eng = []
-            lang = detect_languages(variable)
-            if 'ru' in lang and 'en' in lang:
-                # нечётные строчки должны содержать русский текст, а чётные перевод
-                rus, eng = lines[::2], lines[1::2]
-            elif 'ru' in lang:
-                rus = lines
-            elif 'en' in lang:
-                eng = lines
-            return itertools.zip_longest(rus, eng, fillvalue='')
-
         transformations = [
             variable_transformations.UnescapeHtml(),
             variable_transformations.HideMasterPageLine(),
@@ -89,7 +43,7 @@ class VarsIndexFileBuilder(_base.AbstractCsvFileBuilder):
             for s in marker_infoplan.keys():
                 marker_vars = marker_infoplan[s]
                 for v in marker_vars:   # type: variable_transformations.Variable
-                    for lang_pair in process_var(v.value):
+                    for lang_pair in MarkerVariable.to_lang_pairs(v.value):
                         var_first_use.setdefault(lang_pair, marker_number)
                         var_count[lang_pair] += 1
                         var_ids[lang_pair].append(v.variable_id)

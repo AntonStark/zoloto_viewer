@@ -5,9 +5,9 @@ import re
 from collections import namedtuple
 from typing import List
 
-from zoloto_viewer.infoplan.models import MarkerVariable
-
 Variable = namedtuple('Variable', 'value variable_id')
+PICT_PATTERN = r'@[A-z\d]+@'
+MASTER_PAGE_MARK = 'mp:'
 
 
 class Transformation(abc.ABC):
@@ -33,7 +33,7 @@ def tag_wrap(content, tag, **attrs):
 
 class HideMasterPageLine(Transformation):
     def apply(self, variables_list: List[Variable], **kwargs) -> List[Variable]:
-        return [var for var in variables_list if not var.value.startswith('mp:')]
+        return [var for var in variables_list if not var.value.startswith(MASTER_PAGE_MARK)]
 
 
 class VarValueTransformation(PerOneTransformation):
@@ -287,7 +287,7 @@ class ReplacePictCodes(VarValueTransformation):
     REPLACE_DICT = dict(REPLACE_TABLE)
 
     def substitute_pict_codes(self, var):
-        used = re.findall(MarkerVariable.PICT_PATTERN, var)
+        used = re.findall(PICT_PATTERN, var)
         for code in used:
             pict = self.REPLACE_DICT.get(code, self.DEFAULT_PICT)
             var = var.replace(code, tag_wrap(pict, 'span', class_='infoplan_icon'))
@@ -298,7 +298,7 @@ class ReplacePictCodes(VarValueTransformation):
 
 
 class EliminatePictCodes(VarValueTransformation):
-    PICT_REGEX = re.compile(MarkerVariable.PICT_PATTERN)
+    PICT_REGEX = re.compile(PICT_PATTERN)
 
     def transform_value(self, value: str, **kwargs) -> str:
         return re.sub(self.PICT_REGEX, '', value)

@@ -131,7 +131,7 @@ def edit_names_pair(request, project_id):
     # req: {replace_ru, replace_en, confirmations}
     # replace_ru, replace_en: {name_old, name_new}
     # confirmations: optional {union: true} | {delete: true}
-    top_fields = ('replace_ru', 'replace_en', 'confirmations')
+    top_fields = ('replace_ru', 'replace_en', 'var_ids_hint', 'confirmations')
     if not all(key in req for key in top_fields):
         return JsonResponse({
             'error': 'request object must contain fields: ' + ', '.join(top_fields)
@@ -151,29 +151,27 @@ def edit_names_pair(request, project_id):
     ru_new = req['replace_ru']['name_new']
     en_old = req['replace_en']['name_old']
     en_new = req['replace_en']['name_new']
+    var_ids_hint = req['var_ids_hint']
+    # apply replace only on variables with id in var_ids_hint list
+    var_ids_hint = json.loads(var_ids_hint)
     confirmations_obj = req['confirmations']
 
     def confirmation(mode):
         return mode in confirmations_obj and bool(confirmations_obj[mode])
 
-    # disable api for now
-    # rep = {
-    #     'status': 'success',
-    #     'mode': 'replace',
-    # }
-    # return JsonResponse(rep)
-    from zoloto_viewer.documents.generators.vars_index import VarsIndexFileBuilder
-    vars_collector = VarsIndexFileBuilder(project)
-    # [ (var_ids[lang_pair], lang_pair[1], lang_pair[0]) ]
-    names = vars_collector.make_rows(target='web')
+    # from zoloto_viewer.documents.generators.vars_index import VarsIndexFileBuilder
+    # vars_collector = VarsIndexFileBuilder(project)
+    # # [ (var_ids[lang_pair], lang_pair[1], lang_pair[0]) ]
+    # names = vars_collector.make_rows(target='web')
 
     if not ru_new and not en_new:
         if not confirmation('delete'):
             return JsonResponse({'status': 'error', 'error': 'Confirmation missing'}, status=400)
         mode = 'remove'
-        target_var_ids = MarkerVariable.objects.filter_var_containing(project, ru_old, en_old)
-        MarkerVariable.objects.var_replace_helper(project, ru_old, ru_new, target_var_ids)
-        MarkerVariable.objects.var_replace_helper(project, en_old, en_new, target_var_ids)
+        # target_var_ids = MarkerVariable.objects.filter_var_containing(project, ru_old, en_old)
+        # MarkerVariable.objects.var_replace_helper(project, ru_old, ru_new, target_var_ids)
+        # MarkerVariable.objects.var_replace_helper(project, en_old, en_new, target_var_ids)
+        MarkerVariable.objects.per_line_replace(project, var_ids_hint, ru_old, ru_new, en_old, en_new)
     else:
         change_ru = ru_new != ru_old
 
@@ -187,27 +185,24 @@ def edit_names_pair(request, project_id):
                 return JsonResponse({'status': 'error', 'error': 'Confirmation missing'}, status=400)
             mode = 'union'
 
-            prefilter_var_ids = MarkerVariable.objects.filter_var_containing(project, ru_old, en_old)
-            # apply replace ru_old -> ru_new and keep var_id
-            replaced_ru_ids = MarkerVariable.objects.var_replace_helper(project, ru_old, ru_new, prefilter_var_ids)
-            # then conditionally apply en_old -> en_new on replaced_ru_ids
-            MarkerVariable.objects.var_replace_helper(project, en_old, en_new, replaced_ru_ids)
+            # prefilter_var_ids = MarkerVariable.objects.filter_var_containing(project, ru_old, en_old)
+            # # apply replace ru_old -> ru_new and keep var_id
+            # replaced_ru_ids = MarkerVariable.objects.var_replace_helper(project, ru_old, ru_new, prefilter_var_ids)
+            # # then conditionally apply en_old -> en_new on replaced_ru_ids
+            # MarkerVariable.objects.var_replace_helper(project, en_old, en_new, replaced_ru_ids)
+
+            MarkerVariable.objects.per_line_replace(project, var_ids_hint, ru_old, ru_new, en_old, en_new)
         else:
             mode = 'replace'
-            prefilter_var_ids = MarkerVariable.objects.filter_var_containing(project, ru_old, en_old)
-
-            if change_ru:
-                # если ru_new != ru_old то нужно replace ru_old -> ru_new and keep var_id
-                target_var_ids = MarkerVariable.objects.var_replace_helper(project, ru_old, ru_new, prefilter_var_ids)
-            else:
-                # если ru_new == ru_old то просто использовать префильтер
-                target_var_ids = prefilter_var_ids
-
-            MarkerVariable.objects.var_replace_helper(project, en_old, en_new, target_var_ids)
-
-    # todo попытка замены с пустой строки на новое имя приводит к избыточным заменам
-    #  нужен список использований пары переменных вида (var_id, index_ru, index_en)
-    #  см zoloto_viewer/documents/views.py:107
+            # prefilter_var_ids = MarkerVariable.objects.filter_var_containing(project, ru_old, en_old)
+            # if change_ru:
+            #     # если ru_new != ru_old то нужно replace ru_old -> ru_new and keep var_id
+            #     target_var_ids = MarkerVariable.objects.var_replace_helper(project, ru_old, ru_new, prefilter_var_ids)
+            # else:
+            #     # если ru_new == ru_old то просто использовать префильтер
+            #     target_var_ids = prefilter_var_ids
+            # MarkerVariable.objects.var_replace_helper(project, en_old, en_new, target_var_ids)
+            MarkerVariable.objects.per_line_replace(project, var_ids_hint, ru_old, ru_new, en_old, en_new)
 
     # в случае успешной замены нужны новые имена (в подтверждение), а в остальных только подтверждение режима
     rep = {

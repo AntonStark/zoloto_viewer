@@ -25,7 +25,7 @@ function doApiCall(method, url, data, onResponse, onError=undefined) {
     req.send(JSON.stringify(data));
 }
 
-function postApiCallVarReplace(ruPair, enPair, confirmations, onSuccess, onError=undefined) {
+function postApiCallVarReplace(ruPair, enPair, varIdsHint, confirmations, onSuccess, onError=undefined) {
     const payload = {
         replace_ru: {
             name_old: ruPair[0],
@@ -35,6 +35,7 @@ function postApiCallVarReplace(ruPair, enPair, confirmations, onSuccess, onError
             name_old: enPair[0],
             name_new: enPair[1],
         },
+        var_ids_hint: varIdsHint,
         confirmations
     }
     return doApiCall('POST', API_POST_REPLACE_VAR, payload, onSuccess, onError);
@@ -54,6 +55,7 @@ function nameEditHandler(e) {
     const otherLangName = siblingInput.value;
     const isRussianName = inputElem.classList.contains('name-ru');
     const newNameRu = (isRussianName ? newName : otherLangName);
+    const varIdsHint = tableRow.dataset.varIds;
 
     function isRowSameRu(row) {
         const inputLangRu = row.getElementsByClassName('name-ru')[0];
@@ -99,7 +101,7 @@ function nameEditHandler(e) {
             const origEnName = ( isRussianName ? otherLangElem : inputElem ).dataset.name;
 
             // api call with deleteConfirmation (delete mode)
-            postApiCallVarReplace([origRuName, ''], [origEnName, ''],
+            postApiCallVarReplace([origRuName, ''], [origEnName, ''], varIdsHint,
                 {delete: true}, onSuccess);
         }
     } else if (isRussianName && rowsSameRu.length > 0) {
@@ -116,7 +118,7 @@ function nameEditHandler(e) {
         const origEnName = otherLangElem.dataset.name;
         const newEnglishFromExisting = rowsSameRu[0].getElementsByClassName('name-en')[0].value;
         // api call with unionConfirmation (union mode)
-        postApiCallVarReplace([oldName, newName], [origEnName, newEnglishFromExisting],
+        postApiCallVarReplace([oldName, newName], [origEnName, newEnglishFromExisting], varIdsHint,
             {union: true}, onSuccess);
     } else {
         if (newName === oldName) {
@@ -127,7 +129,7 @@ function nameEditHandler(e) {
         const oneLangPair = [oldName, newName];
         const otherLangPair = [otherLangElem.dataset.name, otherLangElem.value];
         const [ruPair, enPair] = (isRussianName ? [oneLangPair, otherLangPair] : [otherLangPair, oneLangPair]);
-        postApiCallVarReplace(ruPair, enPair, {}, onSuccess);
+        postApiCallVarReplace(ruPair, enPair, varIdsHint, {}, onSuccess);
     }
 }
 
