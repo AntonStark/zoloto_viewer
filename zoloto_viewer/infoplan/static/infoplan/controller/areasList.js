@@ -6,7 +6,8 @@ function ControllerAreasList() {
         const areasBox = document.getElementsByClassName('areas-box side_box_list')[0];
         for (const pageLI of areasBox.children) {
             const pageLink = pageLI.firstElementChild.href;
-            const pageCode = pageLink.split('/').at(-2);
+            const _parts = pageLink.split('/');
+            const pageCode = _parts[_parts.length - 2];
             // console.log(pageLink, pageCode);
             pageCodesArray.push(pageCode);
             pageLinksArray.push(pageLink);
