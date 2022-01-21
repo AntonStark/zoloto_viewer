@@ -256,7 +256,7 @@ class PlanPageWriterLayerGroups(PlanPageWriterMinimal):
         for place in place_gen:
             if not bb_index.is_collide(place, self.max_collisions_allowed):
                 yield place
-            logger.info(f'make_marker_placements: place={place}, collisions: {bb_index.collisions(place)}')
+            # logger.info(f'make_marker_placements: place={place}, collisions: {bb_index.collisions(place)}')
         raise MarkerNoPlaceException
 
     def _make_marker_placements(self, current_marker: MarkerCaption) -> Iterator[BoundingBox]:
@@ -296,7 +296,7 @@ class PlanPageWriterLayerGroups(PlanPageWriterMinimal):
         for increase_a, cross_delta, comment in placement_tuning_options:
             offset, need_rotate = object_.get_caption_offset(increase_a=increase_a, cross_delta=cross_delta)
             place = current_marker.get_bounding_box(self.canvas, offset, need_rotate=need_rotate, force_update=True)
-            logger.info(f'_make_marker_placements: number={current_marker.number}, {comment} -> {place}')
+            # logger.info(f'_make_marker_placements: number={current_marker.number}, {comment} -> {place}')
             yield place
 
     def place_next(self, bb_index: BoundsIndex, marker_place_queue: List[MarkerCaption]):
@@ -304,6 +304,7 @@ class PlanPageWriterLayerGroups(PlanPageWriterMinimal):
             raise MakerPlacementAllDone
 
         current_marker = marker_place_queue.pop(0)
+        logger.debug(f'place_next at: {current_marker.number}, remains: {len(marker_place_queue)}')
         place_gen = self.make_marker_placements(bb_index, current_marker)
 
         def place_current():
