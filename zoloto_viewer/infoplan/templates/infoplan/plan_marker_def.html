@@ -1,35 +1,57 @@
 {% if layer.kind.name == 'фингерпост' %}
-    <g class="plan_marker_fingerpost">
-        <text class="plan_marker_fingerpost__base">
+    <g transform="scale({{ marker_scale }}) translate(-18, 16)">
+        <g class="plan_marker_fingerpost">
+            <text class="plan_marker_fingerpost__base">
+                {{ layer.kind.unicode_symbol }}
+            </text>
+            <text class="plan_marker_fingerpost__pane pane-1">
+                &#xE907;
+            </text>
+            <text class="plan_marker_fingerpost__pane pane-2">
+                &#xE908;
+            </text>
+            <text class="plan_marker_fingerpost__pane pane-3">
+                &#xE909;
+            </text>
+            <text class="plan_marker_fingerpost__pane pane-4">
+                &#xE90A;
+            </text>
+            <text class="plan_marker_fingerpost__pane pane-5">
+                &#xE90B;
+            </text>
+            <text class="plan_marker_fingerpost__pane pane-6">
+                &#xE90C;
+            </text>
+            <text class="plan_marker_fingerpost__pane pane-7">
+                &#xE90D;
+            </text>
+            <text class="plan_marker_fingerpost__pane pane-8">
+                &#xE90E;
+            </text>
+        </g>
+    </g>
+{% elif layer.kind.name == 'напольный' %}
+    <g transform="scale({{ marker_scale }}) translate(-14, 13)">
+        <text font-family="Zoloto Web Elements v1" font-size="30">
             {{ layer.kind.unicode_symbol }}
         </text>
-        <text class="plan_marker_fingerpost__pane pane-1">
-            &#xE907;
+    </g>
+{% elif layer.kind.name == '2' %}
+    <g transform="scale({{ marker_scale }}) translate(-15, 13)">
+        <text font-family="Zoloto Web Elements v1" font-size="30">
+            {{ layer.kind.unicode_symbol }}
         </text>
-        <text class="plan_marker_fingerpost__pane pane-2">
-            &#xE908;
-        </text>
-        <text class="plan_marker_fingerpost__pane pane-3">
-            &#xE909;
-        </text>
-        <text class="plan_marker_fingerpost__pane pane-4">
-            &#xE90A;
-        </text>
-        <text class="plan_marker_fingerpost__pane pane-5">
-            &#xE90B;
-        </text>
-        <text class="plan_marker_fingerpost__pane pane-6">
-            &#xE90C;
-        </text>
-        <text class="plan_marker_fingerpost__pane pane-7">
-            &#xE90D;
-        </text>
-        <text class="plan_marker_fingerpost__pane pane-8">
-            &#xE90E;
+    </g>
+{% elif layer.kind.name == '4' %}
+    <g transform="scale({{ marker_scale }}) translate(-15, 13)">
+        <text font-family="Zoloto Web Elements v1" font-size="30">
+            {{ layer.kind.unicode_symbol }}
         </text>
     </g>
 {% else %}
-    <text font-family="Zoloto Web Elements v1" font-size="30">
-        {{ layer.kind.unicode_symbol }}
-    </text>
+    <g transform="scale({{ marker_scale }}) translate(-15, 14)">
+        <text font-family="Zoloto Web Elements v1" font-size="30">
+            {{ layer.kind.unicode_symbol }}
+        </text>
+    </g>
 {% endif %}

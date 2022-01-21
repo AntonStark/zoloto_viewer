@@ -13,9 +13,9 @@
                 {% for layer in layers %}
                     <g class="layer_markers layer-{{ layer.title }} {{ layer.title|is_not_disabled:state_data.hidden_layers }}">
                         <symbol id="marker_layer-{{ layer.title }}" overflow="visible">
-                            <g transform="scale({{ marker_display_config.marker_scale }}) translate(-15, 15)">
+                            {% with marker_scale=marker_display_config.marker_scale %}
                                 {% include 'infoplan/plan_marker_def.html' %}
-                            </g>
+                            {% endwith %}
                         </symbol>
                         {% for marker in markers_by_layer|get_item:layer.id %}
                             <use href="#marker_layer-{{ layer.title }}"
@@ -67,9 +67,9 @@
         <div {% if layer.id not in markers_by_layer %} style="display: none;" {% endif %} >
             <svg width="30" height="30" style="vertical-align: top;">
                 <symbol id="legend_marker_layer-{{ layer.title }}" overflow="visible">
-                    <g transform="translate(-15, 15)">
+                    {% with marker_scale=1 %}
                         {% include 'infoplan/plan_marker_def.html' %}
-                    </g>
+                    {% endwith %}
                 </symbol>
                 <use href="#legend_marker_layer-{{ layer.title }}"
                      x="15" y="15"
