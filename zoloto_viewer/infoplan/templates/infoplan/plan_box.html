@@ -65,7 +65,7 @@
 <div class="map_legend">
     {% for layer in layers %}
         <div {% if layer.id not in markers_by_layer %} style="display: none;" {% endif %} >
-            <svg width="30" height="30" style="vertical-align: top;">
+            <svg width="30" height="30" style="vertical-align: top;" class="enabled_layer">
                 <symbol id="legend_marker_layer-{{ layer.title }}" overflow="visible">
                     {% with marker_scale=1 %}
                         {% include 'infoplan/plan_marker_def.html' %}

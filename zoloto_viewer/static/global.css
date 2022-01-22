@@ -565,52 +565,52 @@ g.layer_markers.enabled_layer {
 .plan_marker_fingerpost text.pane-1 {
     visibility: var(--pane_1_visibility)
 }
-use.pane-1 {
+.enabled_layer use.pane-1 {
     --pane_1_visibility: visible;
 }
 .plan_marker_fingerpost text.pane-2 {
     visibility: var(--pane_2_visibility)
 }
-use.pane-2 {
+.enabled_layer use.pane-2 {
     --pane_2_visibility: visible;
 }
 
 .plan_marker_fingerpost text.pane-3 {
     visibility: var(--pane_3_visibility)
 }
-use.pane-3 {
+.enabled_layer use.pane-3 {
     --pane_3_visibility: visible;
 }
 .plan_marker_fingerpost text.pane-4 {
     visibility: var(--pane_4_visibility)
 }
-use.pane-4 {
+.enabled_layer use.pane-4 {
     --pane_4_visibility: visible;
 }
 
 .plan_marker_fingerpost text.pane-5 {
     visibility: var(--pane_5_visibility)
 }
-use.pane-5 {
+.enabled_layer use.pane-5 {
     --pane_5_visibility: visible;
 }
 .plan_marker_fingerpost text.pane-6 {
     visibility: var(--pane_6_visibility)
 }
-use.pane-6 {
+.enabled_layer use.pane-6 {
     --pane_6_visibility: visible;
 }
 
 .plan_marker_fingerpost text.pane-7 {
     visibility: var(--pane_7_visibility)
 }
-use.pane-7 {
+.enabled_layer use.pane-7 {
     --pane_7_visibility: visible;
 }
 .plan_marker_fingerpost text.pane-8 {
     visibility: var(--pane_8_visibility)
 }
-use.pane-8 {
+.enabled_layer use.pane-8 {
     --pane_8_visibility: visible;
 }
 
