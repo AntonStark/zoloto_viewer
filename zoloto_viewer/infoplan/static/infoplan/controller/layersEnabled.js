@@ -118,7 +118,7 @@ function ControllerEnabledLayers() {
         const curIndex = positionsIndex[layerTitle];
         let nextTitle = positionsIndex[curIndex+1];
         if (!nextTitle)
-            nextTitle = positionsIndex[0];
+            return null;
         return nextTitle;
     }
 
