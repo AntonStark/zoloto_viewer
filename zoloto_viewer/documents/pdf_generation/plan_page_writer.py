@@ -245,7 +245,7 @@ class PlanPageWriterLayerGroups(PlanPageWriterMinimal):
         for mc in captions:   # type: MarkerCaption
             mc.draw(self.canvas, self._content_box, **options)
 
-    def make_marker_placements(self, bb_index: BoundsIndex, current_marker: MarkerCaption)\
+    def make_marker_placements(self, bb_index: BoundsIndex, current_marker: MarkerCaption, check_collisions=True)\
             -> Iterator[BoundingBox]:
         """
         Генератор положений подписи (повороты смещения) которые
@@ -254,7 +254,7 @@ class PlanPageWriterLayerGroups(PlanPageWriterMinimal):
         """
         place_gen = self._make_marker_placements(current_marker)
         for place in place_gen:
-            if not bb_index.is_collide(place, self.max_collisions_allowed):
+            if not check_collisions or not bb_index.is_collide(place, self.max_collisions_allowed):
                 yield place
             # logger.info(f'make_marker_placements: place={place}, collisions: {bb_index.collisions(place)}')
         raise MarkerNoPlaceException
@@ -305,7 +305,7 @@ class PlanPageWriterLayerGroups(PlanPageWriterMinimal):
 
         current_marker = marker_place_queue.pop(0)
         logger.debug(f'place_next at: {current_marker.number}, remains: {len(marker_place_queue)}')
-        place_gen = self.make_marker_placements(bb_index, current_marker)
+        place_gen = self.make_marker_placements(bb_index, current_marker, check_collisions=False)
 
         def place_current():
             """
