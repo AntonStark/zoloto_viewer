@@ -4,6 +4,7 @@ import typing as t
 import uuid
 import re
 
+from django.contrib.postgres import fields
 from django.db import models, transaction
 
 from zoloto_viewer.infoplan.utils import variable_transformations
@@ -256,6 +257,12 @@ class MarkerFingerpost(models.Model):
                 enabled = bool(pane_obj['enabled'])
                 setattr(self, f'side{number}_enabled', enabled)
         self.save()
+
+
+class MarkerCaptionPlacement(models.Model):
+    marker = models.ForeignKey(Marker, on_delete=models.CASCADE)
+    layer_group = models.ForeignKey('viewer.LayerGroup', on_delete=models.CASCADE, null=True)
+    data = fields.JSONField(null=False)
 
 
 def detect_languages(text):
