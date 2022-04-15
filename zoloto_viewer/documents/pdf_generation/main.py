@@ -1,4 +1,6 @@
 import itertools
+import logging
+
 from reportlab.pdfgen import canvas as reportlab_canvas
 from typing import List
 
@@ -6,7 +8,11 @@ from zoloto_viewer.viewer.models import Project, Page, Layer, LayerGroup
 from zoloto_viewer.infoplan.models import Marker, MarkerFingerpost, MarkerVariable
 from zoloto_viewer.infoplan.utils import variable_transformations as transformations
 
-from . import layout, message_page_writer as message, plan_page_writer as plan
+from . import layout, message_page_writer as message, plan
+from .plan_page_writer import PlanPageWriterMinimal
+from .plan_page_writer_simple import PlanPageWriterLayerGroupsSimple
+
+logger = logging.getLogger(__name__)
 
 
 def generate_pdf(project: Project, buffer, filename):
@@ -28,12 +34,12 @@ def generate_pdf(project: Project, buffer, filename):
 
     @first_page_canvas_management
     def draw_plan_no_captions(page, layers):
-        writer = plan.PlanPageWriterMinimal(canvas, page, layers, make_marker_objects_many_layers)
+        writer = PlanPageWriterMinimal(canvas, page, layers, make_marker_objects_many_layers)
         writer.write()
 
     @first_page_canvas_management
     def draw_plan_active_layers_group(page, layers, layers_group):
-        writer = plan.PlanPageWriterLayerGroups(canvas, page, layers, layers_group, make_marker_objects_many_layers)
+        writer = PlanPageWriterLayerGroupsSimple(canvas, page, layers, layers_group, make_marker_objects_many_layers)
         writer.write()
 
     @first_page_canvas_management
@@ -64,6 +70,7 @@ def make_marker_objects(floor: Page, layer: Layer):
         plan.Object(
             *marker_positions[marker_uid],
             number=marker_numbers[marker_uid],
+            uid=marker_uid,
             layer=layer,
             fingerpost_meta=fingerpost_data.get(marker_uid, {}),
         )
@@ -73,10 +80,12 @@ def make_marker_objects(floor: Page, layer: Layer):
 
 
 def make_marker_objects_many_layers(floor: Page, layers: List[Layer]):
+    # logger.debug('start make_marker_objects_many_layers')
     marker_positions = list(itertools.chain.from_iterable(
         make_marker_objects(floor, L)
         for L in layers
     ))
+    # logger.debug('end make_marker_objects_many_layers')
     return marker_positions
 
 

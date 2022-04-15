@@ -7,6 +7,7 @@ import re
 from django.contrib.postgres import fields
 from django.db import models, transaction
 
+from zoloto_viewer.viewer.models import LayerGroup
 from zoloto_viewer.infoplan.utils import variable_transformations
 
 
@@ -40,11 +41,11 @@ class MarkersManager(models.Manager):
 
     def get_numbers(self, floor, layer):
         return {m.uid: m.number
-                for m in self.filter(floor=floor, layer=layer).all()}
+                for m in self.filter(floor=floor, layer=layer).prefetch_related('floor', 'layer').all()}
 
     def get_numbers_list(self, uid_list):
         return {m.uid: m.number
-                for m in self.filter(uid__in=uid_list).all()}
+                for m in self.filter(uid__in=uid_list).prefetch_related('floor', 'layer').all()}
 
     def get_positions(self, floor, layer):
         return {m.uid: m.position
@@ -259,10 +260,104 @@ class MarkerFingerpost(models.Model):
         self.save()
 
 
-class MarkerCaptionPlacement(models.Model):
-    marker = models.ForeignKey(Marker, on_delete=models.CASCADE)
+class CaptionPlacement(models.Model):
+    marker = models.OneToOneField(Marker, on_delete=models.CASCADE)
     layer_group = models.ForeignKey('viewer.LayerGroup', on_delete=models.CASCADE, null=True)
     data = fields.JSONField(null=False)
+
+    # стандартное расстояние от центра объекта до ближнего края подписи
+    class Offset:
+        LEFT = -10
+        RIGHT = 10
+        TOP = 10
+        BOTTOM = -10
+
+    @classmethod
+    def make_default(cls, marker: Marker, layergroup: LayerGroup):
+        layer_kind = marker.layer.kind.id
+        offset, need_rotate = cls.caption_offset(marker.rotation, layer_kind)
+        rotation = 90 if need_rotate else 0
+        data = {
+            'offset': offset,
+            'rotation': rotation,
+        }
+        return cls(
+            marker=marker,
+            layer_group=layergroup,
+            data=data
+        )
+
+    @classmethod
+    def caption_offset(cls, object_rotation, object_kind):
+        offset_left = offset_top = 0
+        need_rotate = False
+        if object_kind == 1:
+            return cls._caption_offset_kind1(object_rotation)
+        elif object_kind == 2:
+            if 31 <= object_rotation <= 149:
+                need_rotate = True
+                offset_top = cls.Offset.TOP
+            elif 150 <= object_rotation <= 210:
+                offset_left = cls.Offset.LEFT
+            elif 211 <= object_rotation <= 329:
+                need_rotate = True
+                offset_top = cls.Offset.BOTTOM
+            else:   # object_rotation <= 30 or 330 <= object_rotation
+                offset_left = cls.Offset.RIGHT
+        else:
+            if 31 <= object_rotation <= 149:
+                offset_left = cls.Offset.RIGHT
+            elif 150 <= object_rotation <= 210:
+                need_rotate = True
+                offset_top = cls.Offset.TOP
+            elif 211 <= object_rotation <= 329:
+                offset_left = cls.Offset.LEFT
+            else:   # object_rotation <= 30 or 330 <= object_rotation
+                need_rotate = True
+                offset_top = cls.Offset.BOTTOM
+        offset = (offset_left, offset_top)
+        return offset, need_rotate
+
+    @classmethod
+    def _caption_offset_kind1(cls, object_rotation):
+        offset_left = offset_top = 0
+        need_rotate = False
+        if 31 <= object_rotation <= 149:
+            offset_left = cls.Offset.RIGHT
+            if 105 < object_rotation:
+                offset_top = cls.Offset.TOP
+            elif object_rotation < 75:
+                offset_top = cls.Offset.BOTTOM
+            else:
+                pass    # offset_top = 0
+        elif 150 <= object_rotation <= 210:
+            need_rotate = True
+            offset_top = cls.Offset.TOP
+            if object_rotation < 165:
+                offset_left = cls.Offset.RIGHT
+            elif 195 < object_rotation:
+                offset_left = cls.Offset.LEFT
+            else:
+                pass    # offset_left = 0
+        elif 211 <= object_rotation <= 329:
+            offset_left = cls.Offset.LEFT
+            if object_rotation < 255:
+                offset_top = cls.Offset.TOP
+            elif 285 < object_rotation:
+                offset_top = cls.Offset.BOTTOM
+            else:
+                pass    # offset_top = 0
+        else:   # object_rotation <= 30 or 330 <= object_rotation
+            need_rotate = True
+            offset_top = cls.Offset.BOTTOM
+            if 15 < object_rotation:
+                offset_left = cls.Offset.RIGHT
+            elif 330 <= object_rotation < 345:
+                offset_left = cls.Offset.LEFT
+            else:
+                pass    # offset_left = 0
+        offset = (offset_left, offset_top)
+        return offset, need_rotate
 
 
 def detect_languages(text):

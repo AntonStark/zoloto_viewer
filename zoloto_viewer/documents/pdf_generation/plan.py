@@ -9,6 +9,7 @@ from reportlab.pdfgen import canvas as rc
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 from zoloto_viewer.viewer.models import Layer
+from zoloto_viewer.infoplan.models import CaptionPlacement
 
 from . import layout
 
@@ -107,7 +108,7 @@ class PlanLegend:
             y_next_line = y_top_line - 1.5 * text_font_size
 
             fp_example = {pane_key: True for pane_key in (f'pane-{i}' for i in range(1, 9))}
-            object_example = Object(x=x_mark, y=y_top_line, a=0, number='', layer=l, fingerpost_meta=fp_example)
+            object_example = Object(x=x_mark, y=y_top_line, a=0, number='', uid=1, layer=l, fingerpost_meta=fp_example)
             object_example.draw(canvas, box, convert_pos=False, font_size=marker_font_size)
 
             canvas.setFont(self.font_name, text_font_size)
@@ -137,6 +138,7 @@ class Object:
     y: int
     a: int
     number: str
+    uid: Any
 
     fingerpost_meta: dict
     layer: Layer
@@ -206,78 +208,6 @@ class Object:
             'pane-7': '\uE90D',
             'pane-8': '\uE90E',
         }
-
-    @classmethod
-    def caption_offset(cls, object_rotation, object_kind):
-        offset_left = offset_top = 0
-        need_rotate = False
-        if object_kind == 1:
-            return cls._caption_offset_kind1(object_rotation)
-        elif object_kind == 2:
-            if 31 <= object_rotation <= 149:
-                need_rotate = True
-                offset_top = cls.Offset.TOP
-            elif 150 <= object_rotation <= 210:
-                offset_left = cls.Offset.LEFT
-            elif 211 <= object_rotation <= 329:
-                need_rotate = True
-                offset_top = cls.Offset.BOTTOM
-            else:   # object_rotation <= 30 or 330 <= object_rotation
-                offset_left = cls.Offset.RIGHT
-        else:
-            if 31 <= object_rotation <= 149:
-                offset_left = cls.Offset.RIGHT
-            elif 150 <= object_rotation <= 210:
-                need_rotate = True
-                offset_top = cls.Offset.TOP
-            elif 211 <= object_rotation <= 329:
-                offset_left = cls.Offset.LEFT
-            else:   # object_rotation <= 30 or 330 <= object_rotation
-                need_rotate = True
-                offset_top = cls.Offset.BOTTOM
-        offset = (offset_left, offset_top)
-        return offset, need_rotate
-
-    @classmethod
-    def _caption_offset_kind1(cls, object_rotation):
-        offset_left = offset_top = 0
-        need_rotate = False
-        if 31 <= object_rotation <= 149:
-            offset_left = cls.Offset.RIGHT
-            if 105 < object_rotation:
-                offset_top = cls.Offset.TOP
-            elif object_rotation < 75:
-                offset_top = cls.Offset.BOTTOM
-            else:
-                pass    # offset_top = 0
-        elif 150 <= object_rotation <= 210:
-            need_rotate = True
-            offset_top = cls.Offset.TOP
-            if object_rotation < 165:
-                offset_left = cls.Offset.RIGHT
-            elif 195 < object_rotation:
-                offset_left = cls.Offset.LEFT
-            else:
-                pass    # offset_left = 0
-        elif 211 <= object_rotation <= 329:
-            offset_left = cls.Offset.LEFT
-            if object_rotation < 255:
-                offset_top = cls.Offset.TOP
-            elif 285 < object_rotation:
-                offset_top = cls.Offset.BOTTOM
-            else:
-                pass    # offset_top = 0
-        else:   # object_rotation <= 30 or 330 <= object_rotation
-            need_rotate = True
-            offset_top = cls.Offset.BOTTOM
-            if 15 < object_rotation:
-                offset_left = cls.Offset.RIGHT
-            elif 330 <= object_rotation < 345:
-                offset_left = cls.Offset.LEFT
-            else:
-                pass    # offset_left = 0
-        offset = (offset_left, offset_top)
-        return offset, need_rotate
 
     def caption(self) -> 'MarkerCaption':
         if not self.marker:
@@ -381,7 +311,7 @@ class Object:
         a_ = self.a
         if increase_a:
             a_ += increase_a
-        offset, need_rotate = self.__class__.caption_offset(a_, self.layer_kind)
+        offset, need_rotate = CaptionPlacement.caption_offset(a_, self.layer_kind)
         if cross_delta:
             if need_rotate:     # apply delta to horizontal offset
                 offset = (offset[0] + cross_delta, offset[1])
@@ -400,26 +330,42 @@ class MarkerCaption:
     rotation: int
 
     obj: Object
+    offset: Any = field(init=False, default=None)
+    need_rotate: bool = field(init=False, default=False)
     bounding_box: 'BoundingBox' = field(init=False, default=None)
 
     def __repr__(self):
         return f'<{self.__class__.__name__} number={self.number}>'
 
+    @classmethod
+    def from_db_data(cls, data, object: Object):
+        caption = MarkerCaption(number=object.number, rotation=0, obj=object)
+        caption.set_box_params(offset=data['offset'], rotation=data['rotation'])
+        return caption
+
+    def to_db_data(self):
+        return {
+            'offset': self.offset,
+            'rotation': self.rotation,
+        }
+
     def draw(self, canvas, box, **_):
         if not self.bounding_box:
-            offset, need_rotate = self.obj.get_caption_offset()
-            self.get_bounding_box(canvas, offset, need_rotate)   # to set cached attr
+            if not self.offset or self.need_rotate is None:
+                self.offset, self.need_rotate = self.obj.get_caption_offset()
+            self.get_bounding_box(canvas)   # to set cached attr
 
         x, y = self.bounding_box.x, self.bounding_box.y
         width = self.bounding_box.w
         height = self.bounding_box.h
-        need_rotate = self.rotation == 90
+        if self.need_rotate is None:
+            self.need_rotate = self.rotation == 90
 
         canvas.saveState()
         layout.set_colors(canvas, self.obj.layer_color)
         canvas.setFont(self.CAPTION_FONT_NAME, self.CAPTION_FONT_SIZE)
         canvas.translate(x, y)
-        if need_rotate:
+        if self.need_rotate:
             canvas.rotate(self.rotation)
             canvas.rect(0, -1, height, width, stroke=0, fill=1)
         else:
@@ -428,21 +374,30 @@ class MarkerCaption:
         canvas.drawString(0, 0, self.number)
         canvas.restoreState()
 
-    def get_bounding_box(self, canvas, offset, need_rotate=False, force_update=False) -> 'BoundingBox':
+    def set_box_params(self, offset, need_rotate=None, rotation=None):
+        self.offset = offset
+        if rotation:
+            self.rotation = rotation
+            self.need_rotate = rotation != 0
+        else:
+            self.rotation = 90 if self.need_rotate else 0
+            self.need_rotate = bool(need_rotate)
+
+    def get_bounding_box(self, canvas, force_update=False) -> 'BoundingBox':
         # сначала без rotate
         # offset нужно применять к центру объекта
         # и если он отрицательный, то дополнительно уменьшать на длину маркера
         if self.bounding_box and not force_update:
             return self.bounding_box
 
-        if need_rotate:
-            return self._get_bounding_box_rotate(canvas, offset)
+        if self.need_rotate:
+            return self._get_bounding_box_rotate(canvas, self.offset)
 
         canvas.setFont(self.CAPTION_FONT_NAME, self.CAPTION_FONT_SIZE)
         width = canvas.stringWidth(self.number)
         height = self.CAPTION_FONT_SIZE
 
-        offset_x, offset_y = offset
+        offset_x, offset_y = self.offset
         obj_xc = self.obj.bounding_box.x + self.obj.bounding_box.w // 2
         obj_yc = self.obj.bounding_box.y + self.obj.bounding_box.h // 2
 
@@ -757,11 +712,3 @@ class NearObjectsGroup:
         горизонтали или вертикали (соседей ищем по удалённости на длину/высоту подписи)
         """
         pass    # todo
-
-
-class MarkerNoPlaceException(Exception):
-    pass
-
-
-class MakerPlacementAllDone(Exception):
-    pass

@@ -68,10 +68,20 @@ LOGGING = {
     'handlers': {
         'console': {
             'class': 'logging.StreamHandler',
+            'formatter': 'default',
+        },
+    },
+    'formatters': {
+        'default': {
+            'format': '%(asctime)s | %(levelname)s | %(module)s | %(message)s',
         },
     },
     'loggers': {
-        'zoloto_viewer.documents.pdf_generation.plan_page_writer': {
+        'zoloto_viewer.documents.pdf_generation.plan_page_writer_simple': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+        },
+        'zoloto_viewer.documents.pdf_generation.main': {
             'handlers': ['console'],
             'level': 'DEBUG',
         },
