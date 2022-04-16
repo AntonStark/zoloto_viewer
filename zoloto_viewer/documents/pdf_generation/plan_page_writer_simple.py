@@ -69,7 +69,7 @@ class PlanPageWriterLayerGroupsSimple(PlanPageWriterMinimal):
     def restore_captions_db_data(self) -> List[MarkerCaption]:
         object_index = {mo.uid: mo for mo in self._marker_positions}
         return [
-            MarkerCaption.from_db_data(data, object_index[uid])
+            MarkerCaption.from_db_data(data, object_index[uid], self._content_box)
             for uid, data in self.caption_placements.items()
         ]
 
@@ -80,7 +80,7 @@ class PlanPageWriterLayerGroupsSimple(PlanPageWriterMinimal):
             CaptionPlacement(
                 marker_id=mc.obj.uid,
                 layer_group=self.layers_group,
-                data=mc.to_db_data(),
+                data=mc.to_db_data(self._content_box),
             )
             for mc in captions_to_save
         ])

@@ -207,7 +207,7 @@ class Layer(models.Model):
 
 class LayerGroup(models.Model):
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
-    layers = fields.ArrayField(models.IntegerField())
+    layers = fields.ArrayField(models.IntegerField(), db_index=True)
     num = models.IntegerField(null=False, default=None)
 
     layer_ids_list = List[int]
@@ -252,6 +252,10 @@ class LayerGroup(models.Model):
             group = cls(project=project, layers=layers)
             group.save()
         project.save()  # to refresh date_updated
+
+    @classmethod
+    def find_by_layer(cls, layer_id):
+        return cls.objects.filter(layers__contains=[layer_id]).first()
 
     @classmethod
     def exclude_from_groups(cls, layer_id_list):

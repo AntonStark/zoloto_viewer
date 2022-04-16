@@ -62,6 +62,16 @@ class PlanBox:
         can_y = self._box_y + rel_y * self._box_height
         return can_x, can_y
 
+    def calc_pos_to_gb(self, point):
+        # inverse to calc_pos
+        gb_top, gb_left, gb_bottom, gb_right = self._indd_bounds
+        can_x, can_y = point
+        rel_x = (can_x - self._box_x) / self._box_width
+        m_x = rel_x * gb_right + gb_left
+        rel_y = (can_y - self._box_y) / self._box_height
+        m_y = (1. - rel_y) * gb_bottom + gb_top
+        return m_x, m_y
+
     def _scale(self, point):
         gb_top, gb_left, gb_bottom, gb_right = self._indd_bounds
         factor = self._box_height / (gb_bottom - gb_top)
@@ -338,14 +348,17 @@ class MarkerCaption:
         return f'<{self.__class__.__name__} number={self.number}>'
 
     @classmethod
-    def from_db_data(cls, data, object: Object):
+    def from_db_data(cls, data, object: Object, content_box: PlanBox):
         caption = MarkerCaption(number=object.number, rotation=0, obj=object)
-        caption.set_box_params(offset=data['offset'], rotation=data['rotation'])
+        caption.set_box_params(
+            offset=content_box.calc_pos(data['offset']),
+            rotation=data['rotation']
+        )
         return caption
 
-    def to_db_data(self):
+    def to_db_data(self, content_box: PlanBox):
         return {
-            'offset': self.offset,
+            'offset': content_box.calc_pos_to_gb(self.offset),
             'rotation': self.rotation,
         }
 

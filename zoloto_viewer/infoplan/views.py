@@ -11,9 +11,9 @@ from django.views import View
 from django.views.decorators import csrf, http
 from django.utils.decorators import method_decorator
 
-from zoloto_viewer.infoplan.models import Marker, MarkerComment, MarkerFingerpost, MarkerVariable
+from zoloto_viewer.infoplan.models import Marker, MarkerComment, MarkerFingerpost, MarkerVariable, CaptionPlacement
 from zoloto_viewer.infoplan.utils import variable_transformations as transformations
-from zoloto_viewer.viewer.models import Layer, Page, Project
+from zoloto_viewer.viewer.models import Layer, Page, Project, LayerGroup
 
 
 def marker_api(method):
@@ -296,6 +296,86 @@ def resolve_marker_comments(request, marker_uid: uuid.UUID):
     marker.reviewed = False
     marker.save()
     return JsonResponse(marker.to_json())
+
+
+@method_decorator(csrf.csrf_exempt, name='dispatch')
+class MarkerCaptionView(View):
+    @method_decorator(marker_api)
+    def get(self, request, marker_uid: uuid.UUID):
+        marker = get_object_or_404(Marker, uid=marker_uid)
+        try:
+            caption_placement: CaptionPlacement = marker.captionplacement
+        except CaptionPlacement.DoesNotExist:
+            layergroup = LayerGroup.find_by_layer(marker.layer_id)
+            caption_placement = CaptionPlacement.make_default(marker, layergroup)
+            caption_placement.save()
+
+        rep = marker.to_json()
+        rep.update({
+            'caption_placement': {
+                'data': caption_placement.data,
+            }
+        })
+        return JsonResponse(rep)
+
+    @method_decorator(login_required)
+    @method_decorator(marker_api)
+    def put(self, request, marker_uid: uuid.UUID):
+        """Set data of captionplacement"""
+        # {
+        #   data: {
+        #     offset: [0,-10],
+        #     rotation: 90
+        #   },
+        # }
+        marker = get_object_or_404(Marker, uid=marker_uid)
+        try:
+            caption_placement: CaptionPlacement = marker.captionplacement
+        except CaptionPlacement.DoesNotExist:
+            layergroup = LayerGroup.find_by_layer(marker.layer_id)
+            caption_placement = CaptionPlacement.make_default(marker, layergroup)
+            caption_placement.save()
+
+        try:
+            req = json.loads(request.body)
+            data = req['data']
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'request body must be json'}, status=400)
+        except KeyError:
+            return JsonResponse({'error': 'json object must contain field data'}, status=400)
+
+        try:
+            offset, rotation = data['offset'], data['rotation']
+        except KeyError:
+            return JsonResponse({'error': 'data must contain fields offset and rotation'}, status=400)
+        caption_placement.data = {
+            'offset': offset,
+            'rotation': rotation,
+        }
+        caption_placement.save()
+
+        rep = marker.to_json()
+        rep.update({
+            'caption_placement': {
+                'data': caption_placement.data,
+            }
+        })
+        return JsonResponse(rep)
+
+
+def load_floor_captions(request):
+    floor_code = request.GET['floor']
+    floor = get_object_or_404(Page, code=floor_code)
+
+    rep_data = [
+        caption.to_json()
+        for caption in CaptionPlacement.objects.filter(marker__floor=floor)
+            .select_related('marker', 'marker__layer', 'marker__floor').all()
+    ]
+    rep = {
+        'data': rep_data,
+    }
+    return JsonResponse(rep)
 
 
 def project_page(request, **more_context):

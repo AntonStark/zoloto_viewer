@@ -197,6 +197,19 @@ class Marker(models.Model):
             j['page'] = self.floor.code
         return j
 
+    def to_min_json(self):
+        j = {
+            'marker': self.uid,
+            'number': self.number,
+            'position': {
+                'center_x': self.pos_x,
+                'center_y': self.pos_y,
+                'rotation': self.rotation,
+            },
+            'layer': self.layer.title,
+        }
+        return j
+
     def _handle_rotation(self):
         value = self.rotation
         while value >= 360:
@@ -358,6 +371,17 @@ class CaptionPlacement(models.Model):
                 pass    # offset_left = 0
         offset = (offset_left, offset_top)
         return offset, need_rotate
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        self.marker.save()
+
+    def to_json(self):
+        j = {
+            'data': self.data,
+            'marker': self.marker.to_min_json(),
+        }
+        return j
 
 
 def detect_languages(text):
