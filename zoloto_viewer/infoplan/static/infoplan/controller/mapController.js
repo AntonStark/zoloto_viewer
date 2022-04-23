@@ -6,7 +6,7 @@ function ControllerMapInteractions() {
     let markerMovement = false;
     let movementStartPoint = undefined;
 
-    // map interaction mode
+    // map interaction modes
     function isInsertMode() {
         const control = document.getElementById('menu_actions_option1');
         if (!control) return false;
@@ -17,12 +17,21 @@ function ControllerMapInteractions() {
         if (!control) return true;
         return control.checked;
     }
+    function isCaptionsMode() {
+        const control = document.getElementById('menu_actions_option3');
+        if (!control) return false;
+        return control.checked;
+    }
     function toggleInsertMode() {
         const control = document.getElementById('menu_actions_option1');
         control.checked = true;
     }
     function toggleSelectMode() {
         const control = document.getElementById('menu_actions_option2');
+        control.checked = true;
+    }
+    function toggleCaptionsMode() {
+        const control = document.getElementById('menu_actions_option3');
         control.checked = true;
     }
 
@@ -108,6 +117,8 @@ function ControllerMapInteractions() {
             mapInteractionsController.toggleInsertMode();
         } else if (e.code === 'KeyV') {
             mapInteractionsController.toggleSelectMode();
+        } else if (e.code === 'KeyN' && UI_AUTH) {
+            console.log(getSelection());
         } else if (e.code === 'ArrowUp' && e.shiftKey) {
             // upper area
             areasListController.toUpperArea(pageCode);

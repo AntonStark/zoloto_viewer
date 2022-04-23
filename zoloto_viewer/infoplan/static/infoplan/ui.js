@@ -10,6 +10,7 @@ const mapScaleController = ControllerMapScale();
 const enabledLayersController = ControllerEnabledLayers();
 const mapInteractionsController = ControllerMapInteractions();
 const areasListController = ControllerAreasList();
+const captionsController = ControllerCaptions();
 
 
 let SVG_VIEWPORT_BOUNDS = undefined;
@@ -44,8 +45,13 @@ function init() {
     document.getElementById('map_control_minus').addEventListener('click', handleClickMapMinus);
 
     const insertModeBtn = document.getElementById('menu_actions_option1');
-    if (insertModeBtn)
+    if (insertModeBtn) {
         insertModeBtn.addEventListener('click', enabledLayersController.shift);
+    }
+    const captionsModeBtn = document.getElementById('menu_actions_option3');
+    if (captionsModeBtn) {
+        captionsModeBtn.addEventListener('click', captionsController.showAll);
+    }
 
     window.addEventListener('keyup', mapInteractionsController.handleKeyUp);
     window.addEventListener('keypress', mapInteractionsController.handleKeyPress);

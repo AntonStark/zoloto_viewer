@@ -295,6 +295,11 @@ input.disabled {
     fill: var(--layer-color);
 }
 
+.caption {
+    color: white;
+    background: var(--layer-color);
+}
+
 .icon {
     text-decoration: unset;
     color: grey;
@@ -421,6 +426,7 @@ form.actions_menu{
     font-size: x-large;
     border: 1px solid;
     vertical-align: middle;
+    display: inline-block;
 }
 #actions_menu_modes input {
     display: none;

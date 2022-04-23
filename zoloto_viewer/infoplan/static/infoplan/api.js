@@ -10,6 +10,7 @@ const API_MARKER_DELETE      = (markerUid) => `${BASE_URL}/viewer/api/marker/${m
 const API_VAR_ALTER_WRONG    = (markerUid) => `${BASE_URL}/viewer/api/marker/${markerUid}/variable/`;
 const API_MARKER_LOAD_REVIEW = (markerUid) => `${BASE_URL}/viewer/api/marker/${markerUid}/review/`;
 const API_MARKER_RESOLVE_CMS = (markerUid) => `${BASE_URL}/viewer/api/marker/${markerUid}/resolve_all_comments/`;
+const API_MARKERS_CAPTION    = (code)      => `${BASE_URL}/viewer/api/markers/caption/?floor=${code}`;
 const API_PUT_PAGE_DATA      = (code)      => `${BASE_URL}/viewer/page/${code}/edit/`
 
 function doApiCall(method, url, data, onResponse, onError=undefined) {
@@ -75,6 +76,10 @@ function createMarker(args, onSuccess) {
 
 function clipMarkers(args, onSuccess) {
     doApiCall('POST', API_MARKER_CLIPBOARD, args, onSuccess);
+}
+
+function requestCaptionsPlacement(floor_code, onSuccess) {
+    doApiCall('GET', API_MARKERS_CAPTION(floor_code), null, onSuccess);
 }
 
 function handleFileDownloadWithRetryAfter(uri, firstTry=true) {
