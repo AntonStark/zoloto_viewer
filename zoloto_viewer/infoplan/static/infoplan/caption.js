@@ -1,19 +1,27 @@
 function renderCaptionElement(data) {
+    const markerPos = data.marker.position;
+    const captionOffset = data.data.offset;
+    const captionRotation = data.data.rotation;
+    const captionX = markerPos.center_x + captionOffset[0];
+    const captionY = markerPos.center_y + captionOffset[1];
+
     function buildCaptionTextElem(data) {
         let textElem = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        textElem.setAttributeNS(null, 'class', `caption layer-${data.marker.layer}`);
         textElem.textContent = data.marker.number;
 
-        const markerPos = data.marker.position;
-        const captionOffset = data.data.offset;
-        textElem.setAttributeNS(null, 'x', markerPos.center_x + captionOffset[0]);
-        textElem.setAttributeNS(null, 'y', markerPos.center_y + captionOffset[1]);
-        textElem.setAttributeNS(null, 'class', `caption layer-${data.marker.layer}`);
+        textElem.setAttributeNS(null, 'x', captionX);
+        textElem.setAttributeNS(null, 'y', captionY);
         return textElem;
     }
 
     function buildCaptionGroup(data) {
         let g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
         g.setAttributeNS(null, 'class', `caption_group layer-${data.marker.layer}`);
+        if (captionRotation !== 0) {
+            g.setAttributeNS(null, 'transform',
+                `rotate(${-captionRotation}, ${captionX}, ${captionY})`);
+        }
         g.append(buildCaptionTextElem(data));
         return g;
     }
