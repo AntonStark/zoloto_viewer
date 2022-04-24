@@ -18,11 +18,11 @@ function renderCaptionElement(data) {
     function buildCaptionGroup(data) {
         let g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
         g.setAttributeNS(null, 'class', `caption_group layer-${data.marker.layer}`);
-        if (captionRotation !== 0) {
-            g.setAttributeNS(null, 'transform',
-                `rotate(${-captionRotation}, ${captionX}, ${captionY})`);
-        }
         g.append(buildCaptionTextElem(data));
+        g.dataset.captionRotation = captionRotation;
+        g.dataset.isRotated = captionRotation !== 0;
+        g.dataset.captionX = captionX;
+        g.dataset.captionY = captionY;
         return g;
     }
 
@@ -51,4 +51,31 @@ function insertBackground(captionGroup) {
 
     captionGroup.insertBefore(bg, caption);
     caption.style.fill = 'white';
+}
+
+function calcTranslateParams(captionGroup) {
+    const isRotated = captionGroup.dataset.isRotated;
+    const bg = captionGroup.firstChild;
+    const bounds = bg.getBBox();
+
+    let x, y;
+    if (isRotated === 'true') {
+        [x, y] = [bounds.height / 2., bounds.width];
+    }
+    else {
+        [x, y] = [0, bounds.height / 2.];
+    }
+    return [x, y];
+}
+
+function applyProperTransform(captionGroup) {
+    const {captionRotation, isRotated, captionX, captionY} = captionGroup.dataset;
+    // console.log(captionRotation, isRotated, captionX, captionY);
+    const [translateX, translateY] = calcTranslateParams(captionGroup);
+    // console.log(translateX, translateY);
+    const transform = ( isRotated
+            ? `translate(${translateX}, ${translateY}) rotate(${-captionRotation}, ${captionX}, ${captionY})`
+            : `translate(${translateX}, ${translateY})`
+    );
+    captionGroup.setAttributeNS(null, 'transform', transform);
 }

@@ -297,6 +297,7 @@ input.disabled {
 
 .caption {
     color: white;
+    font-size: 10pt;
     background: var(--layer-color);
 }
 

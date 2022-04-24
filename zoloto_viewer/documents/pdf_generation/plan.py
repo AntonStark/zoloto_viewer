@@ -411,8 +411,6 @@ class MarkerCaption:
         height = self.CAPTION_FONT_SIZE
 
         offset_x, offset_y = self.offset
-        obj_xc = self.obj.bounding_box.x + self.obj.bounding_box.w // 2
-        obj_yc = self.obj.bounding_box.y + self.obj.bounding_box.h // 2
 
         # text length
         if offset_x < 0:
@@ -420,6 +418,8 @@ class MarkerCaption:
         # center to down left corner
         offset_y -= height // 2
 
+        obj_xc = self.obj.bounding_box.x + self.obj.bounding_box.w // 2
+        obj_yc = self.obj.bounding_box.y + self.obj.bounding_box.h // 2
         left = obj_xc + offset_x
         bottom = obj_yc + offset_y
 
@@ -428,10 +428,8 @@ class MarkerCaption:
         self.rotation = 0
         return self.bounding_box
 
-    def _get_bounding_box_rotate(self, canvas, offset):
+    def _get_bounding_box_rotate(self, canvas, offset) -> 'BoundingBox':
         offset_x, offset_y = offset
-        obj_xc = self.obj.bounding_box.x + self.obj.bounding_box.w // 2
-        obj_yc = self.obj.bounding_box.y + self.obj.bounding_box.h // 2
 
         canvas.setFont(self.CAPTION_FONT_NAME, self.CAPTION_FONT_SIZE)
         height = canvas.stringWidth(self.number)
@@ -442,6 +440,8 @@ class MarkerCaption:
             offset_y -= height
         offset_x += width // 2  # move to the right so text vertical centered
 
+        obj_xc = self.obj.bounding_box.x + self.obj.bounding_box.w // 2
+        obj_yc = self.obj.bounding_box.y + self.obj.bounding_box.h // 2
         left = obj_xc + offset_x
         bottom = obj_yc + offset_y
         bounding_box = BoundingBox(left, bottom, width, height, ref=self)

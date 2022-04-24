@@ -24,6 +24,7 @@ function ControllerCaptions() {
         for (const captionGroup of captionGroupList) {
             // prepend every caption's group with background rect
             insertBackground(captionGroup);
+            applyProperTransform(captionGroup);
             // todo append move handlers
         }
     }
