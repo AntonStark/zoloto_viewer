@@ -1,14 +1,15 @@
 "use strict";
 function ControllerCaptions() {
+    let captionsIndex = {};
+
     function showAllCaptions() {
-        //    запросить все данные
-        //    и для каждого объекта в массиве ответа
-        //    вызвать рендер
         const floor = mapInteractionsController.pageCode();
         requestCaptionsPlacement(floor, _renderFloorCaptionsData);
     }
     function hideAllCaptions() {
-
+        for (const [markerUid, caption] of Object.entries(captionsIndex)) {
+            _removeDomElement(caption);
+        }
     }
 
     function _renderFloorCaptionsData(rep) {
@@ -25,8 +26,20 @@ function ControllerCaptions() {
             // prepend every caption's group with background rect
             insertBackground(captionGroup);
             applyProperTransform(captionGroup);
+            _registerCaptionGroup(captionGroup);
             // todo append move handlers
         }
+    }
+
+    function _registerCaptionGroup(captionGroup) {
+        const markerUid = captionGroup.dataset.markerUid;
+        console.log(markerUid);
+        captionsIndex[markerUid] = captionGroup;
+    }
+
+    function _removeDomElement(captionGroup) {
+        captionGroup.parentNode.removeChild(captionGroup);
+        captionGroup = null;
     }
 
     return {

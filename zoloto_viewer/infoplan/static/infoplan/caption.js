@@ -19,7 +19,9 @@ function renderCaptionElement(data) {
         let g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
         g.setAttributeNS(null, 'class', `caption_group layer-${data.marker.layer}`);
         g.append(buildCaptionTextElem(data));
+        g.dataset.markerUid = data.marker.marker;
         g.dataset.captionRotation = captionRotation;
+        g.dataset.captionOffset = JSON.stringify(captionOffset);
         g.dataset.isRotated = captionRotation !== 0;
         g.dataset.captionX = captionX;
         g.dataset.captionY = captionY;
@@ -54,16 +56,28 @@ function insertBackground(captionGroup) {
 }
 
 function calcTranslateParams(captionGroup) {
-    const isRotated = captionGroup.dataset.isRotated;
+    const { isRotated, captionOffset } = captionGroup.dataset;
     const bg = captionGroup.firstChild;
+    const [offsetX, offsetY] = JSON.parse(captionOffset);
     const bounds = bg.getBBox();
 
     let x, y;
+    // console.log('calcTranslateParams', [offsetX, offsetY], isRotated)
     if (isRotated === 'true') {
-        [x, y] = [bounds.height / 2., bounds.width];
+        if (offsetY > 0) {
+            [x, y] = [bounds.height / 2., bounds.width];
+        }
+        else {
+            [x, y] = [bounds.height / 2., 0];
+        }
     }
     else {
-        [x, y] = [0, bounds.height / 2.];
+        if (offsetX > 0) {
+            [x, y] = [0, bounds.height / 2.];
+        }
+        else {
+            [x, y] = [- bounds.width, bounds.height / 2.];
+        }
     }
     return [x, y];
 }

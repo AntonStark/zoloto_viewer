@@ -364,7 +364,6 @@ class MarkerCaptionView(View):
 
 
 def load_floor_captions(request):
-    # todo генерация положений по-умолчанию
     floor_code = request.GET['floor']
     floor = get_object_or_404(Page, code=floor_code)
 

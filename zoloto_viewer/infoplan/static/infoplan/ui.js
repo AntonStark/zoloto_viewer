@@ -48,9 +48,17 @@ function init() {
     if (insertModeBtn) {
         insertModeBtn.addEventListener('click', enabledLayersController.shift);
     }
+
     const captionsModeBtn = document.getElementById('menu_actions_option3');
     if (captionsModeBtn) {
         captionsModeBtn.addEventListener('click', captionsController.showAll);
+    }
+    if (insertModeBtn) {
+        insertModeBtn.addEventListener('click', captionsController.hideALl);
+    }
+    const selectModeBtn = document.getElementById('menu_actions_option2');
+    if (selectModeBtn) {
+        selectModeBtn.addEventListener('click', captionsController.hideALl);
     }
 
     window.addEventListener('keyup', mapInteractionsController.handleKeyUp);
