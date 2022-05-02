@@ -10,6 +10,7 @@ const API_MARKER_DELETE      = (markerUid) => `${BASE_URL}/viewer/api/marker/${m
 const API_VAR_ALTER_WRONG    = (markerUid) => `${BASE_URL}/viewer/api/marker/${markerUid}/variable/`;
 const API_MARKER_LOAD_REVIEW = (markerUid) => `${BASE_URL}/viewer/api/marker/${markerUid}/review/`;
 const API_MARKER_RESOLVE_CMS = (markerUid) => `${BASE_URL}/viewer/api/marker/${markerUid}/resolve_all_comments/`;
+const API_MARKER_CAPTION_ONE = (markerUid) => `${BASE_URL}/viewer/api/marker/${markerUid}/caption/`;
 const API_MARKERS_CAPTION    = (code)      => `${BASE_URL}/viewer/api/markers/caption/?floor=${code}`;
 const API_PUT_PAGE_DATA      = (code)      => `${BASE_URL}/viewer/page/${code}/edit/`
 
@@ -80,6 +81,17 @@ function clipMarkers(args, onSuccess) {
 
 function requestCaptionsPlacement(floor_code, onSuccess) {
     doApiCall('GET', API_MARKERS_CAPTION(floor_code), null, onSuccess);
+}
+
+function updateCaptionPlacement(markerUid, offset=undefined, rotation=undefined, onSuccess) {
+    let payload = {data: {}}
+    if (offset) {
+        payload.data.offset = offset;
+    }
+    if (rotation) {
+        payload.data.rotation = rotation;
+    }
+    doApiCall('PUT', API_MARKER_CAPTION_ONE(markerUid), payload, onSuccess);
 }
 
 function handleFileDownloadWithRetryAfter(uri, firstTry=true) {

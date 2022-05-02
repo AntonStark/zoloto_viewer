@@ -300,6 +300,12 @@ input.disabled {
     font-size: 10pt;
     background: var(--layer-color);
 }
+.caption_rotator {
+    visibility: hidden;
+}
+.caption_group:hover .caption_rotator{
+    visibility: visible;
+}
 
 .icon {
     text-decoration: unset;

@@ -2,8 +2,9 @@ function renderCaptionElement(data) {
     const markerPos = data.marker.position;
     const captionOffset = data.data.offset;
     const captionRotation = data.data.rotation;
-    const captionX = markerPos.center_x + captionOffset[0];
-    const captionY = markerPos.center_y + captionOffset[1];
+    // initially place an marker center and setup correct position later with transform
+    const captionX = markerPos.center_x;
+    const captionY = markerPos.center_y;
 
     function buildCaptionTextElem(data) {
         let textElem = document.createElementNS('http://www.w3.org/2000/svg', 'text');
@@ -15,16 +16,29 @@ function renderCaptionElement(data) {
         return textElem;
     }
 
+    function buildRotationBtn(data) {
+        let btn = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        btn.setAttributeNS(null, 'class', `caption_rotator`);
+        btn.textContent = (data.data.rotation === 0 ? '↺' : '↻');
+        btn.setAttributeNS(null, 'x', captionX);
+        btn.setAttributeNS(null, 'y', captionY - 16);
+        btn.dataset.markerUid = data.marker.marker;
+        btn.style.fill = 'black';
+        return btn;
+    }
+
     function buildCaptionGroup(data) {
         let g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
         g.setAttributeNS(null, 'class', `caption_group layer-${data.marker.layer}`);
-        g.append(buildCaptionTextElem(data));
+        g.append(buildCaptionTextElem(data), buildRotationBtn(data));
         g.dataset.markerUid = data.marker.marker;
         g.dataset.captionRotation = captionRotation;
-        g.dataset.captionOffset = JSON.stringify(captionOffset);
         g.dataset.isRotated = captionRotation !== 0;
-        g.dataset.captionX = captionX;
-        g.dataset.captionY = captionY;
+        g.dataset.markerCenter = JSON.stringify([markerPos.center_x, markerPos.center_y]);
+        g.dataset.originOffset = JSON.stringify(captionOffset);
+        g.dataset.captionOffset = JSON.stringify(captionOffset);
+        g.dataset.markerX = markerPos.center_x;
+        g.dataset.markerY = markerPos.center_y;
         return g;
     }
 
@@ -63,6 +77,7 @@ function calcTranslateParams(captionGroup) {
 
     let x, y;
     // console.log('calcTranslateParams', [offsetX, offsetY], isRotated)
+    // calc text direction related offset
     if (isRotated === 'true') {
         if (offsetY > 0) {
             [x, y] = [bounds.height / 2., bounds.width];
@@ -79,17 +94,40 @@ function calcTranslateParams(captionGroup) {
             [x, y] = [- bounds.width, bounds.height / 2.];
         }
     }
+
+    // apply actual offset
+    [x, y] = [x + offsetX, y + offsetY];
+
+    // apply rotation
+    if (isRotated === 'true') {
+        [x, y] = [-y, x];
+    }
     return [x, y];
 }
 
 function applyProperTransform(captionGroup) {
-    const {captionRotation, isRotated, captionX, captionY} = captionGroup.dataset;
+    const {captionRotation, isRotated} = captionGroup.dataset;
+    const markerCenter = JSON.parse(captionGroup.dataset.markerCenter);
+    const captionOffset = JSON.parse(captionGroup.dataset.captionOffset);
+    const captionX = markerCenter[0] + captionOffset[0];
+    const captionY = markerCenter[1] + captionOffset[1];
+
     // console.log(captionRotation, isRotated, captionX, captionY);
     const [translateX, translateY] = calcTranslateParams(captionGroup);
     // console.log(translateX, translateY);
-    const transform = ( isRotated
-            ? `translate(${translateX}, ${translateY}) rotate(${-captionRotation}, ${captionX}, ${captionY})`
+    const transform = ( isRotated === 'true'
+            ? `rotate(${-captionRotation}, ${markerCenter[0]}, ${markerCenter[1]}) translate(${translateX}, ${translateY})`
             : `translate(${translateX}, ${translateY})`
     );
     captionGroup.setAttributeNS(null, 'transform', transform);
+}
+
+function updateCaptionPosition(captionGroup, moveOffset) {
+    const originOffset = JSON.parse(captionGroup.dataset.originOffset);
+    const newOffset = [originOffset[0] + moveOffset[0], originOffset[1] + moveOffset[1]];
+    // console.log('updateCaptionPosition', newOffset)
+
+    // update transform with new Offset
+    captionGroup.dataset.captionOffset = JSON.stringify(newOffset);
+    applyProperTransform(captionGroup);
 }

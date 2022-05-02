@@ -263,8 +263,9 @@ function ControllerMapInteractions() {
         }
     }
     function handleMouseUp(e) {
-        // console.log('handleMouseUp', e);
+        // console.log('handleMouseUp', 'mapController', e);
         mapScaleController.mapSvg().removeEventListener('mousemove', mapInteractionsController.handleMouseMove);
+        mapScaleController.mapSvg().removeEventListener('mousemove', captionsController.handleMouseMove);
 
         if (markerMovement) {
             // обновлять данные в индексе ControllerMarkerCircles.circleCenterIndex и положение сообщения
@@ -342,6 +343,7 @@ function ControllerMapInteractions() {
     return {
         isInsertMode: isInsertMode,
         isSelectMode: isSelectMode,
+        isCaptionsMode: isCaptionsMode,
         toggleInsertMode : toggleInsertMode,
         toggleSelectMode : toggleSelectMode,
 
