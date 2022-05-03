@@ -219,7 +219,7 @@ function ControllerMapInteractions() {
     }
     function handleMouseDown(e) {
         // console.log('handleMouseDown', e);
-        if (isInsertMode())
+        if (isInsertMode() || isCaptionsMode())
             return;
 
         messageBoxManager.hideAll();
