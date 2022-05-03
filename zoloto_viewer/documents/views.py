@@ -63,13 +63,13 @@ def get_pdf_file(request, project_id):
     # with HEAD request not send file content if present
     project = get_object_or_404(Project, id=project_id)
     pf = ProjectFile.objects.look_for_fresh(project, ProjectFile.FileKinds.PDF_EXFOLIATION)
-    pf = None
+    # pf = None
 
     if not pf:
-        # if not is_generate_pdf_task_queued(project.uid):
-        #     generate_pdf_doc(str(project.uid), schedule=timezone.now())
-        # return HTTP_RETRY_LATER
-        pf = ProjectFile.objects.pdf_generate_file(project)
+        if not is_generate_pdf_task_queued(project.uid):
+            generate_pdf_doc(str(project.uid), schedule=timezone.now())
+        return HTTP_RETRY_LATER
+        # pf = ProjectFile.objects.pdf_generate_file(project)
 
     return FileResponse(pf.file, filename=pf.public_name) \
         if request.method == 'GET' \
