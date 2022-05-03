@@ -71,6 +71,7 @@ class PlanPageWriterLayerGroupsSimple(PlanPageWriterMinimal):
         return [
             MarkerCaption.from_db_data(data, object_index[uid], self._content_box)
             for uid, data in self.caption_placements.items()
+            if uid in object_index
         ]
 
     def store_captions_db_data(self, captions_to_save: List[MarkerCaption]):
