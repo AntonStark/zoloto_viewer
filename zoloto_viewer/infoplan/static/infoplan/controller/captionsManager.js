@@ -16,7 +16,7 @@ function ControllerCaptions() {
 
     function _renderFloorCaptionsData(rep) {
         for (const capData of rep.data) {
-            console.log(capData);
+            // console.log(capData);
             renderCaptionElement(capData);
         }
         _postRenderProcessing();
@@ -35,7 +35,6 @@ function ControllerCaptions() {
 
     function _registerCaptionGroup(captionGroup) {
         const markerUid = captionGroup.dataset.markerUid;
-        console.log(markerUid);
         captionsIndex[markerUid] = captionGroup;
     }
     function _removeDomElement(captionGroup) {
@@ -136,13 +135,13 @@ function ControllerCaptions() {
             //         "layer": "110_S"
             //     }
             // }
-            console.log('successHandler', rep.data.offset);
+            // console.log('successHandler', rep.data.offset);
             setupCaptionGroupGeometryDataset(captionGroup, rep);
-            console.log('after setupCaptionGroupGeometryDataset', captionGroup.dataset.captionOffset)
+            // console.log('after setupCaptionGroupGeometryDataset', captionGroup.dataset.captionOffset)
             applyProperTransform(captionGroup);
         }
         const markerUid = captionGroup.dataset.markerUid;
-        console.log('_updateHelper', offset);
+        // console.log('_updateHelper', offset);
         updateCaptionPlacement(markerUid, offset, rotation, successHandler);
     }
 
