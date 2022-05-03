@@ -1,44 +1,44 @@
 function renderCaptionElement(data) {
     const markerPos = data.marker.position;
-    const captionOffset = data.data.offset;
-    const captionRotation = data.data.rotation;
     // initially place an marker center and setup correct position later with transform
     const captionX = markerPos.center_x;
     const captionY = markerPos.center_y;
 
     function buildCaptionTextElem(data) {
-        let textElem = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-        textElem.setAttributeNS(null, 'class', `caption layer-${data.marker.layer}`);
-        textElem.textContent = data.marker.number;
+        const markerNumber = data.marker.number;
+        const layerTitle = data.marker.layer;
 
+        let textElem = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        textElem.setAttributeNS(null, 'class', `caption layer-${layerTitle}`);
+        textElem.textContent = markerNumber;
         textElem.setAttributeNS(null, 'x', captionX);
         textElem.setAttributeNS(null, 'y', captionY);
         return textElem;
     }
 
     function buildRotationBtn(data) {
+        const captionRotation = data.data.rotation;
+        const markerUid = data.marker.marker;
+
         let btn = document.createElementNS('http://www.w3.org/2000/svg', 'text');
         btn.setAttributeNS(null, 'class', `caption_rotator`);
-        btn.textContent = (data.data.rotation === 0 ? '↺' : '↻');
+        btn.textContent = (captionRotation === 0 ? '↺' : '↻');
         btn.setAttributeNS(null, 'x', captionX);
         btn.setAttributeNS(null, 'y', captionY - 16);
-        btn.dataset.markerUid = data.marker.marker;
+        btn.dataset.markerUid = markerUid;
         btn.style.fill = 'black';
         return btn;
     }
 
     function buildCaptionGroup(data) {
+        const markerUid = data.marker.marker;
+        const layerTitle = data.marker.layer;
+
         let g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-        g.setAttributeNS(null, 'class', `caption_group layer-${data.marker.layer}`);
+        g.setAttributeNS(null, 'class', `caption_group layer-${layerTitle}`);
+        g.dataset.markerUid = markerUid;
+        setupCaptionGroupGeometryDataset(g, data);
         g.append(buildCaptionTextElem(data), buildRotationBtn(data));
-        g.dataset.markerUid = data.marker.marker;
-        g.dataset.captionRotation = captionRotation;
-        g.dataset.isRotated = captionRotation !== 0;
-        g.dataset.markerCenter = JSON.stringify([markerPos.center_x, markerPos.center_y]);
-        g.dataset.originOffset = JSON.stringify(captionOffset);
-        g.dataset.captionOffset = JSON.stringify(captionOffset);
-        g.dataset.markerX = markerPos.center_x;
-        g.dataset.markerY = markerPos.center_y;
         return g;
     }
 
@@ -46,6 +46,18 @@ function renderCaptionElement(data) {
     if (layerGroup) {
         layerGroup.append(buildCaptionGroup(data));
     }
+}
+
+function setupCaptionGroupGeometryDataset(captionGroup, data) {
+    const markerPos = data.marker.position;
+    const captionRotation = data.data.rotation;
+    const captionOffset = data.data.offset;
+
+    captionGroup.dataset.captionRotation = captionRotation;
+    captionGroup.dataset.isRotated = captionRotation !== 0;
+    captionGroup.dataset.markerCenter = JSON.stringify([markerPos.center_x, markerPos.center_y]);
+    captionGroup.dataset.originOffset = JSON.stringify(captionOffset);
+    captionGroup.dataset.captionOffset = JSON.stringify(captionOffset);
 }
 
 function insertBackground(captionGroup) {
@@ -69,12 +81,7 @@ function insertBackground(captionGroup) {
     caption.style.fill = 'white';
 }
 
-function calcTranslateParams(captionGroup) {
-    const { isRotated, captionOffset } = captionGroup.dataset;
-    const bg = captionGroup.firstChild;
-    const [offsetX, offsetY] = JSON.parse(captionOffset);
-    const bounds = bg.getBBox();
-
+function calcTranslateParams(isRotated, offsetX, offsetY, bounds) {
     let x, y;
     // console.log('calcTranslateParams', [offsetX, offsetY], isRotated)
     // calc text direction related offset
@@ -106,14 +113,13 @@ function calcTranslateParams(captionGroup) {
 }
 
 function applyProperTransform(captionGroup) {
-    const {captionRotation, isRotated} = captionGroup.dataset;
+    const {captionRotation, isRotated, captionOffset} = captionGroup.dataset;
     const markerCenter = JSON.parse(captionGroup.dataset.markerCenter);
-    const captionOffset = JSON.parse(captionGroup.dataset.captionOffset);
-    const captionX = markerCenter[0] + captionOffset[0];
-    const captionY = markerCenter[1] + captionOffset[1];
 
-    // console.log(captionRotation, isRotated, captionX, captionY);
-    const [translateX, translateY] = calcTranslateParams(captionGroup);
+    const bg = captionGroup.firstChild;
+    const bounds = bg.getBBox();
+    const [offsetX, offsetY] = JSON.parse(captionOffset);
+    const [translateX, translateY] = calcTranslateParams(isRotated, offsetX, offsetY, bounds);
     // console.log(translateX, translateY);
     const transform = ( isRotated === 'true'
             ? `rotate(${-captionRotation}, ${markerCenter[0]}, ${markerCenter[1]}) translate(${translateX}, ${translateY})`

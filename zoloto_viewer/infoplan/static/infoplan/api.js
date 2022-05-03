@@ -83,12 +83,12 @@ function requestCaptionsPlacement(floor_code, onSuccess) {
     doApiCall('GET', API_MARKERS_CAPTION(floor_code), null, onSuccess);
 }
 
-function updateCaptionPlacement(markerUid, offset=undefined, rotation=undefined, onSuccess) {
+function updateCaptionPlacement(markerUid, offset, rotation, onSuccess) {
     let payload = {data: {}}
-    if (offset) {
+    if (offset !== undefined && offset !== null) {
         payload.data.offset = offset;
     }
-    if (rotation) {
+    if (rotation !== undefined && rotation !== null) {
         payload.data.rotation = rotation;
     }
     doApiCall('PUT', API_MARKER_CAPTION_ONE(markerUid), payload, onSuccess);

@@ -344,22 +344,18 @@ class MarkerCaptionView(View):
         except KeyError:
             return JsonResponse({'error': 'json object must contain field data'}, status=400)
 
-        try:
-            offset, rotation = data['offset'], data['rotation']
-        except KeyError:
-            return JsonResponse({'error': 'data must contain fields offset and rotation'}, status=400)
-        caption_placement.data = {
-            'offset': offset,
-            'rotation': rotation,
-        }
+        offset = data.get('offset', None)
+        rotation = data.get('rotation', None)
+        if offset is None and rotation is None:
+            return JsonResponse({'error': 'data must contain fields offset OR rotation'}, status=400)
+
+        if offset is not None:
+            caption_placement.data.update({'offset': offset})
+        if rotation is not None:
+            caption_placement.data.update({'rotation': rotation})
         caption_placement.save()
 
-        rep = marker.to_json()
-        rep.update({
-            'caption_placement': {
-                'data': caption_placement.data,
-            }
-        })
+        rep = caption_placement.to_json()
         return JsonResponse(rep)
 
 

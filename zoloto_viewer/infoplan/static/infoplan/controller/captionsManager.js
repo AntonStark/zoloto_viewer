@@ -3,12 +3,14 @@ function ControllerCaptions() {
     let captionsIndex = {};
 
     function showAllCaptions() {
+        hideAllCaptions();
         const floor = mapInteractionsController.pageCode();
         requestCaptionsPlacement(floor, _renderFloorCaptionsData);
     }
     function hideAllCaptions() {
         for (const [markerUid, caption] of Object.entries(captionsIndex)) {
             _removeDomElement(caption);
+            delete captionsIndex[markerUid];
         }
     }
 
@@ -67,10 +69,11 @@ function ControllerCaptions() {
         for (maybeCaptionGroup of e.path) {
             // console.log('maybeCaptionGroup', maybeCaptionGroup);
             captionMovement = maybeCaptionGroup.classList.contains('caption_group');
-            if (captionMovement)
+            if (captionMovement) {
+                movementTarget = maybeCaptionGroup;
                 break;
+            }
         }
-        movementTarget = maybeCaptionGroup;
         // console.log('handleMouseDown', 'captionMovement=', captionMovement, 'movementAllowed=', movementAllowed);
 
         movementStartPoint = getSvgCoordinates(e);
@@ -85,26 +88,62 @@ function ControllerCaptions() {
         updateCaptionPosition(movementTarget, moveOffset);
     }
     function handleMouseUp(e) {
-        // console.log('handleMouseUp', 'captionsController', e);
-        // remove throw mapInteractionsController.handleMouseUp
-        // mapScaleController.mapSvg().removeEventListener('mousemove', captionsController.handleMouseMove);
-
         const endPoint = getSvgCoordinates(e);
         const moveOffset = [endPoint[0] - movementStartPoint[0], endPoint[1] - movementStartPoint[1]];
-        // console.log(movementTarget.dataset);
-        // _updateHelper()
+        // send new offset and rotation and update from response
+        const originOffset = JSON.parse(movementTarget.dataset.originOffset);
+        const totalOffset = [originOffset[0] + moveOffset[0], originOffset[1] + moveOffset[1]];
+        _updateHelper(movementTarget, totalOffset);
 
         captionMovement = false;
         movementStartPoint = movementTarget = undefined;
-    //    todo послать на сервер и обновить из ответа рендер-параметры: x, y, dataset...
     }
 
     function handleClickRotate(e) {
-        console.log('caption_rotator');
+        let maybeCaptionGroup, isCaptionGroupTarget, captionGroupTarget;
+        for (maybeCaptionGroup of e.path) {
+            // console.log('maybeCaptionGroup', maybeCaptionGroup);
+            isCaptionGroupTarget = maybeCaptionGroup.classList.contains('caption_group');
+            if (isCaptionGroupTarget) {
+                captionGroupTarget = maybeCaptionGroup;
+                break;
+            }
+        }
+        // console.log('caption_rotator', markerUid, e, captionGroupTarget);
+        const isAlreadyRotated = captionGroupTarget.dataset.isRotated;
+        const newRotation = ( isAlreadyRotated === 'true' ? 0 : 90);
+        _updateHelper(captionGroupTarget, undefined, newRotation);
     }
 
-    function _updateHelper(offset, rotation) {
-        updateCaptionPlacement()
+    function _updateHelper(captionGroup, offset=undefined, rotation=undefined) {
+        function successHandler(rep) {
+            //    {
+            //     "data": {
+            //         "offset": [
+            //             -10.8582763671875,
+            //             69.2216796875
+            //         ],
+            //         "rotation": 0
+            //     },
+            //     "marker": {
+            //         "marker": "96b8a36f-2333-4312-aa69-f006b1feb50a",
+            //         "number": "110_S/L2/2",
+            //         "position": {
+            //             "center_x": 1268,
+            //             "center_y": 651,
+            //             "rotation": 91
+            //         },
+            //         "layer": "110_S"
+            //     }
+            // }
+            console.log('successHandler', rep.data.offset);
+            setupCaptionGroupGeometryDataset(captionGroup, rep);
+            console.log('after setupCaptionGroupGeometryDataset', captionGroup.dataset.captionOffset)
+            applyProperTransform(captionGroup);
+        }
+        const markerUid = captionGroup.dataset.markerUid;
+        console.log('_updateHelper', offset);
+        updateCaptionPlacement(markerUid, offset, rotation, successHandler);
     }
 
     return {
