@@ -24,8 +24,8 @@
 <form style="width: fit-content;">
     <h2>Группировка носителей</h2>
     <div class="group_setup_pdf_btn__wrapper">
-        <label for="layer_grouping_1" class="group_setup_pdf_btn__btn fill-button"
-               onclick="handleFileDownloadWithRetryAfter('{% url 'get_pdf_file' project.id %}?autogroup_remains=true')">
+        <label for="layer_grouping_1" class="group_setup_pdf_btn__btn fill-button" id="download_pdf_label"
+               data-target-url="{% url 'get_pdf_file' project.id %}?autogroup_remains=true">
             <span class="z_pict pict_pos_middle">&#xE916;</span>
             PDF
             <input id="layer_grouping_1" type="button" style="display: none;">

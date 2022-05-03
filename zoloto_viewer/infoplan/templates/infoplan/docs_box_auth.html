@@ -31,7 +31,7 @@
             <td>
                 <span class="z_pict pict_pos_middle small">&nbsp;&nbsp;</span>
                 {#                <a href="{% url 'get_pdf_file' project.id %}">PDF</a>#}
-                <span onclick="handleFileDownloadWithRetryAfter('{% url 'get_pdf_file' project.id %}')">PDF</span>
+                <span id="download_pdf_span" data-target-url="{% url 'get_pdf_file' project.id %}">PDF</span>
             </td>
         </tr>
         </tbody>

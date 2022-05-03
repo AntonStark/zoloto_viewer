@@ -187,6 +187,12 @@ function setupAllBuckets() {
     setupAddBtnHandlers();
 }
 
+function addDownloadPdfHandler() {
+    const downloadPdfLabel = document.getElementById('download_pdf_label');
+    downloadPdfLabel.addEventListener('click',
+        (e) => e.currentTarget === e.target && handleFileDownloadWithRetryAfter(downloadPdfLabel.dataset.targetUrl))
+}
+
 "HANDLERS"
 
 function makeUpdateHandlerNonGroupedAndBucket(groupNum) {
@@ -215,3 +221,4 @@ function handleExcludeLayer(e) {
 }
 
 setupAllBuckets();
+addDownloadPdfHandler();
