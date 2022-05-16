@@ -45,8 +45,10 @@ function init() {
     document.getElementById('map_control_minus').addEventListener('click', handleClickMapMinus);
 
     const downloadPdfSpan = document.getElementById('download_pdf_span');
-    downloadPdfSpan.addEventListener('click',
-        (e) => e.currentTarget === e.target && handleFileDownloadWithRetryAfter(downloadPdfSpan.dataset.targetUrl));
+    if (downloadPdfSpan) {
+        downloadPdfSpan.addEventListener('click',
+            (e) => e.currentTarget === e.target && handleFileDownloadWithRetryAfter(downloadPdfSpan.dataset.targetUrl));
+    }
 
     const insertModeBtn = document.getElementById('menu_actions_option1');
     if (insertModeBtn) {

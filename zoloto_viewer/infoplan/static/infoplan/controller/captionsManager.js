@@ -58,6 +58,8 @@ function ControllerCaptions() {
     let movementTarget = undefined;
     let movementStartPoint = undefined;
 
+    function isCaptionMovement() { return captionMovement; }
+
     function handleMouseDown(e) {
         if (!mapInteractionsController.isCaptionsMode())
             return;
@@ -87,11 +89,15 @@ function ControllerCaptions() {
         updateCaptionPosition(movementTarget, moveOffset);
     }
     function handleMouseUp(e) {
+        // console.log('handleMouseUp')
         const endPoint = getSvgCoordinates(e);
+        // console.log('endPoint', endPoint)
         const moveOffset = [endPoint[0] - movementStartPoint[0], endPoint[1] - movementStartPoint[1]];
         // send new offset and rotation and update from response
         const originOffset = JSON.parse(movementTarget.dataset.originOffset);
+        // console.log('originOffset', originOffset)
         const totalOffset = [originOffset[0] + moveOffset[0], originOffset[1] + moveOffset[1]];
+        // console.log('totalOffset', totalOffset)
         _updateHelper(movementTarget, totalOffset);
 
         captionMovement = false;
@@ -148,6 +154,8 @@ function ControllerCaptions() {
     return {
         showAll: showAllCaptions,
         hideALl: hideAllCaptions,
+
+        isCaptionMovement: isCaptionMovement,
 
         handleMouseDown : handleMouseDown,
         handleMouseMove : handleMouseMove,

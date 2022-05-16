@@ -267,6 +267,14 @@ function ControllerMapInteractions() {
         mapScaleController.mapSvg().removeEventListener('mousemove', mapInteractionsController.handleMouseMove);
         mapScaleController.mapSvg().removeEventListener('mousemove', captionsController.handleMouseMove);
 
+        // если подпись выпрыгнула из под мышки (проход через ноль) то
+        // срабатывает этот метод, а не captionsController.handleMouseUp и нужно перенаправить
+        if (captionsController.isCaptionMovement()) {
+            // delegate
+            captionsController.handleMouseUp(e);
+            return;
+        }
+
         if (markerMovement) {
             // обновлять данные в индексе ControllerMarkerCircles.circleCenterIndex и положение сообщения
             markerCirclesManager.finishMovement(getSelection());
