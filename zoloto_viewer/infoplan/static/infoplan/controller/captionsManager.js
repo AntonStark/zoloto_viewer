@@ -27,6 +27,7 @@ function ControllerCaptions() {
         for (const captionGroup of captionGroupList) {
             // prepend every caption's group with background rect
             insertBackground(captionGroup);
+            insertRotatorExtender(captionGroup);
             applyProperTransform(captionGroup);
             _registerCaptionGroup(captionGroup);
             _setMoveHandlers(captionGroup);
