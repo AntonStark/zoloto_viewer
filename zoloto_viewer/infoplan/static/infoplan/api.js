@@ -1,5 +1,6 @@
 "use strict";
 
+const API_PING               = `${BASE_URL}/viewer/api/ping/`;
 const API_MARKER_CREATE      = `${BASE_URL}/viewer/api/marker/`;
 const API_MARKER_CLIPBOARD   = `${BASE_URL}/viewer/api/marker/from_clipboard/`;
 const API_MARKER_GET_DATA    = (markerUid) => `${BASE_URL}/viewer/api/marker/${markerUid}`;
@@ -14,7 +15,7 @@ const API_MARKER_CAPTION_ONE = (markerUid) => `${BASE_URL}/viewer/api/marker/${m
 const API_MARKERS_CAPTION    = (code)      => `${BASE_URL}/viewer/api/markers/caption/?floor=${code}`;
 const API_PUT_PAGE_DATA      = (code)      => `${BASE_URL}/viewer/page/${code}/edit/`
 
-function doApiCall(method, url, data, onResponse, onError=undefined) {
+function doApiCall(method, url, data, onResponse, onError=undefined, configure=undefined) {
     let req = new XMLHttpRequest();
     req.open(method, url);
 
@@ -33,6 +34,12 @@ function doApiCall(method, url, data, onResponse, onError=undefined) {
             }
         }
     };
+
+    if (configure) {
+        if (configure.timeout) {
+            req.timeout = configure.timeout;
+        }
+    }
 
     req.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
     req.send(JSON.stringify(data));

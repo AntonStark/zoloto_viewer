@@ -11,6 +11,7 @@ const enabledLayersController = ControllerEnabledLayers();
 const mapInteractionsController = ControllerMapInteractions();
 const areasListController = ControllerAreasList();
 const captionsController = ControllerCaptions();
+const statusComponent = StatusComponent();
 
 
 let SVG_VIEWPORT_BOUNDS = undefined;
@@ -75,6 +76,10 @@ function init() {
 
     window.addEventListener('copy', mapInteractionsController.handleCopyEvent);
     window.addEventListener('paste', mapInteractionsController.handlePasteEvent);
+
+    statusComponent.init();
+    checkApiStatus();
+    setInterval(checkApiStatus, 30000);
 }
 window.addEventListener('load', init);
 

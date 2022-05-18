@@ -4,6 +4,7 @@ from zoloto_viewer.infoplan import views
 
 
 urlpatterns = [
+    path('ping/', views.ping_api, name='ping_api'),
     path('marker/', views.create_marker, name='create_marker'),
     path('marker/from_clipboard/', views.create_marker_clipboard, name='create_marker_clipboard'),
     path('marker/<str:marker_uid>', views.MarkerView.as_view(), name='marker_get_data'),

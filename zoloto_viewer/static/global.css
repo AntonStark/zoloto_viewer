@@ -193,6 +193,9 @@ input.disabled {
     font: normal small-caps 400 14px sans-serif;
 }
 
+.actions_status {
+    font-size: 10px;
+}
 
 
 #project-page-left-column hr {

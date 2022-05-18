@@ -16,6 +16,11 @@ from zoloto_viewer.infoplan.utils import variable_transformations as transformat
 from zoloto_viewer.viewer.models import Layer, Page, Project, LayerGroup
 
 
+@http.require_GET
+def ping_api(request):
+    return JsonResponse({'status': 'OK'}, status=200)
+
+
 def marker_api(method):
     def _decorated_method(request, marker_uid):
         try:
