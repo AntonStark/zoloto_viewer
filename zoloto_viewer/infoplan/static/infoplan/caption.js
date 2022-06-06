@@ -60,21 +60,22 @@ function setupCaptionGroupGeometryDataset(captionGroup, data) {
     captionGroup.dataset.captionOffset = JSON.stringify(captionOffset);
 }
 
-function insertBackground(captionGroup) {
+function insertRotatorExtender(captionGroup) {
     const rotator = captionGroup.getElementsByClassName('caption_rotator')[0];
     const bounds = rotator.getBBox();
-    let bg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    let extender = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
 
-    bg.setAttribute("x", bounds.x + bounds.width)
-    bg.setAttribute("y", bounds.y)
-    bg.setAttribute("width", 5 * bounds.width)
-    bg.setAttribute("height", bounds.height)
-    bg.setAttribute("fill", 'white')
+    extender.setAttribute("x", bounds.x + bounds.width)
+    extender.setAttribute("y", bounds.y)
+    extender.setAttribute("width", 5 * bounds.width)
+    extender.setAttribute("height", bounds.height)
+    extender.setAttribute("fill", 'white')
+    extender.setAttribute("opacity", '0')
 
-    captionGroup.insertBefore(bg, rotator);
+    captionGroup.insertBefore(extender, rotator);
 }
 
-function insertRotatorExtender(captionGroup) {
+function insertBackground(captionGroup) {
     const caption = captionGroup.firstChild;
     const bounds = caption.getBBox();
     let bg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
