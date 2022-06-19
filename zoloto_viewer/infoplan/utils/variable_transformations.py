@@ -6,8 +6,20 @@ from collections import namedtuple
 from typing import List
 
 Variable = namedtuple('Variable', 'value variable_id')
-PICT_PATTERN = r'@[A-z\d]+@'
+PICT_PATTERN = r'@[A-z\d(←↖↑↗→↘↓↙)…]+@'
 MASTER_PAGE_MARK = 'mp:'
+
+
+def check_pict_pattern():
+    test = [
+        (pict, found := bool(re.findall(PICT_PATTERN, pict)))
+        for pict, _ in ReplacePictCodes.REPLACE_TABLE
+    ]
+    return [
+        pict
+        for pict, found in test
+        if not found
+    ]
 
 
 class Transformation(abc.ABC):

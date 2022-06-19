@@ -35,7 +35,7 @@ class Definitions:
     DEFAULT_FONT_NAME = 'FreePTSans'
     DEFAULT_FONT_FILE = os.path.join(zoloto_viewer__documents__pdf_generation, 'fonts/pt_sans.ttf')
 
-    PICT_FONT_NAME = 'Picts_v1'
+    PICT_FONT_NAME = 'Picts_v2'
     PICT_FONT_FILE = os.path.join(zoloto_viewer, 'static/picts_v2.ttf')
 
     MARK_FONT_SIZE = 15
