@@ -86,6 +86,10 @@ class MessageElem:
                 + self.PADDING_RIGHT
         if width < self.MIN_WIDTH:
             width = self.MIN_WIDTH
+        # not less than number width
+        number_width = self._number_width()
+        if width < number_width:
+            width = number_width
         return width
 
     def set_canvas(self, canvas):
@@ -109,7 +113,7 @@ class MessageElem:
     def _draw_number(self, position):
         x_start, y_start = position
         self.canvas.setFont(self.FONT_NAME, self.FONT_SIZE)
-        nr_w = self.canvas.stringWidth(self.number) + self.PADDING_LEFT + self.PADDING_RIGHT
+        nr_w = self._number_width()
         nr_h = self.NUMBER_RECT_HEIGHT
         x_text = x_start + self.PADDING_LEFT
         y_top = y_start + self.get_height()
@@ -155,6 +159,10 @@ class MessageElem:
             ]
             # 1.2 for interline space
             self.side_heights[side] = 1.2 * sum(line_heights)
+
+    def _number_width(self):
+        self.canvas.setFont(self.FONT_NAME, self.FONT_SIZE)
+        return self.canvas.stringWidth(self.number) + self.PADDING_LEFT + self.PADDING_RIGHT
 
 
 class TextPictLine:
