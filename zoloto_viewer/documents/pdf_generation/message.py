@@ -64,15 +64,18 @@ class MessageElem:
         height = 2 * 1.2 * self.FONT_SIZE + max(self.side_heights.values()) + self.PADDING_BOTTOM
         return height
 
-    def get_side_header(self, side: int):
-        side_labels = {
-            1: 'Сторона A',
-            2: 'Сторона B',
-            3: 'Сторона C',
-            4: 'Сторона D',
-        }
-        side_header = side_labels.get(side, 'Сторона') if self.side_count != 1 else None
-        return side_header
+    def get_side_header(self, side: int) -> str:
+        if self.side_count == 1:
+            return ''
+        elif self.side_count == 8:
+            return f'Лопасть {side}'
+        else:
+            return {
+                1: 'Сторона A',
+                2: 'Сторона B',
+                3: 'Сторона C',
+                4: 'Сторона D',
+            }.get(side, 'Сторона')
 
     def get_width(self):
         if self.max_var_width is None:
