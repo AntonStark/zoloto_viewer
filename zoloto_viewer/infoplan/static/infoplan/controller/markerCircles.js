@@ -183,7 +183,7 @@ function ControllerMarkerCircles() {
             return;
 
         const marker = messageBoxManager.getMarker(markerUid);
-        marker.setAttribute('transform', `rotate(-${m.rotation + delta} ${m.pos_x} ${m.pos_y})`);
+        marker.setAttribute('transform', `rotate(${-(m.rotation + delta)} ${m.pos_x} ${m.pos_y})`);
         _addMarkersTouched([markerUid]);
     }
     function updateRotation(markerUidArray, delta) {
