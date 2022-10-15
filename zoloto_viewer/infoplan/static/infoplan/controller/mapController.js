@@ -144,10 +144,10 @@ function ControllerMapInteractions() {
             'ArrowRight': [1, 0],
         }
         const acceleration = e.shiftKey;
-        if (e.code === 'KeyQ') {
-            handleRotationNegative(acceleration);
-        } else if (e.code === 'KeyE') {
-            handleRotationPositive(acceleration);
+        if (e.code === 'KeyQ') {            // positive rotation
+            handleRotation(true, acceleration)
+        } else if (e.code === 'KeyE') {     // negative rotation
+            handleRotation(false, acceleration);
         } else if (keyToOffset.hasOwnProperty(e.code)) {
             let offset = keyToOffset[e.code];
             if (acceleration) {
@@ -304,12 +304,10 @@ function ControllerMapInteractions() {
         markerCirclesManager.render(selectionPredicate, toggleIsSelected);
     }
 
-    function handleRotationPositive(accelerated) {
-        const rotationDelta = (accelerated ? 10 : 1);
-        markerCirclesManager.updateRotation(getSelection(), rotationDelta);
-    }
-    function handleRotationNegative(accelerated) {
-        const rotationDelta = (accelerated ? -10 : -1);
+    function handleRotation(isPositive, isAccelerated) {
+        const posFactor = (isPositive ? 1 : -1);
+        const accFactor = (isAccelerated ? 10 : 1);
+        const rotationDelta = posFactor * accFactor;
         markerCirclesManager.updateRotation(getSelection(), rotationDelta);
     }
 
