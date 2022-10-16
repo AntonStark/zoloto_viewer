@@ -45,6 +45,11 @@ function init() {
     document.getElementById('map_control_plus').addEventListener('click', handleClickMapPlus);
     document.getElementById('map_control_minus').addEventListener('click', handleClickMapMinus);
 
+    document.getElementById('all-layers-toggle-invisible')
+        .addEventListener('click', enabledLayersController.handleSetAllInvisible);
+    document.getElementById('all-layers-toggle-visible')
+        .addEventListener('click', enabledLayersController.handleSetAllVisible);
+
     const downloadPdfSpan = document.getElementById('download_pdf_span');
     if (downloadPdfSpan) {
         downloadPdfSpan.addEventListener('click',

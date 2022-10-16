@@ -362,6 +362,25 @@ li.active .icon {
     color: var(--layer-color);
 }
 
+
+.layers-box-panel {
+    font-size: smaller;
+}
+
+.layers-box-panel a {
+    cursor: pointer;
+    display: none;
+}
+
+.layers-box-panel a.active {
+    display: unset;
+}
+
+
+ul.layers-box {
+    margin-top: 4px;
+}
+
 ul.layers-box li {
     color: var(--layer-color);
 }
@@ -563,7 +582,7 @@ g.layer_markers.enabled_layer {
 }
 
 .pict_pos_middle {
-    vertical-align: middle;
+    vertical-align: sub;
 }
 
 .small {

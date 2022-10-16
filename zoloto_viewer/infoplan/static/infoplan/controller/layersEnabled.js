@@ -6,13 +6,32 @@ function ControllerEnabledLayers() {
     const ENABLED_LAYER_CLASS = 'enabled_layer';
     const PAGE_LINK_CLASS = 'project-page-link';
 
+    const lsKeyToggleAll = 'ZW:layers-box:toggle-all-direction';
+
     let layersLiElemIndex = {};
     let positionsIndex = {};
 
+    let toggleDirectionTurnOn;
+
     const activeLayerTitles = new Set();
 
+    function _adjustHiddenLayersUrlParam(url, hiddenLayers) {
+        let arr = [];
+        for (const [title, disabled] of Object.entries(hiddenLayers)) {
+            if (disabled) {
+                arr.push(title);
+            }
+        }
+
+        url.searchParams.delete(HIDDEN_LAYERS_PARAM);
+        if (arr.length > 0) {
+            url.searchParams.append(HIDDEN_LAYERS_PARAM, arr.join(LAYER_TITLE_SEP));
+        }
+        return url;
+    }
     function _toggleLayerUrlParam(actualUrl, title) {
         const paramValue = actualUrl.searchParams.get(HIDDEN_LAYERS_PARAM);
+
         const layerTitles = ( paramValue ? paramValue.split(LAYER_TITLE_SEP) : []);
         let hiddenLayers = layerTitles
             .reduce((hash, l, _) => {
@@ -20,19 +39,8 @@ function ControllerEnabledLayers() {
                 return hash;
             }, {});
         hiddenLayers[title] = !hiddenLayers[title];
-        // console.log(hiddenLayers, hiddenLayers[title]);
 
-        actualUrl.searchParams.delete(HIDDEN_LAYERS_PARAM);
-        let arr = [];
-        for (const [title, disabled] of Object.entries(hiddenLayers)) {
-            if (disabled) {
-                arr.push(title);
-            }
-        }
-        if (arr.length > 0) {
-            actualUrl.searchParams.append(HIDDEN_LAYERS_PARAM, arr.join(LAYER_TITLE_SEP));
-        }
-        return actualUrl;
+        return _adjustHiddenLayersUrlParam(actualUrl, hiddenLayers);
     }
     function _setupEnabledLayersMarksListeners() {
         const elements = document.getElementsByClassName('side-box-list__item__marks-box');
@@ -44,6 +52,38 @@ function ControllerEnabledLayers() {
         for (let title in layersLiElemIndex) {
             const layerLiTag = layersLiElemIndex[title];
             layerLiTag.classList.toggle('active', activeLayerTitles.has(title));
+        }
+    }
+    function _syncToggleAllLayersControls() {
+        const controlTurnOff = document.getElementById('all-layers-toggle-invisible');
+        const controlTurnOn = document.getElementById('all-layers-toggle-visible');
+        if (!controlTurnOff || !controlTurnOn) return;
+
+        const isDirectionTurnOn = toggleDirectionTurnOn;
+        controlTurnOn.classList.toggle('active', isDirectionTurnOn);
+        controlTurnOff.classList.toggle('active', !isDirectionTurnOn);
+    }
+
+    function _setToggleAllLayersDirection(isDirectionTurnOn) {
+        toggleDirectionTurnOn = isDirectionTurnOn;
+        window.localStorage.setItem(lsKeyToggleAll, toggleDirectionTurnOn);
+        _syncToggleAllLayersControls();
+    }
+
+    function _syncToggleAll_FromLayersList() {
+        function _isAllEnabled() {
+            function isTrue(v) {return v === true;}
+            return Object.keys(layersLiElemIndex).map(isEnabled).every(isTrue);
+        }
+        function _isAllDisabled() {
+            function isFalse(v) {return v === false;}
+            return Object.keys(layersLiElemIndex).map(isEnabled).every(isFalse);
+        }
+
+        if (_isAllEnabled()) {
+            _setToggleAllLayersDirection(false);
+        } else if ( _isAllDisabled()) {
+            _setToggleAllLayersDirection(true);
         }
     }
 
@@ -67,13 +107,20 @@ function ControllerEnabledLayers() {
         }
 
         _setupEnabledLayersMarksListeners();
+
+        toggleDirectionTurnOn = window.localStorage.getItem(lsKeyToggleAll) === 'true';
+        _syncToggleAll_FromLayersList();
+        _syncToggleAllLayersControls();
     }
 
-    function toggleLayer(layerTitle) {
+    function _toggleLayerRelatedComponents(layerTitle, state=undefined) {
         const layerClassTitle = 'layer-' + layerTitle;
         const layerRelatedElements = document.getElementsByClassName(layerClassTitle);
         for (const el of layerRelatedElements)
-            el.classList.toggle(ENABLED_LAYER_CLASS);
+            el.classList.toggle(ENABLED_LAYER_CLASS, state);
+    }
+    function toggleLayer(layerTitle) {
+        _toggleLayerRelatedComponents(layerTitle);
 
         let actualUrl = new URL(document.location.href);
         const newUrl = _toggleLayerUrlParam(actualUrl, layerTitle);
@@ -84,7 +131,53 @@ function ControllerEnabledLayers() {
             let targetUrl = new URL(linkItem.href);
             linkItem.href = _toggleLayerUrlParam(targetUrl, layerTitle);
         }
+
+        _syncToggleAll_FromLayersList();
     }
+    function _handleSetAllVisible() {
+
+        for (const layerTitle in layersLiElemIndex) {
+            _toggleLayerRelatedComponents(layerTitle, true);
+        }
+
+        const targetHiddenLayersParam = {};
+
+        let actualUrl = new URL(document.location.href);
+        const newUrl = _adjustHiddenLayersUrlParam(actualUrl, targetHiddenLayersParam);
+        window.history.pushState({}, '', newUrl.toString());
+
+        const projectPageLinks = document.getElementsByClassName(PAGE_LINK_CLASS);
+        for (const linkItem of projectPageLinks) {
+            let targetUrl = new URL(linkItem.href);
+            linkItem.href = _adjustHiddenLayersUrlParam(targetUrl, targetHiddenLayersParam);
+        }
+
+        _setToggleAllLayersDirection(false);
+    }
+    function _handleSetAllInvisible() {
+
+        for (const layerTitle in layersLiElemIndex) {
+            _toggleLayerRelatedComponents(layerTitle, false);
+        }
+        resetActiveLayer();
+
+        // hack there: layersLiElemIndex contain all layer titles as keys and values cast to true
+        const targetHiddenLayersParam = layersLiElemIndex;
+
+        let actualUrl = new URL(document.location.href);
+        const newUrl = _adjustHiddenLayersUrlParam(actualUrl, targetHiddenLayersParam);
+        window.history.pushState({}, '', newUrl.toString());
+
+        const projectPageLinks = document.getElementsByClassName(PAGE_LINK_CLASS);
+        for (const linkItem of projectPageLinks) {
+            let targetUrl = new URL(linkItem.href);
+            linkItem.href = _adjustHiddenLayersUrlParam(targetUrl, targetHiddenLayersParam);
+        }
+
+        _setToggleAllLayersDirection(true);
+
+    }
+
     function isEnabled(layerTitle) {
         const layerLiTag = layersLiElemIndex[layerTitle];
         if (!layerLiTag)
@@ -148,5 +241,7 @@ function ControllerEnabledLayers() {
         isActive : isActive,
 
         shift: shiftActiveLayerToVisible,
+        handleSetAllVisible     : _handleSetAllVisible,
+        handleSetAllInvisible   : _handleSetAllInvisible,
     }
 }
