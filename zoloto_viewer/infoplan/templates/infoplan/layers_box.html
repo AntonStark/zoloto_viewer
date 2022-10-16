@@ -1,4 +1,14 @@
 <div class="menu_header">типы носителей</div>
+
+<div class="layers-box-panel">
+    <a id="all-layers-toggle-invisible" class="active">
+        <span class="z_pict pict_pos_middle small">&#xE915;</span> Выключить все
+    </a>
+    <a id="all-layers-toggle-visible">
+        <span class="z_pict pict_pos_middle small">&#xE914;</span> Включить все
+    </a>
+</div>
+
 <ul class="layers-box side_box_list">
 {% load layers_visibility %}
 {% for l in layers %}
