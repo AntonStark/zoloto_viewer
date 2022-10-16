@@ -101,10 +101,10 @@ function ControllerEnabledLayers() {
             // console.log(layerLiTag);
         }
 
-        if (positionsIndex[0] && UI_AUTH) {
-            setActiveLayer(positionsIndex[0]);
-            shiftActiveLayerToVisible();
-        }
+        // if (positionsIndex[0] && UI_AUTH) {
+        //     setActiveLayer(positionsIndex[0]);
+        //     shiftActiveLayerToVisible();
+        // }
 
         _setupEnabledLayersMarksListeners();
 
@@ -202,7 +202,12 @@ function ControllerEnabledLayers() {
     }
     function getActiveLayer() {
         function withMinimalNumber(one, two) {return ( Number.parseInt(one) < Number.parseInt(two) ? one : two ); }
-        return Array.from(activeLayerTitles.values()).reduce(withMinimalNumber)
+
+        try {
+            return Array.from(activeLayerTitles.values()).reduce(withMinimalNumber)
+        } catch (e) {
+            return null;
+        }
     }
     function isActive(layerTitle) {
         return activeLayerTitles.has(layerTitle);
@@ -221,6 +226,11 @@ function ControllerEnabledLayers() {
         while (!isEnabled(active)) {    // set active to next
             const next = nextTitle(active);
             if (!next) {
+                const firstLayerTitle = positionsIndex[0]
+                setActiveLayer(firstLayerTitle);
+                if (!isEnabled(firstLayerTitle)) {
+                    toggleLayer(firstLayerTitle);
+                }
                 break;
             }
             setActiveLayer(next);
