@@ -76,6 +76,8 @@ function ControllerMapInteractions() {
         }
         dropSelection();
     }
+
+    // marker creator
     function _createHelper(posX, posY) {
         createMarker({
             project: projectUid,
@@ -92,8 +94,15 @@ function ControllerMapInteractions() {
             markerCirclesManager.render(mapInteractionsController.isInSelection);
         });
     }
-    function _pasteMarkerHelper(clipboardContent) {
-        clipMarkers(clipboardContent,
+
+    // marker copy creators
+    function _pasteMarkerHelper(markerUidArray) {
+        let payload = {
+            'clipboard_uuid': markerUidArray,
+            'project': mapInteractionsController.getProjectUid(),
+            'page': mapInteractionsController.pageCode(),
+        };
+        clipMarkers(payload,
             function (rep) {
             dropSelection();
             for (const elem of rep.created) {
@@ -101,6 +110,25 @@ function ControllerMapInteractions() {
                 addToSelection(elem.marker);
             }
             markerCirclesManager.render(mapInteractionsController.isInSelection);
+        });
+    }
+    function _duplicateMarkerHelper(markerUidArray) {
+        let payload = {
+            'clipboard_uuid': markerUidArray,
+            'project': mapInteractionsController.getProjectUid(),
+            'page': mapInteractionsController.pageCode(),
+            'shift': false,
+        };
+        clipMarkers(payload,
+            function (rep) {
+            dropSelection();
+            for (const elem of rep.created) {
+                renderMarkerElement(elem);
+                addToSelection(elem.marker);
+            }
+            markerCirclesManager.render(mapInteractionsController.isInSelection);
+
+            mapScaleController.mapSvg().addEventListener('mousemove', mapInteractionsController.handleMouseMove);
         });
     }
 
@@ -237,6 +265,14 @@ function ControllerMapInteractions() {
         else {
             movementStartPoint = getSvgCoordinates(e);
             const markerUid = maybeCircleElement.dataset.markerUid;
+
+            if (e.altKey) {
+                // если зажат Alt/Option, то применяем конструктор копированием аналогичный _pasteMarkerHelper
+                // но обработчик mousemove устанавливается в onSuccess чтобы не затронуть существующий маркер
+                _duplicateMarkerHelper([markerUid]);
+                return;
+            }
+
             if (!isInSelection(markerUid)) {
                 if (!e.shiftKey) {
                     dropSelection();
@@ -329,12 +365,9 @@ function ControllerMapInteractions() {
 
         // console.debug('Paste start!');
         function onClipboardResolve(text) {
-            let payload = decodeClipboardContent(text);
-            payload.project = mapInteractionsController.getProjectUid();
-            payload.page = mapInteractionsController.pageCode();
-
-            // console.debug('Paste!', payload);
-            _pasteMarkerHelper(payload);
+            const markerUidArray = decodeClipboardContent(text);
+            // console.debug('Paste!', markerUidArray);
+            _pasteMarkerHelper(markerUidArray);
         }
         function onError(e) {
             alert('Доступ к буфферу заблокирован.\n' +

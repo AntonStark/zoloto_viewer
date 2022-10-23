@@ -72,6 +72,7 @@ def create_marker_clipboard(request):
         return JsonResponse({'error': 'request body must be json'}, status=400)
     except KeyError:
         return JsonResponse({'error': 'json object must contain fields: ' + ', '.join(fields_)}, status=400)
+    need_shift = req.get('shift')
 
     project = get_object_or_404(Project, uid=uuid.UUID(project))
     page = get_object_or_404(Page, project=project, code=page)
@@ -82,7 +83,7 @@ def create_marker_clipboard(request):
             m = Marker.objects.get(uid=uuid.UUID(marker_uid))
         except Marker.DoesNotExist:     # just skip bad uuid
             continue
-        mc = m.copy(floor=page)
+        mc = m.copy(floor=page, shift=need_shift)
         mc.layer.save()     # to update layer date_updated
         markers_created.append(mc)
 

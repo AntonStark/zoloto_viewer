@@ -159,7 +159,7 @@ function renderMarkerElement(data) {
         use.setAttributeNS(null, 'x', pos.center_x);
         use.setAttributeNS(null, 'y', pos.center_y);
         use.setAttributeNS(null, 'transform',
-            `rotate(${pos.rotation} ${pos.center_x} ${pos.center_y})`);
+            `rotate(${-pos.rotation} ${pos.center_x} ${pos.center_y})`);
 
         use.setAttributeNS(null, 'class', 'plan_marker');
         use.setAttributeNS(null, 'data-marker-uid', markerUid);

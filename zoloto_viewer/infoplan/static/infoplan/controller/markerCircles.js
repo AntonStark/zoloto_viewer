@@ -264,6 +264,7 @@ function ControllerMarkerCircles() {
         delete  : deleteMarkerCircleGroup,
         sync    : updateCorrectness,
         position: getCircleCenter,
+        mPos    : markerPosition,
         render  : renderSelection,
 
         setSelectionRect: setSelectionRect,

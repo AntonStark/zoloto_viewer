@@ -24,5 +24,6 @@ function encodeClipboardContent(markerUidArray) {
 }
 
 function decodeClipboardContent(content_string) {
-    return JSON.parse(content_string);
+    const parsedClipboard = JSON.parse(content_string)
+    return parsedClipboard.clipboard_uuid;
 }

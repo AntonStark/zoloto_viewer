@@ -122,7 +122,10 @@ class Marker(models.Model):
         if need_create_fingerpost_entry:
             self._create_fingerpost_entry()
 
-    def copy(self, copy_variables=True, floor=None, pos_x=None, pos_y=None, rotation=None) -> 'Marker':
+    def copy(self, copy_variables=True, floor=None, pos_x=None, pos_y=None, rotation=None, shift=None) -> 'Marker':
+        if shift is None:
+            shift = True
+
         mc = self.__class__(
             layer=self.layer,
             floor=self.floor,
@@ -133,7 +136,10 @@ class Marker(models.Model):
 
         if floor and floor != self.floor:
             mc.floor = floor
-        else:   # move a little to prevent overlay
+            shift = False
+
+        # move a little to prevent overlay
+        if shift:
             mc.pos_x += 30
             mc.pos_y += 30
 
