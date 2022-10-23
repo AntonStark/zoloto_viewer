@@ -97,7 +97,7 @@ class Marker(models.Model):
 
     @property
     def number(self):
-        return f'{self.layer.title}/{self.floor.floor_caption}/{self.ordinal}'
+        return f'{self.layer.title}  {self.floor.floor_caption}  {self.ordinal}'
 
     @property
     def neg_rotation(self):
