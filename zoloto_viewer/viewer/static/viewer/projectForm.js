@@ -89,7 +89,6 @@ const cellInit = {
         input.type = 'text';
         input.name = 'floor_level_' + btoa(fileDesc.name);
         input.placeholder = 'Отметка 0.000';
-        input.required = true;
         td.append(input);
         return td;
     },
@@ -132,7 +131,7 @@ function onPlanFilesChange() {
                 'При сохранении он будет заменён выбранным.')
         }
         else {
-            const tr = buildRow(file, [0, 1, 2, 4, 5], {
+            const tr = buildRow(file, [0, 1, 2, 4, 5, 6], {
                 totalRows: planTableElement.childElementCount
             });
             tr.id = planTableElement.childElementCount;
