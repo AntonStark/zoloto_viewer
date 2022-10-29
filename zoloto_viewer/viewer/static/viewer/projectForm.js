@@ -86,8 +86,7 @@ const cellInit = {
     5: function (fileDesc, extra) {
         let td = document.createElement('td');
         let input = document.createElement('input');
-        input.type = 'number';
-        input.step = '0.001';
+        input.type = 'text';
         input.name = 'floor_level_' + btoa(fileDesc.name);
         input.placeholder = 'Отметка 0.000';
         input.required = true;

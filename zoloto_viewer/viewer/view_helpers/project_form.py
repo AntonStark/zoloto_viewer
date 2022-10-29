@@ -70,7 +70,7 @@ def parse_levels(req_post):
         elif k.startswith(LEVEL_LABEL):
             encoded = k[len(LEVEL_LABEL):]
             filename = base64.decodebytes(encoded.encode('utf-8')).decode('utf-8')
-            floor_levels[filename] = float(v.replace(',', '.'))
+            floor_levels[filename] = v
 
     captions_to_levels = {
         floor_captions[filename]: offset

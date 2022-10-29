@@ -31,7 +31,7 @@
         <div style="color: red;"><small>
             Чтобы заменить изображение монтажной области просто добавьте новое с такой же подписью.
             <br>
-            Удалять сущестующий файл не нужно.
+            Удалять существующий файл не нужно.
         </small></div>
     {% endif %}
     <table>
@@ -45,8 +45,8 @@
                                style="display: none;"></td>
                     <td>{{ filename }}</td>
                     <td><a class="mark-delete"
-                           onclick="deleteFileHandler('{{ filename }}', this.parentNode.parentNode)">&#x2A09</a></td>
-                    <td><input type="number" step="0.001" name="floor_level_{{ filename|as_base64 }}" value="{{ p.level|default_if_none:'' }}"
+                           onclick="deleteFileHandler('{{ filename }}', this.parentNode.parentNode)">&#x2A09;</a></td>
+                    <td><input type="text" name="floor_level_{{ filename|as_base64 }}" value="{{ p.level|default_if_none:'' }}"
                                placeholder="Отметка 0.000" required></td>
                     <td><input type="text" name="floor_offset_{{ filename|as_base64 }}"
                                class="plan-row-offset-input disabled" style="visibility: hidden;"

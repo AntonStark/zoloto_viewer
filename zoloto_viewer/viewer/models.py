@@ -324,7 +324,7 @@ class Page(models.Model):
     indd_floor = models.TextField(blank=False, null=False, editable=False)      # текст, лежащий на слое floor
     floor_caption = models.TextField(null=True)                                 # текст, отображаемый на странице
     document_offset = models.PositiveSmallIntegerField(null=True, default=None) # настройка порядка страниц
-    level = models.FloatField(null=True)
+    level = models.TextField(null=False, blank=True)
 
     marker_size_factor = models.IntegerField(default=100)       # possible values are: {SIZE_FACTOR_ALLOWED}
 
