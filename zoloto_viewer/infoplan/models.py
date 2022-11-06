@@ -228,6 +228,15 @@ class Marker(models.Model):
         MarkerFingerpost(marker=self).save()
 
 
+class MarkerFingerpostQuerySet(models.QuerySet):
+
+    def bulk_serialize(self):
+        return {
+            mf.marker.uid: mf.to_json()
+            for mf in self.all()
+        }
+
+
 class MarkerFingerpost(models.Model):
     """
     Содержит информацию об использовании лопастей маркера типа фингерпост
@@ -241,6 +250,8 @@ class MarkerFingerpost(models.Model):
     side6_enabled = models.BooleanField(default=False)
     side7_enabled = models.BooleanField(default=False)
     side8_enabled = models.BooleanField(default=False)
+
+    objects = MarkerFingerpostQuerySet.as_manager()
 
     @classmethod
     def bulk_serialize(cls, marker_uid_list):

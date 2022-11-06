@@ -44,7 +44,10 @@ def generate_pdf(project: Project, buffer, filename):
 
     @first_page_canvas_management
     def draw_messages(page, layers):
-        writer = message.MessagePageWriter(canvas, page, layers, make_messages_obj_many_layers)
+        writer = message.MessagePageWriter(
+            canvas, page, layers,
+            marker_messages_getter=make_messages_obj_many_layers,
+        )
         writer.write()
 
     layer_groups = LayerGroup.objects.filter(project=project)
@@ -91,9 +94,14 @@ def make_marker_objects_many_layers(floor: Page, layers: List[Layer]):
 
 def make_messages_obj(floor: Page, layer: Layer):
     def marker_infoplan(vars_info_by_side, marker_uid, side_keys):
-        infoplan = vars_info_by_side.get(marker_uid, {})
         return [
-            (side_key, [v.value for v in infoplan.get(side_key, [])])
+            (
+                side_key,
+                [
+                    v.value
+                    for v in vars_info_by_side.get(side_key, [])
+                ]
+            )
             for side_key in side_keys
         ]
 
@@ -106,12 +114,17 @@ def make_messages_obj(floor: Page, layer: Layer):
     vars_by_side, _ = MarkerVariable.objects.vars_page_layer_by_side(floor, layer, apply_transformations=filters)
     marker_numbers = Marker.objects.get_numbers(floor, layer)
 
+    fingerpost_data = {}
+    if layer.kind.is_fingerpost:
+        fingerpost_data = MarkerFingerpost.objects.filter(marker__layer=layer).bulk_serialize()
+
     res = [
         message.MessageElem(
-            marker_numbers[marker_uid],
-            marker_infoplan(vars_by_side, marker_uid, layer.kind.side_keys()),
-            layer.kind.sides,
-            layout.color_adapter(layer.color.rgb_code)
+            number=marker_numbers[marker_uid],
+            infoplan=marker_infoplan(vars_by_side.get(marker_uid, {}), marker_uid, layer.kind.side_keys()),
+            side_count=layer.kind.sides,
+            layer_color=layout.color_adapter(layer.color.rgb_code),
+            fingerpost_data=fingerpost_data.get(marker_uid),
         )
         for marker_uid in marker_numbers.keys()
     ]

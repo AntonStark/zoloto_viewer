@@ -93,7 +93,7 @@ function buildMessBox(data) {
                     ? buildSideHeaderFingerpost(data) : buildSideHeaderUsual(data));
 
                 let sideList = document.createElement('ul');
-                sideList.setAttribute('data-number', nSide);
+                sideList.dataset['number'] = nSide;
 
                 sideList.append(...sideVars.map(varData => {
                     let variableItem = document.createElement('li');
@@ -104,8 +104,10 @@ function buildMessBox(data) {
                 }));
 
                 sideBlock.append(sideLabel, sideList);
+                sideBlock.dataset['number'] = nSide;
                 return sideBlock;
             }
+
             return buildSideBlock;
         }
 
@@ -121,10 +123,6 @@ function buildMessBox(data) {
 
         let variablesDiv  = document.createElement('div');
         variablesDiv.setAttribute('class', `variables_container`);
-        variablesDiv.style.gridTemplateColumns = ( isFingerPostMarker
-            ? `repeat(4, 1fr)`
-            : `repeat(${sides}, 1fr)`
-        );
 
         if (isInfoplanSet) {
             const sideNumbers = Array.from(Array(sides));
@@ -132,6 +130,24 @@ function buildMessBox(data) {
                 .map((e, i) => buildSideNBlock(i + 1)(data))
                 .filter((elem) => elem !== null)
             );
+        }
+        const actualSideCount = variablesDiv.children.length;
+
+        if (isFingerPostMarker) {
+            for (const sideBlock of Array.from(variablesDiv.children)) {
+                // insert br only before list of 5th pane
+                if (sideBlock.dataset['number'] === '5') {
+                    variablesDiv.insertBefore(document.createElement('br'), sideBlock);
+                }
+            }
+        }
+
+        if (isFingerPostMarker) {
+            const oneRowSides = Math.min(actualSideCount, 4);
+            variablesDiv.style.gridTemplateColumns = `repeat(${oneRowSides}, 1fr)`;
+        }
+        else {
+            variablesDiv.style.gridTemplateColumns = `repeat(${actualSideCount}, 1fr)`;
         }
 
         let infoplanDiv  = document.createElement('div');

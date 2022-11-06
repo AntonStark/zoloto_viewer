@@ -3,7 +3,10 @@ import re
 
 from dataclasses import dataclass, field
 from reportlab.lib import colors
-from typing import Any
+from typing import (
+    Any,
+    Optional,
+)
 
 from . import layout
 
@@ -30,11 +33,16 @@ class MessageElem:
     infoplan: list
     side_count: int
     layer_color: dict
+    fingerpost_data: Optional[dict] = None
 
     canvas: Any = field(init=False)
     text_lines_per_side: dict = field(init=False)
     max_var_width: int = field(init=False, default=None)
     side_heights: dict = field(init=False)
+
+    @property
+    def is_fingerpost(self) -> bool:
+        return self.side_count == 8
 
     def __post_init__(self):
         self._infoplan_to_lines()
@@ -52,8 +60,9 @@ class MessageElem:
         x_text = x_start + self.PADDING_LEFT
 
         # self.max_var_width must be set with prior call to set_canvas
-        for side, _ in self.infoplan:
-            x_side = x_text + (side - 1) * (self.PADDING_SIDES + self.max_var_width)
+        side_keys = dict(self.infoplan).keys() if not self.is_fingerpost else self.text_lines_per_side.keys()
+        for n_side, side in enumerate(side_keys, start=1):
+            x_side = x_text + (n_side - 1) * (self.PADDING_SIDES + self.max_var_width)
             self._draw_side(x_side, y_text, side)
 
         self.canvas.restoreState()
@@ -61,13 +70,13 @@ class MessageElem:
     def get_height(self):
         # number, empty = 2
         # 1.2 for interline space
-        height = 2 * 1.2 * self.FONT_SIZE + max(self.side_heights.values()) + self.PADDING_BOTTOM
+        height = 2 * 1.2 * self.FONT_SIZE + max(self.side_heights.values(), default=0) + self.PADDING_BOTTOM
         return height
 
     def get_side_header(self, side: int) -> str:
         if self.side_count == 1:
             return ''
-        elif self.side_count == 8:
+        elif self.is_fingerpost:
             return f'Лопасть {side}'
         else:
             return {
@@ -81,8 +90,9 @@ class MessageElem:
         if self.max_var_width is None:
             raise ValueError('need to set canvas')
 
-        width = self.PADDING_LEFT + self.side_count * self.max_var_width \
-                + (self.side_count - 1) * self.PADDING_SIDES \
+        actual_side_count = len(self.text_lines_per_side)
+        width = self.PADDING_LEFT + actual_side_count * self.max_var_width \
+                + (actual_side_count - 1) * self.PADDING_SIDES \
                 + self.PADDING_RIGHT
         if width < self.MIN_WIDTH:
             width = self.MIN_WIDTH
@@ -123,11 +133,14 @@ class MessageElem:
         self.canvas.drawString(x_text, y_number, self.number)
 
     def _draw_side(self, x_side, y_side, side_number):
+        text_lines = self.text_lines_per_side.get(side_number)
+        if not text_lines:
+            return
+
         side_text = self.canvas.beginText(x_side, y_side)
         side_text.setFont(self.FONT_NAME, self.FONT_SIZE)
         side_text.setFillColor(colors.black)
 
-        text_lines = self.text_lines_per_side[side_number]
         first_line = True
         for line in text_lines:     # type: TextPictLine
             if first_line:
@@ -140,6 +153,11 @@ class MessageElem:
     def _infoplan_to_lines(self):
         self.text_lines_per_side = dict()
         for side, vars_list in self.infoplan:
+            if self.is_fingerpost:
+                is_pane_active = self.fingerpost_data.get(f'pane-{side}')
+                if not is_pane_active:
+                    continue
+
             side_lines = []
             side_header = self.get_side_header(side)
             if side_header:
