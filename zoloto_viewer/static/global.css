@@ -597,6 +597,10 @@ g.layer_markers.enabled_layer {
     font-size: 36px;
 }
 
+text.plan_marker_fingerpost__pane {
+    font-family: "Zoloto Fingerpost Font v1";
+}
+
 .plan_marker_fingerpost text.pane-1 {
     visibility: var(--pane_1_visibility)
 }

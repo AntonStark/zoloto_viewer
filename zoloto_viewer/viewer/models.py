@@ -174,6 +174,9 @@ class Layer(models.Model):
             'title': self.title,
         }
 
+    def default_marker_scale_in_legend(self):
+        return 0.8 if self.kind.is_fingerpost else 1
+
     @staticmethod
     def test_title_free(project, title, except_=None):
         q = Layer.objects.filter(project=project, title=title)
