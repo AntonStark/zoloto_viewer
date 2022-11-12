@@ -135,9 +135,11 @@ def project_page(request, page_code):
         'map_scale_factors': Page.MAP_SCALE_ALLOWED,
     }
 
-    return infoplan_views.project_page(request,
-                                       page_obj=page_obj,
-                                       page_config=page_config)
+    return infoplan_views.project_page(
+        request,
+        page_obj=page_obj,
+        page_config=page_config
+    )
 
 
 @login_required

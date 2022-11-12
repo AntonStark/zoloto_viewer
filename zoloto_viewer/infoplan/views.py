@@ -385,15 +385,24 @@ def project_page(request, **more_context):
     page_config = more_context['page_config']
 
     project = page_obj.project
+
     page_code_list = project.page_set.values_list('code', 'floor_caption')
+    ordinal_window_size = [2000, 1250]
+    oversize_plan_compression = max(
+        page_obj.plan.width // ordinal_window_size[0],
+        page_obj.plan.height // ordinal_window_size[1],
+    )
+
     layers = project.layer_set.all().prefetch_related('color', 'kind')
     layers_with_comments_by_page = MarkerComment.layer_with_comments_by_page(project=project)
+
     markers_that_page = Marker.objects.filter(floor=page_obj)\
         .prefetch_related('markercomment_set')\
         .order_by()     # turn off sorting
     markers_by_layer = collections.defaultdict(list)
     for m in markers_that_page:
         markers_by_layer[m.layer_id].append(m)
+
     fingerpost_data = {
         mf.marker.uid: mf
         for mf in MarkerFingerpost.objects.filter(marker__floor=page_obj)
@@ -418,7 +427,7 @@ def project_page(request, **more_context):
 
         'base_url': settings.BASE_URL,
         'marker_display_config': page_obj.apply_size_factor({
-            'marker_scale': 1,
+            'marker_scale': int(oversize_plan_compression),
             'circle_radius': Marker.CIRCLE_RADIUS,
             'comment_mark_radius': Marker.COMMENT_MARK_RADIUS,
             'comment_mark_padding': Marker.COMMENT_MARK_PADDING,
