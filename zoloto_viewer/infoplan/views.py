@@ -268,7 +268,6 @@ class MarkerView(View):
         vars_by_side = transformations.html_escape_incoming(vars_by_side)
 
         MarkerVariable.objects.reset_values(marker, vars_by_side)
-        # todo bulk set should use per side reset with `reset_side_values`
 
         if fingerpost_metadata:
             mf = MarkerFingerpost.objects.filter(marker=marker).first()
