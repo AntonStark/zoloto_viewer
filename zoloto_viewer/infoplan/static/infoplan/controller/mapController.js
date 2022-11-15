@@ -140,7 +140,7 @@ function ControllerMapInteractions() {
             dropSelection();
             markerCirclesManager.render(mapInteractionsController.isInSelection);
         } else if (e.code === 'KeyI') {
-            messageBoxManager.showSelected(mapInteractionsController.isInSelection);
+            handleInfoplanOpen(mapInteractionsController.getSelection());
         } else if (e.code === 'KeyX') {
             mapInteractionsController.toggleInsertMode();
         } else if (e.code === 'KeyV') {
@@ -377,6 +377,15 @@ function ControllerMapInteractions() {
         window.navigator.clipboard.readText()
             .then(onClipboardResolve)
             .catch(onError);
+    }
+
+    function handleInfoplanOpen(markerUidArray) {
+        if (markerUidArray.length === 1) {
+            messageBoxManager.show(markerUidArray[0]);
+        }
+        else {
+            messageBoxManager.showMany(markerUidArray)
+        }
     }
 
     return {

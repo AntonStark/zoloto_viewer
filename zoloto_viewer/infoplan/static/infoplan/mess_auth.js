@@ -1,16 +1,5 @@
 'use strict';
 
-// STARTER
-
-function makeDataRequest(markerUid, onResponse, onError=undefined) {
-    doApiCall('GET',
-        API_MARKER_GET_DATA(markerUid),
-        undefined,
-        onResponse,
-        onError
-    );
-}
-
 // RENDER
 
 const INFOPLAN_SIDE_LABELS_USUAL = {
@@ -35,13 +24,12 @@ function buildMessBox(data) {
     function buildInfoplanBlock(data) {
         const isFingerPostMarker = data.layer.kind.name === 'фингерпост';
         const markerElem = messageBoxManager.getMarker(data.marker);
-        if (!markerElem) {
+        if (isFingerPostMarker && !markerElem) {
             alert('Ошибка при отображении инфоплана.\n' +
-                'Поробуйте обновить страницу или обратитесь к администратору.');
+                'Попробуйте обновить страницу или обратитесь к администратору.');
         }
-        const markerClassList = markerElem.classList;
         function paneEnabled(paneN)
-        { return markerClassList.contains(`pane-${paneN}`); }
+        { return markerElem.classList.contains(`pane-${paneN}`); }
 
         function buildSideNBlock(nSide, totalSideCount) {
             function buildSideHeaderUsual(data) {
@@ -117,14 +105,21 @@ function buildMessBox(data) {
         let infoplanHeader = document.createElement('div');
         let variablesLabel = document.createElement('span');
         variablesLabel.setAttribute('style', 'font-size: 10px;');
-        variablesLabel.textContent = 'Инфоплан';
+        variablesLabel.textContent = ( data.marker ? 'Инфоплан' : 'Инфоплан нескольких');
         let numberLabel = document.createElement('span');
         // numberLabel.style.float = 'right';
         numberLabel.style.marginLeft = '10px';
         numberLabel.style.fontSize = '10px';
         numberLabel.style.fontWeight = 'bold';
         numberLabel.textContent = data.number;
-        infoplanHeader.append(variablesLabel, numberLabel);
+        let closeBtn = document.createElement('span');
+        closeBtn.style.float = 'right';
+        closeBtn.textContent = 'x';
+        closeBtn.addEventListener('click', function () {
+            const markersUidArray = data.markers || data.marker;
+            messageBoxManager.drop(markersUidArray);
+        })
+        infoplanHeader.append(variablesLabel, numberLabel, closeBtn);
 
         let variablesDiv  = document.createElement('div');
         variablesDiv.setAttribute('class', `variables_container`);
@@ -179,10 +174,17 @@ function buildMessBox(data) {
     }
     function buildSaveBtn(data) {
         const markerUid = data.marker;
+        const markersUidArray = data.markers;
+
         let btnLink = document.createElement('a');
         btnLink.setAttribute('class', 'message_confirm_btn');
-        btnLink.textContent = 'Сохранить';
-        btnLink.addEventListener('click', () => handlerConfirmBtnClick(markerUid));
+        if (markerUid) {
+            btnLink.textContent = 'Сохранить';
+            btnLink.addEventListener('click', () => handlerConfirmBtnClick(markerUid));
+        } else if (markersUidArray) {
+            btnLink.textContent = 'Сохранить несколько';
+            btnLink.addEventListener('click', () => handleConfirmBtnManyClick(markersUidArray));
+        }
         return btnLink;
     }
 
@@ -232,38 +234,38 @@ function handlerResolveCommentsBtnClick(marker_uid) {
             refreshMarkerElement(markerData);
         },
         (rep) => {console.log(rep);},
-        );
+    );
+}
+
+function parseSideVariables(sideInputValue) {
+    if (sideInputValue.endsWith(';\n')) {
+        sideInputValue = sideInputValue.slice(0, -2);
+    } else if (sideInputValue.endsWith(';')) {
+        sideInputValue = sideInputValue.slice(0, -1);
+    }
+
+    // noinspection UnnecessaryLocalVariableJS
+    const sideVars = sideInputValue.split(';\n');
+    return sideVars;
+}
+function parseFingerpostMetadata(messContainer) {
+    if (!messContainer) {
+        return null;
+    }
+    const paneCheckboxElements = messContainer.getElementsByClassName('side_label__checkbox');
+    if (paneCheckboxElements.length === 0) {
+        return null;
+    }
+
+    return {
+        'panes': Array.from(paneCheckboxElements).map((elem) => ({
+            'pane_number': elem.dataset['pane_number'],
+            'enabled': elem.checked,
+        }))
+    }
 }
 
 function handlerConfirmBtnClick(marker_uid) {
-    function parseSideVariables(sideInputValue) {
-        if (sideInputValue.endsWith(';\n')) {
-            sideInputValue = sideInputValue.slice(0, -2);
-        } else if (sideInputValue.endsWith(';')) {
-            sideInputValue = sideInputValue.slice(0, -1);
-        }
-
-        // noinspection UnnecessaryLocalVariableJS
-        const sideVars = sideInputValue.split(';\n');
-        return sideVars;
-    }
-    function parseFingerpostMetadata(messContainer) {
-        if (!messContainer) {
-            return null;
-        }
-        const paneCheckboxElements = messContainer.getElementsByClassName('side_label__checkbox');
-        if (paneCheckboxElements.length === 0) {
-            return null;
-        }
-
-        return {
-            'panes': Array.from(paneCheckboxElements).map((elem) => ({
-                'pane_number': elem.dataset['pane_number'],
-                'enabled': elem.checked,
-            }))
-        }
-    }
-
     const box = messageBoxManager.get(marker_uid);
     if (!box) return;
     console.debug('btnSave box', box);
@@ -271,7 +273,10 @@ function handlerConfirmBtnClick(marker_uid) {
     const sides = box.getElementsByClassName('variables-container-side-input');
     let sideObjects = [];
     for (const s of sides) {
-        sideObjects.push({side: Number(s.dataset.number), variables: parseSideVariables(s.value)})
+        sideObjects.push({
+            side: Number(s.dataset.number),
+            variables: parseSideVariables(s.value)
+        })
     }
 
     const payload = {
@@ -282,13 +287,44 @@ function handlerConfirmBtnClick(marker_uid) {
         API_MARKER_PUT_VARS(marker_uid),
         payload,
         function onSuccessLoadReview(markerData) {
-        const markerUid = markerData.marker;
-        messageBoxManager.hide(markerUid);
-        refreshMarkerElement(markerData);
-    }, function onErrorLoadReview(rep) {
-        console.log(rep);
-        alert('Возникла ошибка при сохранении.\nПопробуйте чуть позже или обратитесь к администратору.');
-    });
+            const markerUid = markerData.marker;
+            messageBoxManager.drop(markerUid);
+            refreshMarkerElement(markerData);
+        },
+        function onErrorLoadReview(rep) {
+            console.log(rep);
+            alert('Возникла ошибка при сохранении.\nПопробуйте чуть позже или обратитесь к администратору.');
+        }
+    );
+}
+
+function handleConfirmBtnManyClick(markersUidArray) {
+    const box = messageBoxManager.get(markersUidArray);
+    if (!box) return;
+    console.debug('btnSave box', box);
+
+    const sides = box.getElementsByClassName('variables-container-side-input');
+    let sideObjects = [];
+    for (const s of sides) {
+        sideObjects.push({
+            side: Number(s.dataset.number),
+            variables: parseSideVariables(s.value)
+        })
+    }
+
+    const payload = {
+        infoplan: sideObjects,
+        markers: markersUidArray,
+    }
+    doApiCall('POST', API_MARKER_SUBMIT_DATA_MANY, payload,
+        function (markersData) {
+            messageBoxManager.drop(markersUidArray);
+        },
+        function onErrorLoadReview(rep) {
+            console.log(rep);
+            alert('Возникла ошибка при сохранении.\nПопробуйте чуть позже или обратитесь к администратору.');
+        }
+    );
 }
 
 const handlerMessBlur = handlerConfirmBtnClick;

@@ -36,8 +36,9 @@ function ControllerMessageBox(render) {
         return markerElementIndex[markerUid].dataset.layerTitle;
     }
 
-    function deduceContainer(layerTitle) {
-        const c = document.getElementsByClassName('layer_messages layer-' + layerTitle);
+    function deduceContainer(layerTitle=null) {
+        const layerKey = (layerTitle ? 'layer-' + layerTitle : 'multi-layer');
+        const c = document.getElementsByClassName(`layer_messages ${layerKey}`);
         if (c.length > 0)
             return c[0];
         else
@@ -101,6 +102,15 @@ function ControllerMessageBox(render) {
         else
             return false;
     }
+    function dropMessage(markerUid) {
+        const maybeMessItem = getContainerOrNull(markerUid);
+        if (maybeMessItem !== null) {
+            _renderedMessagesIndex[markerUid] = null;
+            delete _renderedMessagesIndex[markerUid];
+            maybeMessItem.parentNode.removeChild(maybeMessItem);
+            delete visibleMessagesIndex[markerUid];
+        }
+    }
     function showMessage(markerUid) {
         // проверить индекс и если есть, просто переключить видимость
         // console.log('showMessage', markerPosition);
@@ -121,29 +131,157 @@ function ControllerMessageBox(render) {
         //   1) запросить данные
         //   2) если данные пришли, построить Node сообщения, закинуть в индекс и отобразить в контейнере
         //   3) запросить и установить размещение. если места не нашлось, удалить
-        makeDataRequest(markerUid, function (markerData) {
-                const messageElem = renderMessage(markerData);
-                let messContainer = makeWrapper(undefined, undefined, messageElem);
-                // сначала размещаем в дефолтном положении и невидимым
-                placeDefault(container, markerData.marker, messContainer);
-                const position = acquireMessagePosition(markerUid, messContainer);
-                // а теперь выставляем положение и показываем
-                if (position) {
-                    _setPosition(messContainer, position);
-                    _setVisibility(messContainer);
-                    visibleMessagesIndex[markerUid] = true;
-                }
-                else {
-                    console.log('position=', position);
+        function onSuccess(markerData) {
+            const messageElem = renderMessage(markerData);
+            let messContainer = makeWrapper(undefined, undefined, messageElem);
+            // сначала размещаем в дефолтном положении и невидимым
+            placeDefault(container, markerData.marker, messContainer);
+            const position = acquireMessagePosition(markerUid, messContainer);
+            // а теперь выставляем положение и показываем
+            if (position) {
+                _setPosition(messContainer, position);
+                _setVisibility(messContainer);
+                visibleMessagesIndex[markerUid] = true;
+            }
+            else {
+                console.log('position=', position);
 
-                    container.removeChild(messContainer);
-                    messContainer = null;       // for proper garbage collection
-                    return;
-                }
+                container.removeChild(messContainer);
+                messContainer = null;       // for proper garbage collection
+                return;
+            }
 
-                messContainer.focus();
-            });
+            messContainer.focus();
+        }
+
+        doApiCall('GET', API_MARKER_GET_DATA(markerUid), undefined,
+            onSuccess, undefined
+        );
     }
+    function showMessagesMany(markerUidArray) {
+        const container = deduceContainer(null);
+        if (!container)
+            return;
+
+        function onSuccess(markersData) {
+            // console.log(markersData);
+            // markersData = {markers: [ {infoplan} ] }
+            // infoplan = [ {side, variables} ]
+            let sideCounts = new Set();
+            let perSideInfoplans = {};
+            for (const data of markersData.markers) {
+                sideCounts.add(data.layer.kind.sides);
+                for (const infoplanElement of data.infoplan) {
+                    if (!perSideInfoplans[infoplanElement.side])
+                        perSideInfoplans[infoplanElement.side] = [];
+                    perSideInfoplans[infoplanElement.side].push(infoplanElement.variables);
+                }
+            }
+            // console.log('sideCounts', sideCounts);
+            // console.log(perSideInfoplans);
+
+            const sides = Math.min.apply(this, Array.from(sideCounts));
+            if (sideCounts.size > 1) {
+                alert(`Разное кол-во сторон носителей
+Выводится окно для минимального: ${sides} стороны`);
+            }
+
+            function sideInitialContent(sideN, sideInfoplans) {
+
+                // Warn if overriding existing method
+                if(Array.prototype.equals)
+                    console.warn("Overriding existing Array.prototype.equals. Possible causes: New API defines the method, there's a framework conflict or you've got double inclusions in your code.");
+                // attach the .equals method to Array's prototype to call it on any array
+                Array.prototype.equals = function (array) {
+                    // if the other array is a falsy value, return
+                    if (!array)
+                        return false;
+                    // if the argument is the same array, we can be sure the contents are same as well
+                    if(array === this)
+                        return true;
+                    // compare lengths - can save a lot of time
+                    if (this.length != array.length)
+                        return false;
+
+                    for (var i = 0, l=this.length; i < l; i++) {
+                        // Check if we have nested arrays
+                        if (this[i] instanceof Array && array[i] instanceof Array) {
+                            // recurse into the nested arrays
+                            if (!this[i].equals(array[i]))
+                                return false;
+                        }
+                        else if (this[i] != array[i]) {
+                            // Warning - two different object instances will never be equal: {x:20} != {x:20}
+                            return false;
+                        }
+                    }
+                    return true;
+                }
+                // Hide method from for-in loops
+                Object.defineProperty(Array.prototype, "equals", {enumerable: false});
+
+                // console.log(sideInfoplans);
+                // check that all infoplan of sideInfoplans equals
+                let x;
+                for (const infoplan of sideInfoplans) {
+                    if (!x) {
+                        x = infoplan;
+                    }
+                    else {
+                        if (!infoplan.equals(x)) {
+                            x = [''];
+                            break;
+                        }
+                    }
+                }
+
+                return {side: sideN, variables: x};
+            }
+            let initialInfoplan = [];
+            for (let s = 1; s <= sides; ++s) {
+                initialInfoplan.push(sideInitialContent(s, perSideInfoplans[s]));
+            }
+
+            const sampleMarker = markersData.markers[0];
+            const dataToRender = {
+                markers: markerUidArray,
+                layer: {
+                    kind: {
+                        name: '',
+                        sides: sides,
+                    }
+                },
+                number: '',
+                has_comment: false,
+                comments: [],
+                infoplan: initialInfoplan,
+            }
+            const messageElem = renderMessage(dataToRender);
+            let messContainer = makeWrapper(undefined, undefined, messageElem);
+            // сначала размещаем в дефолтном положении и невидимым
+            placeDefault(container, markerUidArray, messContainer);
+            const position = acquireMessagePosition(sampleMarker.marker, messContainer);
+            if (position) {
+                _setPosition(messContainer, position);
+                _setVisibility(messContainer);
+            }
+            else {
+                console.log('position=', position);
+
+                container.removeChild(messContainer);
+                messContainer = null;       // for proper garbage collection
+                return;
+            }
+
+            messContainer.focus();
+
+        }
+
+        doApiCall('POST', API_MARKER_GET_DATA_MANY, {markers: markerUidArray},
+            onSuccess, undefined
+        );
+    }
+
     function getComment(markerUid) {
         const box = getContainerOrNull(markerUid);
         if (!box)
@@ -199,7 +337,9 @@ function ControllerMessageBox(render) {
 
     return {
         show: showMessage,
+        showMany: showMessagesMany,
         hide: hideMessage,
+        drop: dropMessage,
         read: getComment,
         get : getContainerOrNull,
         getMarker: getMarkerOrNull,

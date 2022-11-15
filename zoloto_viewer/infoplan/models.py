@@ -430,6 +430,15 @@ class VariablesManager(models.Manager):
             self.bulk_create(variables)
             marker.save()   # to update marker.last_modified
 
+    def reset_side_values(self, marker, n_side, values):
+        with transaction.atomic():
+            marker.markervariable_set.filter(side=n_side).delete()
+            self.bulk_create([
+                MarkerVariable(marker=marker, side=n_side, key=k, value=v)
+                for k, v in enumerate(values)
+            ])
+            marker.save()   # to update marker.last_modified
+
     def vars_by_side(self, queryset: models.QuerySet, apply_transformations=None):
         from zoloto_viewer.infoplan.utils.variable_transformations import Variable
         markers = set()

@@ -3,6 +3,8 @@
 const API_PING               = `${BASE_URL}/viewer/api/ping/`;
 const API_MARKER_CREATE      = `${BASE_URL}/viewer/api/marker/`;
 const API_MARKER_CLIPBOARD   = `${BASE_URL}/viewer/api/marker/from_clipboard/`;
+const API_MARKER_GET_DATA_MANY    = `${BASE_URL}/viewer/api/marker/fetch_many/`;
+const API_MARKER_SUBMIT_DATA_MANY = `${BASE_URL}/viewer/api/marker/submit_many/`;
 const API_MARKER_GET_DATA    = (markerUid) => `${BASE_URL}/viewer/api/marker/${markerUid}`;
 const API_MARKER_GET_DATA_PRETTY = (markerUid) => `${BASE_URL}/viewer/api/marker/${markerUid}?pretty=true`;
 const API_MARKER_PUT_VARS    = (markerUid) => `${BASE_URL}/viewer/api/marker/${markerUid}`;

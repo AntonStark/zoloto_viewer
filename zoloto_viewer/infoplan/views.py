@@ -93,6 +93,63 @@ def create_marker_clipboard(request):
     return JsonResponse(rep)
 
 
+@login_required
+@http.require_POST
+@csrf.csrf_exempt
+def fetch_markers_bulk(request):
+    # use POST to request multiple UUID
+    field_name = 'markers'
+    try:
+        req = json.loads(request.body)
+        marker_uid_list = req[field_name]
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'request body must be json'}, status=400)
+    except (TypeError, KeyError):
+        return JsonResponse({'error': f'json object must contain field "{field_name}"'}, status=400)
+
+    filters = []
+    rep = {
+        'markers': [
+            m.serialize(filters)
+            for m in Marker.objects.filter(uid__in=marker_uid_list)
+        ],
+    }
+    return JsonResponse(rep)
+
+
+@login_required
+@http.require_POST
+@csrf.csrf_exempt
+def submit_markers_bulk(request):
+    try:
+        req = json.loads(request.body)
+        infoplan = req['infoplan']
+        markers = req['markers']
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'request body must be json'}, status=400)
+    except KeyError:
+        return JsonResponse({'error': 'json object must contain field infoplan'}, status=400)
+
+    vars_by_side = {
+        sideObj['side']: sideObj['variables']
+        for sideObj in infoplan
+    }
+    vars_by_side = transformations.html_escape_incoming(vars_by_side)
+
+    for m in Marker.objects.filter(uid__in=markers):
+        for side, variables in vars_by_side.items():
+            MarkerVariable.objects.reset_side_values(m, n_side=side, values=variables)
+
+    filters = []
+    rep = {
+        'markers': [
+            m.serialize(filters)
+            for m in Marker.objects.filter(uid__in=markers)
+        ],
+    }
+    return JsonResponse(rep)
+
+
 @method_decorator(csrf.csrf_exempt, name='dispatch')
 class MarkerView(View):
     @method_decorator(marker_api)
@@ -194,25 +251,24 @@ class MarkerView(View):
                     return False
             return True
 
-        def validate_sides_count(data):
-            return max(data.keys()) == marker.layer.kind.sides
-
-        def validate_all_sides_present(data):
-            return tuple(sorted(data.keys())) == tuple(range(1, marker.layer.kind.sides + 1))
-
         if not validate_side_objects(infoplan):
             return JsonResponse({'error': 'side obj must contain fields side and variables of types int and list[str]'},
                                 status=400)
-        vars_by_side = {sideObj['side']: sideObj['variables'] for sideObj in infoplan}
+        vars_by_side = {
+            sideObj['side']: sideObj['variables']
+            for sideObj in infoplan
+        }
 
-        if not validate_sides_count(vars_by_side):
+        side_counts = max(vars_by_side.keys()) == marker.layer.kind.sides
+        if not side_counts:
             return JsonResponse({'error': 'wrong sides count for that marker kind'}, status=400)
-        if not validate_all_sides_present(vars_by_side):
+        if not tuple(sorted(vars_by_side.keys())) == tuple(range(1, marker.layer.kind.sides + 1)):
             return JsonResponse({'error': 'some side objects missing'}, status=400)
 
         vars_by_side = transformations.html_escape_incoming(vars_by_side)
 
         MarkerVariable.objects.reset_values(marker, vars_by_side)
+        # todo bulk set should use per side reset with `reset_side_values`
 
         if fingerpost_metadata:
             mf = MarkerFingerpost.objects.filter(marker=marker).first()
