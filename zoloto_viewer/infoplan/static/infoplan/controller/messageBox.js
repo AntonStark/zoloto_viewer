@@ -171,7 +171,11 @@ function ControllerMessageBox(render) {
             let perSideInfoplans = {};
             for (const data of markersData.markers) {
                 sideCounts.add(data.layer.kind.sides);
-                for (const infoplanElement of data.infoplan) {
+                const markerInfoplan = data.infoplan
+                if (markerInfoplan.length === 0) {
+                    markerInfoplan.push({side: 1, variables: []})
+                }
+                for (const infoplanElement of markerInfoplan) {
                     if (!perSideInfoplans[infoplanElement.side])
                         perSideInfoplans[infoplanElement.side] = [];
                     perSideInfoplans[infoplanElement.side].push(infoplanElement.variables);
@@ -180,11 +184,13 @@ function ControllerMessageBox(render) {
             // console.log('sideCounts', sideCounts);
             // console.log(perSideInfoplans);
 
-            const sides = Math.min.apply(this, Array.from(sideCounts));
+            // const sides = Math.min.apply(this, Array.from(sideCounts));
             if (sideCounts.size > 1) {
                 alert(`Разное кол-во сторон носителей
-Выводится окно для минимального: ${sides} стороны`);
+Одновременное редактирование недоступно`);
+                return;
             }
+            const sides = sideCounts.values().next().value;
 
             function sideInitialContent(sideN, sideInfoplans) {
 
