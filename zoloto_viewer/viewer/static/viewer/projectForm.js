@@ -43,6 +43,7 @@ function addMoreFileInput(labelTag, options = {}) {
 }
 
 const cellInit = {
+    // drag handle icon
     0: function (fileDesc) {
         let td = document.createElement('td');
         let icon = document.createElement('i');
@@ -50,6 +51,7 @@ const cellInit = {
         td.append(icon);
         return td;
     },
+    // invisible text input to submit floor caption
     1: function(fileDesc) {
         let td = document.createElement('td');
         let input = document.createElement('input');
@@ -60,16 +62,19 @@ const cellInit = {
         td.append(input);
         return td;
     },
+    // file name
     2: function(fileDesc) {
         let td = document.createElement('td');
         td.append(fileDesc.name);
         return td;
     },
+    // file last modified
     3: function(fileDesc) {
         let td = document.createElement('td');
         td.append(fileDesc.lastModifiedDate);
         return td;
     },
+    // delete row icon
     4: function(fileDesc) {
         let td = document.createElement('td');
         let a = document.createElement('a');
@@ -83,6 +88,7 @@ const cellInit = {
         td.append(a);
         return td;
     },
+    // text input for level
     5: function (fileDesc, extra) {
         let td = document.createElement('td');
         let input = document.createElement('input');
@@ -92,6 +98,7 @@ const cellInit = {
         td.append(input);
         return td;
     },
+    // hidden input to submit plan offset
     6: function (fileDesc, extra) {
         let td = document.createElement('td');
         let input = document.createElement('input');
@@ -131,10 +138,10 @@ function onPlanFilesChange() {
                 'При сохранении он будет заменён выбранным.')
         }
         else {
-            const tr = buildRow(file, [0, 1, 2, 4, 5, 6], {
+            const tr = buildRow(file, [0, 1, 2, 5, 4, 6], {
                 totalRows: planTableElement.childElementCount
             });
-            tr.id = planTableElement.childElementCount;
+            tr.id = planTableElement.childElementCount + i;
             rows.push(tr);
         }
     }
