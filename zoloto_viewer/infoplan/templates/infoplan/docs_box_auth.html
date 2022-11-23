@@ -12,19 +12,22 @@
         <tr>
             <td>
                 <span class="z_pict pict_pos_middle small">&#xE916;</span>
-                <a href="{% url 'get_infoplan_file' project.id %}">Инфоплан</a>
+                <a download="project_{{ project.title }}_infoplan.tar"
+                   href="{% url 'get_infoplan_file' project.id %}">Инфоплан</a>
             </td>
         </tr>
         <tr>
             <td>
                 <span class="z_pict pict_pos_middle small">&#xE916;</span>
-                <a href="{% url 'get_counts_file' project.id %}">Количество</a>
+                <a download="project_{{ project.title }}_marker_counts.csv"
+                   href="{% url 'get_counts_file' project.id %}">Количество</a>
             </td>
         </tr>
         <tr>
             <td>
                 <span class="z_pict pict_pos_middle small">&#xE916;</span>
-                <a href="{% url 'get_picts_file' project.id %}">Пикты</a>
+                <a download="project_{{ project.title }}_picts.csv"
+                   href="{% url 'get_picts_file' project.id %}">Пикты</a>
             </td>
         </tr>
         <tr>
