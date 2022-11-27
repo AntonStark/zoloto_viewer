@@ -540,6 +540,11 @@ g.layer_markers.enabled_layer {
     font-family: Arial, serif;
 }
 
+.variables-container-side-input[data-changed="true"] {
+    border: 1px solid cyan;
+}
+
+
 .variables_container ul li {
     white-space: nowrap;
     font-size: 12px;

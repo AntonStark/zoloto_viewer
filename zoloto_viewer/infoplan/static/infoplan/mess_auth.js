@@ -92,6 +92,8 @@ function buildMessBox(data) {
                 // noinspection UnnecessaryLocalVariableJS
                 const inputValue = ( sideVars ? sideVars.join(';\n') + ';' : '');
                 sideInput.value = htmlDecode(inputValue);
+                sideInput.dataset['initialValue'] = htmlDecode(inputValue);
+                sideInput.dataset['changed'] = false;
                 sideInput.addEventListener('blur', variablesContainerBlur);
 
                 sideBlock.append(sideHeader, sideInput);
@@ -203,13 +205,16 @@ function buildMessBox(data) {
 // HANDLERS
 
 function variablesContainerBlur(e) {
-    let v = e.target.value;
-    if (v.length > 0
-        && !( v.endsWith(';') || v.endsWith('\n') )
+    const sideInput = e.target
+    let v = sideInput.value;
+    if (v.length > 0 && !( v.endsWith(';') || v.endsWith('\n') )
     ) {
         v = v + ';\n';
-        e.target.value = v;
+        sideInput.value = v;
     }
+
+    const isChanged = v !== sideInput.dataset['initialValue'];
+    sideInput.dataset['changed'] = isChanged;
 }
 
 function fingerpostPaneCheckboxChange(e) {
@@ -306,10 +311,12 @@ function handleConfirmBtnManyClick(markersUidArray) {
     const sides = box.getElementsByClassName('variables-container-side-input');
     let sideObjects = [];
     for (const s of sides) {
-        sideObjects.push({
-            side: Number(s.dataset.number),
-            variables: parseSideVariables(s.value)
-        })
+        if (s.dataset['changed'] === 'true') {
+            sideObjects.push({
+                side: Number(s.dataset.number),
+                variables: parseSideVariables(s.value)
+            })
+        }
     }
 
     const payload = {
