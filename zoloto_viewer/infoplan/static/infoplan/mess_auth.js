@@ -204,8 +204,7 @@ function buildMessBox(data) {
 
 // HANDLERS
 
-function variablesContainerBlur(e) {
-    const sideInput = e.target
+function processVariablesContainerBlur(sideInput) {
     let v = sideInput.value;
     if (v.length > 0 && !( v.endsWith(';') || v.endsWith('\n') )
     ) {
@@ -215,6 +214,11 @@ function variablesContainerBlur(e) {
 
     const isChanged = v !== sideInput.dataset['initialValue'];
     sideInput.dataset['changed'] = isChanged;
+}
+
+function variablesContainerBlur(e) {
+    const sideInput = e.target
+    processVariablesContainerBlur(sideInput);
 }
 
 function fingerpostPaneCheckboxChange(e) {
@@ -311,6 +315,7 @@ function handleConfirmBtnManyClick(markersUidArray) {
     const sides = box.getElementsByClassName('variables-container-side-input');
     let sideObjects = [];
     for (const s of sides) {
+        processVariablesContainerBlur(s);
         if (s.dataset['changed'] === 'true') {
             sideObjects.push({
                 side: Number(s.dataset.number),

@@ -2,6 +2,8 @@
 function ControllerMessageBox(render) {
     let _renderedMessagesIndex = {};    // marker_uid -> {messContainer: MessageBoxNode}
     let visibleMessagesIndex  = {};     // marker_uid -> visibility (bool)
+    let manyEditMessagesIndex = {};     // markerUidArray -> visibility (bool)
+
     let markerElementIndex    = {};     // marker_uid -> MarkerElement
     const renderMessage = render;
     const nodesSparseFactor = 10;
@@ -108,7 +110,9 @@ function ControllerMessageBox(render) {
             _renderedMessagesIndex[markerUid] = null;
             delete _renderedMessagesIndex[markerUid];
             maybeMessItem.parentNode.removeChild(maybeMessItem);
+
             delete visibleMessagesIndex[markerUid];
+            delete manyEditMessagesIndex[markerUid];
         }
     }
     function showMessage(markerUid) {
@@ -270,6 +274,7 @@ function ControllerMessageBox(render) {
             if (position) {
                 _setPosition(messContainer, position);
                 _setVisibility(messContainer);
+                manyEditMessagesIndex[markerUidArray] = true;
             }
             else {
                 console.log('position=', position);
@@ -329,9 +334,15 @@ function ControllerMessageBox(render) {
     }
 
     function hideAllMessages() {
-        for (const markerUid in visibleMessagesIndex)
+        for (const markerUid in visibleMessagesIndex) {
             if (visibleMessagesIndex[markerUid])
                 handlerMessBlur(markerUid);
+        }
+
+        for (const markerUidArray in manyEditMessagesIndex) {
+            if (manyEditMessagesIndex[markerUidArray])
+                handleConfirmBtnManyClick(markerUidArray);
+        }
     }
     function showAllSelected(isSelected) {
         for (const markerUid of Object.keys(markerElementIndex)) {

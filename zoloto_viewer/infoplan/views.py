@@ -136,6 +136,9 @@ def submit_markers_bulk(request):
     }
     vars_by_side = transformations.html_escape_incoming(vars_by_side)
 
+    if not isinstance(markers, list):
+        markers = markers.split(',')
+
     for m in Marker.objects.filter(uid__in=markers):
         for side, variables in vars_by_side.items():
             MarkerVariable.objects.reset_side_values(m, n_side=side, values=variables)
