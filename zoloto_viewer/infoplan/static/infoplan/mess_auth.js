@@ -23,13 +23,14 @@ const INFOPLAN_SIDE_LABELS_FINGERPOST = {
 function buildMessBox(data) {
     function buildInfoplanBlock(data) {
         const isFingerPostMarker = data.layer.kind.name === 'фингерпост';
-        const markerElem = messageBoxManager.getMarker(data.marker);
-        if (isFingerPostMarker && !markerElem) {
-            alert('Ошибка при отображении инфоплана.\n' +
-                'Попробуйте обновить страницу или обратитесь к администратору.');
-        }
-        function paneEnabled(paneN)
-        { return markerElem.classList.contains(`pane-${paneN}`); }
+
+        const paneEnabled = (data.marker
+            ? function (paneN) {
+                const markerElem = messageBoxManager.getMarker(data.marker);
+                return markerElem.classList.contains(`pane-${paneN}`);
+            }
+            : undefined
+        );
 
         function buildSideNBlock(nSide, totalSideCount) {
             function buildSideHeaderUsual(data) {
@@ -54,10 +55,16 @@ function buildMessBox(data) {
                 let checkbox = document.createElement('input');
                 checkbox.setAttribute('type', 'checkbox');
                 checkbox.setAttribute('class', 'side_label__checkbox');
-                checkbox.dataset['pane_number'] = nSide;
-                checkbox.dataset['marker'] = data.marker;
-                checkbox.checked = paneEnabled(nSide);
-                checkbox.addEventListener('change', fingerpostPaneCheckboxChange);
+                if (paneEnabled) {
+                    checkbox.dataset['pane_number'] = nSide;
+                    checkbox.dataset['marker'] = data.marker;
+                    checkbox.checked = paneEnabled(nSide);
+                    checkbox.addEventListener('change', fingerpostPaneCheckboxChange);
+                }
+                else {
+                    checkbox.disabled = true;
+                    checkbox.hidden = true;
+                }
 
                 const text = document.createTextNode(sideLabels[nSide]);
 

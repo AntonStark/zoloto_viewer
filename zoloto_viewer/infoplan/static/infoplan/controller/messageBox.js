@@ -255,12 +255,7 @@ function ControllerMessageBox(render) {
             const sampleMarker = markersData.markers[0];
             const dataToRender = {
                 markers: markerUidArray,
-                layer: {
-                    kind: {
-                        name: '',
-                        sides: sides,
-                    }
-                },
+                layer: sampleMarker.layer,
                 number: '',
                 has_comment: false,
                 comments: [],
