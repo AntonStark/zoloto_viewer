@@ -483,14 +483,17 @@ def project_page(request, **more_context):
             'hidden_layers': hidden_layers,
         },
 
+
         'base_url': settings.BASE_URL,
-        'marker_display_config': page_obj.apply_size_factor({
-            'marker_scale': int(oversize_plan_compression),
+        'marker_display_config': Page.multiply_object_values(page_obj.apply_size_factor({
+            'marker_scale': 1.,
             'circle_radius': Marker.CIRCLE_RADIUS,
             'comment_mark_radius': Marker.COMMENT_MARK_RADIUS,
             'comment_mark_padding': Marker.COMMENT_MARK_PADDING,
-        }),
+        }), int(oversize_plan_compression)),
     }
     template = 'infoplan/project_page_auth.html' if request.user.is_authenticated \
         else 'infoplan/project_page.html'
     return render(request, template, context=context)
+
+

@@ -30,6 +30,7 @@
                                 <circle cx="{{ marker.pos_x }}" cy="{{ marker.pos_y }}"
                                         r="{{ marker_display_config.circle_radius }}"
                                         class="marker_circle" id="marker_circle-{{ marker.uid }}"
+                                        style="stroke-width: {{ marker_display_config.marker_scale }}px;"
                                         data-marker-uid="{{ marker.uid }}" data-layer-title="{{ layer.title }}"></circle>
                                 {% with cmp=marker_display_config.comment_mark_padding cmr=marker_display_config.comment_mark_radius %}
                                 <circle cx="{{ marker.pos_x }}" cy="{{ marker.pos_y }}" r="{{ cmr }}"

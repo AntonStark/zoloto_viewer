@@ -397,6 +397,13 @@ class Page(models.Model):
         except Page.DoesNotExist:
             return None
 
+    @staticmethod
+    def multiply_object_values(object: dict, factor):
+        return {
+            k: v * factor
+            for k, v in object.items()
+        }
+
     def apply_size_factor(self, value: (int, dict)):
         if isinstance(value, (int, float)):
             return value * self.marker_size_factor / 100
