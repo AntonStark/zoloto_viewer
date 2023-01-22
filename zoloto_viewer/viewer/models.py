@@ -1,11 +1,14 @@
 import base64
+import io
 import re
 import shutil
 import uuid
 
 from django.conf import settings
 from django.contrib.postgres import fields
+from django.core.files.temp import NamedTemporaryFile
 from django.db import models
+from django.db.models.fields import files
 from django.dispatch import receiver
 
 from os import path
@@ -370,14 +373,24 @@ class Page(models.Model):
 
     @staticmethod
     def create_or_replace(project, plan, indd_floor, floor_caption):
+        pil_image = Image.open(plan)
+        buf = io.BytesIO()
+        pil_image.save(buf, 'JPEG', optimize=True, quality=20)
+        buf.seek(0)
+
+        image_temp_file = NamedTemporaryFile(delete=True)
+        image_temp_file.write(buf.read())
+        image_temp_file.flush()
+        temp_file = files.File(image_temp_file, name=plan.name)
+
         # if plan with equal floor_caption already exists just update them
         p = Page.objects.filter(project=project, floor_caption=floor_caption).first()
         if not p:
-            p = Page(project=project, plan=plan, indd_floor=indd_floor, floor_caption=floor_caption)
+            p = Page(project=project, plan=temp_file, indd_floor=indd_floor, floor_caption=floor_caption)
             p.save()
         else:
             p.plan.delete(save=False)
-            p.plan = plan
+            p.plan = temp_file
             p.indd_floor = indd_floor
             p.save()
         return p
