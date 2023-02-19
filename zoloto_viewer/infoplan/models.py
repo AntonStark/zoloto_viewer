@@ -609,7 +609,7 @@ class MarkerVariable(models.Model):
             return bool(relevant)
 
         without_empty = [line for line in lines if is_relevant(line)]
-        lines = without_empty
+        lines = [line.strip() for line in without_empty]
         # print(lines)
 
         rus = eng = []

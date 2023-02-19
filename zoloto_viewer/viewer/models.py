@@ -351,7 +351,7 @@ class Page(models.Model):
 
     @property
     def level_subtitle(self):
-        return f'Отметка {self.level}' if self.level else ''
+        return self.level or ''
 
     @property
     def file_title(self):
